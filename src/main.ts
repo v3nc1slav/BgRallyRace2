@@ -1,6 +1,7 @@
 import './style.css';
 import Phaser from 'phaser';
 import { RaceScene } from './scenes/RaceScene';
+import { apiGet } from './api';
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -18,3 +19,7 @@ new Phaser.Game({
   },
   scene: [RaceScene],
 });
+
+apiGet<{ name: string }>('')
+  .then((d) => console.log('WordPress казва:', d.name))
+  .catch((e) => console.warn('Няма връзка с WordPress:', e));

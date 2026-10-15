@@ -4,10 +4,19 @@
  */
 
 add_shortcode('car_racer', function () {
+    $dir = plugin_dir_path(__FILE__) . 'game/';
     $url = plugin_dir_url(__FILE__) . 'game/';
-    wp_enqueue_script('car-racer', $url . 'game.js', [], '1.0', true);
-    wp_enqueue_style('car-racer', $url . 'game.css', [], '1.0');
-    return '<div id="app" style="width:100%;height:80vh"></div>';
+
+    $ver = fn($file) => file_exists($dir . $file) ? filemtime($dir . $file) : false;
+
+    wp_enqueue_script('car-racer', $url . 'game.js', [], $ver('game.js'), true);
+    wp_enqueue_style('car-racer', $url . 'game.css', [], $ver('game.css'));
+
+    return sprintf(
+        '<div id="app" data-rest-url="%s" data-nonce="%s" style="width:100%%;height:80vh"></div>',
+        esc_url(rest_url()),
+        esc_attr(wp_create_nonce('wp_rest'))
+    );
 });
 
 add_filter('script_loader_tag', function ($tag, $handle) {

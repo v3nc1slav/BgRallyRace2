@@ -5,7 +5,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/wp-json': {
-        target: 'http://bg-race.local.crt/', // смени с твоя адрес от LocalWP
+        target: 'http://bg-race.local', //
         changeOrigin: true,
       },
     },
