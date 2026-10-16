@@ -1,27 +1,28 @@
 <?php
 /**
  * Plugin Name: Car Racer Backend
+ * Description: Сървърът на BG Rally: игрова логика, админ и REST API.
+ * Version: 0.1.0
+ * Requires PHP: 8.1
  */
 
-add_shortcode('car_racer', function () {
-    $dir = plugin_dir_path(__FILE__) . 'game/';
-    $url = plugin_dir_url(__FILE__) . 'game/';
+defined('ABSPATH') || exit;
 
-    $ver = fn($file) => file_exists($dir . $file) ? filemtime($dir . $file) : false;
+define('BGR_VERSION', '0.1.0');
+define('BGR_FILE', __FILE__);
+define('BGR_DIR', __DIR__);
 
-    wp_enqueue_script('car-racer', $url . 'game.js', [], $ver('game.js'), true);
-    wp_enqueue_style('car-racer', $url . 'game.css', [], $ver('game.css'));
-
-    return sprintf(
-        '<div id="app" data-rest-url="%s" data-nonce="%s" style="width:100%%;height:80vh"></div>',
-        esc_url(rest_url()),
-        esc_attr(wp_create_nonce('wp_rest'))
-    );
+spl_autoload_register(function ($class) {
+    if (!str_starts_with($class, 'BgRally\\')) {
+        return;
+    }
+    $path = __DIR__ . '/includes/' . str_replace('\\', '/', substr($class, 8)) . '.php';
+    if (is_file($path)) {
+        require $path;
+    }
 });
 
-add_filter('script_loader_tag', function ($tag, $handle) {
-    if ($handle === 'car-racer') {
-        return str_replace('<script ', '<script type="module" ', $tag);
-    }
-    return $tag;
-}, 10, 2);
+register_activation_hook(__FILE__, [BgRally\Database\Schema::class, 'install']);
+register_deactivation_hook(__FILE__, [BgRally\Cron::class, 'unschedule']);
+
+BgRally\Plugin::boot();

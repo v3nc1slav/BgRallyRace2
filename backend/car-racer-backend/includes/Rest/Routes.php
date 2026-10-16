@@ -1,0 +1,56 @@
+<?php
+
+namespace BgRally\Rest;
+
+final class Routes
+{
+    public const NAMESPACE = 'bgrally/v1';
+
+    public static function register(): void
+    {
+        $public = '__return_true';
+        $loggedIn = 'is_user_logged_in';
+        $player = [Auth::class, 'player'];
+        $rally = '/rallies/(?P<id>\d+)';
+
+        self::route('/auth/register', 'POST', [AuthController::class, 'register'], $public);
+        self::route('/auth/login', 'POST', [AuthController::class, 'login'], $public);
+        self::route('/auth/logout', 'POST', [AuthController::class, 'logout'], $loggedIn);
+        self::route('/me', 'GET', [PlayerController::class, 'me'], $public);
+        self::route('/player', 'POST', [PlayerController::class, 'create'], $loggedIn);
+        self::route('/cities', 'GET', [CatalogController::class, 'cities'], $public);
+
+        self::route('/garage', 'GET', [GarageController::class, 'show'], $player);
+        self::route('/garage/mount', 'POST', [GarageController::class, 'mount'], $player);
+        self::route('/garage/repair', 'POST', [GarageController::class, 'repair'], $player);
+        self::route('/garage/upgrade', 'POST', [GarageController::class, 'upgrade'], $player);
+        self::route('/garage/active', 'POST', [GarageController::class, 'activeCar'], $player);
+        self::route('/staff/fire', 'POST', [GarageController::class, 'fire'], $player);
+        self::route('/shop', 'GET', [GarageController::class, 'shop'], $player);
+        self::route('/shop/buy', 'POST', [GarageController::class, 'buy'], $player);
+        self::route('/shop/buy-car', 'POST', [GarageController::class, 'buyCar'], $player);
+
+        self::route('/bar', 'GET', [CityController::class, 'bar'], $player);
+        self::route('/bar/hire', 'POST', [CityController::class, 'hire'], $player);
+        self::route('/sponsors', 'GET', [CityController::class, 'sponsors'], $player);
+        self::route('/sponsors/(?P<id>\d+)/negotiate', 'POST', [CityController::class, 'negotiate'], $player);
+        self::route('/inbox', 'GET', [CityController::class, 'inbox'], $player);
+        self::route('/city', 'GET', [CityController::class, 'city'], $player);
+
+        self::route('/rallies', 'GET', [RallyController::class, 'index'], $player);
+        self::route($rally, 'GET', [RallyController::class, 'show'], $player);
+        self::route($rally . '/register', 'POST', [RallyController::class, 'register'], $player);
+        self::route($rally . '/styles', 'POST', [RallyController::class, 'styles'], $player);
+        self::route($rally . '/recon', 'POST', [RallyController::class, 'recon'], $player);
+        self::route('/standings', 'GET', [RallyController::class, 'standings'], $player);
+    }
+
+    private static function route(string $path, string $method, callable $callback, callable $permission): void
+    {
+        register_rest_route(self::NAMESPACE, $path, [
+            'methods' => $method,
+            'callback' => $callback,
+            'permission_callback' => $permission,
+        ]);
+    }
+}
