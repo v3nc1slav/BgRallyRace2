@@ -32,8 +32,74 @@ final class Field
             'ref' => 'bigint(20) unsigned NOT NULL DEFAULT 0',
             'refs', 'multi' => "varchar(255) NOT NULL DEFAULT ''",
             'datetime' => 'datetime DEFAULT NULL',
+            'route' => 'longtext NULL',
             default => "varchar(191) NOT NULL DEFAULT ''",
         };
+    }
+
+    public static function sanitizeRoute(mixed $raw): string
+    {
+        $data = is_array($raw) ? $raw : json_decode((string) $raw, true);
+        if (!is_array($data)) {
+            return '';
+        }
+
+        $unit = fn($value) => round(min(1, max(0, (float) $value)), 4);
+        $polyline = function ($list, int $limit) use ($unit) {
+            $result = [];
+            foreach ((array) $list as $point) {
+                if (is_array($point) && count($point) >= 2) {
+                    $result[] = [$unit($point[0]), $unit($point[1])];
+                }
+            }
+            return array_slice($result, 0, $limit);
+        };
+
+        $points = $polyline($data['points'] ?? [], 400);
+        if (count($points) < 2) {
+            return '';
+        }
+
+        $zones = [];
+        foreach ((array) ($data['zones'] ?? []) as $zone) {
+            $zonePoints = $polyline($zone['points'] ?? [], 200);
+            if (in_array($zone['type'] ?? '', ['forest', 'meadow', 'field', 'water', 'village'], true) && count($zonePoints) >= 3) {
+                $zones[] = ['type' => $zone['type'], 'points' => $zonePoints];
+            }
+        }
+
+        $rivers = [];
+        foreach ((array) ($data['rivers'] ?? []) as $river) {
+            $riverPoints = $polyline($river['points'] ?? [], 200);
+            if (count($riverPoints) >= 2) {
+                $rivers[] = ['points' => $riverPoints];
+            }
+        }
+
+        $pois = [];
+        foreach ((array) ($data['pois'] ?? []) as $poi) {
+            if (in_array($poi['type'] ?? '', ['bridge', 'jump', 'spectators'], true)) {
+                $pois[] = ['type' => $poi['type'], 'x' => $unit($poi['x'] ?? 0), 'y' => $unit($poi['y'] ?? 0)];
+            }
+        }
+
+        $labels = [];
+        foreach ((array) ($data['labels'] ?? []) as $label) {
+            $name = sanitize_text_field((string) ($label['name'] ?? ''));
+            if ($name !== '') {
+                $labels[] = ['name' => mb_substr($name, 0, 40), 'x' => $unit($label['x'] ?? 0), 'y' => $unit($label['y'] ?? 0)];
+            }
+        }
+
+        $aspect = (float) ($data['aspect'] ?? 16 / 9);
+        return wp_json_encode([
+            'aspect' => round(min(4, max(0.25, $aspect)), 4),
+            'points' => $points,
+            'labels' => array_slice($labels, 0, 60),
+            'zones' => array_slice($zones, 0, 80),
+            'rivers' => array_slice($rivers, 0, 20),
+            'pois' => array_slice($pois, 0, 60),
+        ]);
     }
 
     public function defaultValue(): mixed
@@ -69,6 +135,8 @@ final class Field
                 $date = \DateTime::createFromFormat('Y-m-d\TH:i', (string) $raw)
                     ?: \DateTime::createFromFormat('Y-m-d H:i:s', (string) $raw);
                 return $date ? $date->format('Y-m-d H:i:00') : null;
+            case 'route':
+                return self::sanitizeRoute($raw);
             default:
                 return sanitize_text_field((string) $raw);
         }
@@ -94,6 +162,9 @@ final class Field
                 return implode(', ', $names);
             case 'datetime':
                 return $value ? mysql2date('d.m.Y H:i', $value) : '—';
+            case 'route':
+                $route = json_decode((string) $value, true);
+                return $route ? sprintf('%d точки', count($route['points'] ?? [])) : 'генериран';
             default:
                 return (string) $value;
         }
@@ -138,6 +209,47 @@ final class Field
             case 'datetime':
                 $formatted = $value ? mysql2date('Y-m-d\TH:i', $value) : '';
                 return sprintf('<input type="datetime-local" id="%s" name="%s" value="%s"%s>', $id, $name, esc_attr($formatted), $required);
+            case 'route':
+                return sprintf(
+                    '<div class="bgr-route-editor" id="%1$s">
+                        <p><label>Подложка: <input type="file" accept="image/*"></label> <span class="description">Снимката е само за чертане и не се записва никъде.</span></p>
+                        <p class="bgr-route-tools">
+                            <button type="button" class="button button-primary" data-mode="point">Път</button>
+                            <button type="button" class="button" data-mode="label">Надписи</button>
+                            <select data-role="zone-type">
+                                <option value="forest">Гора</option>
+                                <option value="meadow">Поляна</option>
+                                <option value="field">Нива</option>
+                                <option value="water">Вода</option>
+                                <option value="village">Село</option>
+                            </select>
+                            <button type="button" class="button" data-mode="zone">Зона</button>
+                            <button type="button" class="button" data-mode="river">Река</button>
+                            <select data-role="poi-type">
+                                <option value="spectators">Публика</option>
+                                <option value="bridge">Мост</option>
+                                <option value="jump">Скок</option>
+                            </select>
+                            <button type="button" class="button" data-mode="poi">Обекти</button>
+                        </p>
+                        <p class="bgr-route-tools">
+                            <button type="button" class="button" data-action="finish">Затвори зоната / реката</button>
+                            <button type="button" class="button" data-action="undo">Махни последната точка от пътя</button>
+                            <button type="button" class="button" data-action="clear">Изчисти всичко</button>
+                            <span class="bgr-route-count"></span>
+                        </p>
+                        <canvas style="max-width:100%%;border:1px solid #c3c4c7;background:#f0f0f1;cursor:crosshair"></canvas>
+                        <p class="description">
+                            Път: кликай от старта към финала, влачи точка, за да я преместиш.
+                            Зона и река: кликай по контура и натисни „Затвори“ (или двоен клик). Горите се пълнят с дървета, селата с къщи.
+                            Десен клик трие точка, надпис, обект, зона или река. Без маршрут играта генерира картата сама.
+                        </p>
+                        <textarea name="%2$s" hidden>%3$s</textarea>
+                    </div>',
+                    $id,
+                    $name,
+                    esc_textarea((string) $value)
+                );
             default:
                 return sprintf('<input type="text" id="%s" name="%s" value="%s" class="regular-text"%s>', $id, $name, esc_attr((string) $value), $required);
         }

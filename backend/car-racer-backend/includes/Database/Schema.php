@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '5';
+    private const VERSION = '8';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -67,6 +67,7 @@ final class Schema
   garage_level smallint(5) unsigned NOT NULL DEFAULT 1,
   active_car_id bigint(20) unsigned NOT NULL DEFAULT 0,
   payroll_week varchar(10) NOT NULL DEFAULT '',
+  training_date date DEFAULT NULL,
   banned_at datetime DEFAULT NULL,
   ban_reason varchar(255) NOT NULL DEFAULT '',
   created_at datetime NOT NULL,
@@ -111,6 +112,8 @@ final class Schema
   skill smallint(5) unsigned NOT NULL DEFAULT 30,
   morale smallint(5) unsigned NOT NULL DEFAULT 70,
   reputation smallint(5) unsigned NOT NULL DEFAULT 20,
+  physical smallint(5) unsigned NOT NULL DEFAULT 30,
+  fitness_date date DEFAULT NULL,
   unpaid tinyint(1) NOT NULL DEFAULT 0,
   energy smallint(5) unsigned NOT NULL DEFAULT 0,
   energy_date date DEFAULT NULL,
@@ -215,6 +218,35 @@ final class Schema
   PRIMARY KEY  (id),
   KEY manager_id (manager_id),
   KEY sponsor_id (sponsor_id)",
+
+            'bribes' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  manager_id bigint(20) unsigned NOT NULL,
+  institution varchar(10) NOT NULL,
+  status varchar(10) NOT NULL,
+  week varchar(10) NOT NULL,
+  expires_at datetime DEFAULT NULL,
+  created_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  KEY manager_id (manager_id)",
+
+            'street_races' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  city_id bigint(20) unsigned NOT NULL,
+  stage_id bigint(20) unsigned NOT NULL,
+  challenger_id bigint(20) unsigned NOT NULL,
+  opponent_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  bot_name varchar(100) NOT NULL DEFAULT '',
+  bet int(11) NOT NULL,
+  status varchar(10) NOT NULL,
+  winner_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  challenger_ms int(11) NOT NULL DEFAULT 0,
+  opponent_ms int(11) NOT NULL DEFAULT 0,
+  challenger_caught tinyint(1) NOT NULL DEFAULT 0,
+  opponent_caught tinyint(1) NOT NULL DEFAULT 0,
+  created_at datetime NOT NULL,
+  resolved_at datetime DEFAULT NULL,
+  PRIMARY KEY  (id),
+  KEY city_status (city_id,status),
+  KEY challenger_id (challenger_id)",
 
             'inbox' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   manager_id bigint(20) unsigned NOT NULL,

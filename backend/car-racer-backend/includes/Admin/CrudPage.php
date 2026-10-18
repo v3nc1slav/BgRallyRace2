@@ -16,6 +16,13 @@ final class CrudPage
 
     public function handle(): void
     {
+        foreach ($this->entity->fields as $field) {
+            if ($field->type === 'route') {
+                $file = BGR_DIR . '/assets/route-editor.js';
+                wp_enqueue_script('bgr-route-editor', plugin_dir_url(BGR_FILE) . 'assets/route-editor.js', [], file_exists($file) ? filemtime($file) : false, true);
+            }
+        }
+
         $action = sanitize_key($_REQUEST['bgr_action'] ?? '');
 
         if ($action === 'save' && $_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -37,6 +37,19 @@ final class Routes
         self::route('/inbox', 'GET', [CityController::class, 'inbox'], $player);
         self::route('/city', 'GET', [CityController::class, 'city'], $player);
 
+        self::route('/track', 'GET', [TownController::class, 'track'], $player);
+        self::route('/track/train', 'POST', [TownController::class, 'trackTrain'], $player);
+        self::route('/police', 'GET', [TownController::class, 'police'], $player);
+        self::route('/police/bribe', 'POST', [TownController::class, 'bribe'], $player);
+        self::route('/black', 'GET', [TownController::class, 'black'], $player);
+        self::route('/black/challenge', 'POST', [TownController::class, 'blackChallenge'], $player);
+        self::route('/black/accept', 'POST', [TownController::class, 'blackAccept'], $player);
+        self::route('/black/cancel', 'POST', [TownController::class, 'blackCancel'], $player);
+        self::route('/black/bot', 'POST', [TownController::class, 'blackBot'], $player);
+        self::route('/black/train', 'POST', [TownController::class, 'blackTrain'], $player);
+        self::route('/mall', 'GET', [TownController::class, 'mall'], $player);
+        self::route('/mall/fitness', 'POST', [TownController::class, 'fitness'], $player);
+
         self::route('/rallies', 'GET', [RallyController::class, 'index'], $player);
         self::route($rally, 'GET', [RallyController::class, 'show'], $player);
         self::route($rally . '/register', 'POST', [RallyController::class, 'register'], $player);

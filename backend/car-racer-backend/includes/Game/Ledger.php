@@ -6,7 +6,7 @@ use BgRally\Database\Tables;
 
 final class Ledger
 {
-    public static function add(int $managerId, int $amount, string $reason, string $note = ''): bool
+    public static function add(int $managerId, int $amount, string $reason, string $note = '', bool $allowDebt = false): bool
     {
         global $wpdb;
 
@@ -19,10 +19,11 @@ final class Ledger
         $wpdb->query('START TRANSACTION');
 
         $updated = $wpdb->query($wpdb->prepare(
-            "UPDATE $managers SET money = money + %d WHERE id = %d AND money + %d >= 0",
+            "UPDATE $managers SET money = money + %d WHERE id = %d AND (money + %d >= 0 OR %d = 1)",
             $amount,
             $managerId,
-            $amount
+            $amount,
+            $allowDebt ? 1 : 0
         ));
 
         if ($updated !== 1) {

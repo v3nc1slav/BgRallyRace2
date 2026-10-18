@@ -37,6 +37,7 @@ final class Registry
                 new Field('profile', 'Характер', 'select', options: Labels::PROFILES),
                 new Field('difficulty', 'Трудност (1–10)', 'int', default: 5),
                 new Field('turns', 'Брой завои', 'int', default: 40),
+                new Field('route', 'Маршрут на картата', 'route', inList: false),
                 new Field('active', 'Активен', 'bool', default: 1),
             ], label: fn(array $row) => self::cityName((int) $row['city_id']) . ': ' . $row['name'], orderBy: 'city_id, position, id'),
 

@@ -93,6 +93,8 @@ final class Staff
             'skill' => (int) $row['skill'],
             'morale' => in_array($row['role'], ['pilot', 'navigator'], true) ? (int) $row['morale'] : null,
             'reputation' => in_array($row['role'], ['pilot', 'navigator'], true) ? (int) $row['reputation'] : null,
+            'physical' => in_array($row['role'], ['pilot', 'navigator'], true) ? (int) $row['physical'] : null,
+            'fitness_today' => $row['fitness_date'] === wp_date('Y-m-d'),
             'energy' => $row['role'] === 'mechanic' ? (int) $row['energy'] : null,
             'salary' => self::salary($row['role'], (int) $row['skill']),
             'unpaid' => (bool) $row['unpaid'],
@@ -112,6 +114,7 @@ final class Staff
             'navigator' => ['name' => $rows['navigator']['name'] ?? '—', 'skill' => (int) ($rows['navigator']['skill'] ?? 0)],
             'morale' => $average('morale', self::STARTING_MORALE),
             'reputation' => $average('reputation', 0),
+            'physical' => $average('physical', 0),
             'engineer' => isset($rows['engineer']) ? (int) $rows['engineer']['skill'] : null,
             'chemist' => isset($rows['chemist']) ? (int) $rows['chemist']['skill'] : null,
         ];
@@ -193,6 +196,48 @@ final class Staff
             $amount,
             $managerId
         ));
+    }
+
+    public static function improveRole(int $managerId, string $role, int $amount): void
+    {
+        global $wpdb;
+        $wpdb->query($wpdb->prepare(
+            'UPDATE ' . self::table() . ' SET skill = LEAST(100, skill + %d) WHERE manager_id = %d AND role = %s',
+            $amount,
+            $managerId,
+            $role
+        ));
+    }
+
+    public static function fitness(array $manager, int $staffId): string|WP_Error
+    {
+        global $wpdb;
+        $managerId = (int) $manager['id'];
+        $row = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . ' WHERE id = %d AND manager_id = %d', $staffId, $managerId), ARRAY_A);
+
+        if (!$row || !in_array($row['role'], ['pilot', 'navigator'], true)) {
+            return new WP_Error('bgr_staff', 'Във фитнеса тренират само пилотът и навигаторът.', ['status' => 400]);
+        }
+        if ($row['fitness_date'] === wp_date('Y-m-d')) {
+            return new WP_Error('bgr_fitness', sprintf('%s вече тренира днес.', $row['name']), ['status' => 400]);
+        }
+        if ((int) $row['physical'] >= 100) {
+            return new WP_Error('bgr_fitness', sprintf('%s е в отлична форма.', $row['name']), ['status' => 400]);
+        }
+
+        $energy = Settings::int('fitness_energy');
+        if (!Energy::spend($managerId, $energy)) {
+            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+        }
+        if (!Ledger::add($managerId, -Settings::int('fitness_price'), 'fitness', $row['name'])) {
+            Energy::refund($managerId, $energy);
+            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+        }
+
+        $physical = min(100, (int) $row['physical'] + Settings::int('fitness_gain'));
+        $wpdb->update(self::table(), ['physical' => $physical, 'fitness_date' => wp_date('Y-m-d')], ['id' => $staffId]);
+
+        return sprintf('%s тренира във фитнеса. Физически умения: %d.', $row['name'], $physical);
     }
 
     public static function afterRally(int $managerId, int $place, int $classSize, string $status): void

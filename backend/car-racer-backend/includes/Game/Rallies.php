@@ -140,6 +140,24 @@ final class Rallies
         return $now < strtotime($run['broadcast_end']) ? 'live' : 'finished';
     }
 
+    public static function fuelForKm(float $km, int $managerId): int
+    {
+        $car = Garage::car($managerId);
+        return $car ? self::fuelCost($km, (float) $car['fuel_consumption'], $managerId) : 0;
+    }
+
+    public static function seasonPosition(int $managerId): ?int
+    {
+        foreach (self::standings($managerId)['classes'] as $class) {
+            foreach ($class['rows'] as $row) {
+                if ($row['is_me']) {
+                    return $row['position'];
+                }
+            }
+        }
+        return null;
+    }
+
     private static function fuelCost(float $km, float $consumption, int $managerId): int
     {
         return (int) round($km * $consumption / 100 * Settings::get('fuel_price') * Staff::chemistFuelFactor($managerId));

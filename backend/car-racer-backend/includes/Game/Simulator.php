@@ -250,12 +250,87 @@ final class Simulator
             'pilot_skill' => (int) $crew['pilot']['skill'],
             'nav_skill' => (int) $crew['navigator']['skill'],
             'morale' => (float) $crew['morale'],
+            'physical' => (float) $crew['physical'],
             'time_factor' => Staff::engineerFactor($crew['engineer']),
             'tyre_factor' => Staff::chemistTyreFactor($crew['chemist']),
             'home' => $manager && (int) $manager['city_id'] === (int) $this->rally['city_id'],
             'recon' => (bool) $entry['recon'],
             'styles' => json_decode((string) $entry['styles'], true) ?: [],
         ]);
+    }
+
+    public static function streetCrew(int $managerId): ?array
+    {
+        $car = Garage::car($managerId);
+        $snapshot = $car ? Garage::snapshot((int) $car['player_car_id']) : null;
+        if (!$snapshot || $snapshot['problems'] || Staff::problems($managerId)) {
+            return null;
+        }
+
+        $crew = Staff::crew($managerId);
+        $parts = [];
+        foreach ($snapshot['parts'] as $part) {
+            $parts[(int) $part['id']] = [
+                'type' => $part['type'],
+                'health' => (float) $part['health'],
+                'rate' => (float) $part['wear_per_100km'],
+                'defect' => (bool) $part['defect'],
+            ];
+        }
+
+        return [
+            'class' => (string) $snapshot['class'],
+            'pilot' => $crew['pilot']['name'],
+            'stats' => $snapshot['stats'],
+            'parts' => $parts,
+            'tyre' => self::tyreData($snapshot['tyre'], (int) $snapshot['tyre']['id']),
+            'pilot_skill' => (int) $crew['pilot']['skill'],
+            'nav_skill' => (int) $crew['navigator']['skill'],
+            'time_factor' => Staff::engineerFactor($crew['engineer']),
+            'tyre_factor' => Staff::chemistTyreFactor($crew['chemist']),
+            'home' => true,
+            'recon' => false,
+        ];
+    }
+
+    public static function streetBot(array $rival): array
+    {
+        global $wpdb;
+        $cars = Registry::get('cars')->table();
+        $car = $wpdb->get_row($wpdb->prepare("SELECT * FROM $cars WHERE active = 1 AND class = %s ORDER BY RAND() LIMIT 1", $rival['class']), ARRAY_A);
+        $skill = fn(int $base) => max(10, min(95, $base + mt_rand(-10, 10)));
+
+        return [
+            'class' => $rival['class'],
+            'pilot' => Names::person(),
+            'stats' => $car ? [
+                'power' => (int) $car['power'],
+                'handling' => (int) $car['handling'],
+                'braking' => (int) $car['braking'],
+                'reliability' => (int) $car['reliability'],
+            ] : $rival['stats'],
+            'parts' => [],
+            'tyre' => null,
+            'pilot_skill' => $skill($rival['pilot_skill']),
+            'nav_skill' => $skill($rival['nav_skill']),
+            'time_factor' => 1.0,
+            'tyre_factor' => 1.0,
+            'home' => false,
+            'recon' => false,
+        ];
+    }
+
+    public static function streetWear(array $crew, array $stage, float $factor): array
+    {
+        $km = (float) $stage['length_km'];
+        $wear = [];
+        foreach ($crew['parts'] as $id => $part) {
+            $wear[$id] = self::wearAmount($part['rate'], $km, $stage['surface'], 'normal') * $factor;
+        }
+        if ($crew['tyre']) {
+            $wear[$crew['tyre']['id']] = self::wearAmount($crew['tyre']['rate'], $km, $stage['surface'], 'normal') * $factor * $crew['tyre_factor'];
+        }
+        return $wear;
     }
 
     private function botCrew(int $entryId, array $bot): array
@@ -290,6 +365,7 @@ final class Simulator
             'spare_parts' => [],
             'spare_tyres' => [],
             'morale' => 70.0,
+            'physical' => 50.0,
             'time_factor' => 1.0,
             'tyre_factor' => 1.0,
             'home' => false,
@@ -347,7 +423,7 @@ final class Simulator
                 $this->event((int) round($start), $crew['entry_id'], $seq, 'go', '');
                 $style = $this->style($crew, (int) $stage['id']);
                 $time = $this->stageTime($crew, $stage, $style, $weather);
-                $event = $this->rollEvent($crew, $stage, $style, $weather);
+                $event = $this->rollEvent($crew, $stage, $style, $weather, $index);
                 $loss = 0;
                 $outcome = 'finish';
 
@@ -636,7 +712,7 @@ final class Simulator
         };
     }
 
-    private function grip(array $crew, array $stage, string $weather): float
+    private static function grip(array $crew, array $stage, string $weather): float
     {
         if (!$crew['tyre']) {
             return self::BOT_GRIP;
@@ -644,7 +720,7 @@ final class Simulator
         return $crew['tyre'][self::gripKey($stage['surface'], $weather)] * (0.85 + 0.15 * $crew['tyre']['health'] / 100);
     }
 
-    private function partsHealth(array $crew): float
+    private static function partsHealth(array $crew): float
     {
         if (!$crew['parts']) {
             return 100;
@@ -652,7 +728,7 @@ final class Simulator
         return array_sum(array_column($crew['parts'], 'health')) / count(Labels::PART_TYPES);
     }
 
-    private function stageTime(array $crew, array $stage, string $style, string $weather): float
+    public static function stageTime(array $crew, array $stage, string $style, string $weather): float
     {
         $speed = (self::BASE_SPEED[$stage['surface']][$stage['profile']] ?? 90) - (int) $stage['difficulty'] * 1.5;
         $speed *= self::WEATHER_SPEED[$weather] ?? 1;
@@ -663,8 +739,8 @@ final class Simulator
         $performance = $weights[0] * $stats['power'] / 300 + $weights[1] * $stats['handling'] / 60 + $weights[2] * $stats['braking'] / 60;
         $carFactor = 1 / max(0.3, 0.6 + 0.4 * $performance);
 
-        $tyreFactor = 1 / (0.5 + 0.5 * $this->grip($crew, $stage, $weather));
-        $partsFactor = 1 + 0.15 * (1 - $this->partsHealth($crew) / 100);
+        $tyreFactor = 1 / (0.5 + 0.5 * self::grip($crew, $stage, $weather));
+        $partsFactor = 1 + 0.15 * (1 - self::partsHealth($crew) / 100);
         $crewFactor = 1 - 0.08 * ($crew['pilot_skill'] - 50) / 50 - 0.02 * ($crew['nav_skill'] - 50) / 50;
         $bonus = ($crew['home'] ? 0.98 : 1) * ($crew['recon'] ? 0.99 : 1) * $crew['time_factor'];
         $random = 1 + mt_rand(-150, 150) / 10000;
@@ -672,7 +748,7 @@ final class Simulator
         return $base * $carFactor * $tyreFactor * $partsFactor * $crewFactor * self::STYLE_TIME[$style] * $bonus * $random;
     }
 
-    private function rollEvent(array $crew, array $stage, string $style, string $weather): ?array
+    private function rollEvent(array $crew, array $stage, string $style, string $weather, int $index): ?array
     {
         foreach (self::SEVERITY as $type) {
             foreach ($this->catalog[$type] ?? [] as $event) {
@@ -682,7 +758,7 @@ final class Simulator
                 if ($event['weather'] !== '' && $event['weather'] !== $weather) {
                     continue;
                 }
-                $chance = (float) $event['chance'] / 100 * $this->modifier($type, $crew, $stage, $style, $weather);
+                $chance = (float) $event['chance'] / 100 * $this->modifier($type, $crew, $stage, $style, $weather, $index);
                 if (mt_rand() / mt_getrandmax() < $chance) {
                     return $event;
                 }
@@ -691,15 +767,16 @@ final class Simulator
         return null;
     }
 
-    private function modifier(string $type, array $crew, array $stage, string $style, string $weather): float
+    private function modifier(string $type, array $crew, array $stage, string $style, string $weather, int $index): float
     {
         $factor = (self::STYLE_RISK[$type][$style] ?? 1) * (0.6 + (int) $stage['difficulty'] / 10);
         $morale = max(0.5, 1 + (70 - $crew['morale']) / 100);
-        $slippery = $this->grip($crew, $stage, $weather) < 0.85 ? 1.5 : 1;
+        $slippery = self::grip($crew, $stage, $weather) < 0.85 ? 1.5 : 1;
+        $fatigue = 1 + $index * Settings::get('fatigue_per_stage') / 100 * (1 - $crew['physical'] / 100);
 
         switch ($type) {
             case 'mistake':
-                return $factor * (1 - $crew['nav_skill'] / 200) * ($crew['recon'] ? 0.7 : 1) * $slippery * $morale;
+                return $factor * (1 - $crew['nav_skill'] / 200) * ($crew['recon'] ? 0.7 : 1) * $slippery * $morale * $fatigue;
 
             case 'puncture':
                 $health = $crew['tyre']['health'] ?? 100;
@@ -716,7 +793,7 @@ final class Simulator
 
             case 'crash':
             case 'chassis':
-                return $factor * (1 - $crew['pilot_skill'] / 200) * $morale * $slippery * ($weather !== 'dry' ? 1.3 : 1) * ($crew['recon'] ? 0.85 : 1);
+                return $factor * (1 - $crew['pilot_skill'] / 200) * $morale * $slippery * $fatigue * ($weather !== 'dry' ? 1.3 : 1) * ($crew['recon'] ? 0.85 : 1);
         }
         return $factor;
     }

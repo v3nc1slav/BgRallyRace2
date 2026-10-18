@@ -124,6 +124,8 @@ final class Broadcast
         }
 
         return [
+            'start_at' => str_replace(' ', 'T', $rally['start_at']),
+            'weather' => self::weather($rally),
             'revealed' => $revealed,
             'duration' => $duration,
             'scale' => round($scale, 3),
@@ -136,8 +138,23 @@ final class Broadcast
                 'turns' => (int) $stage['turns'],
                 'surface' => $stage['surface'],
                 'difficulty' => (int) $stage['difficulty'],
+                'route' => json_decode((string) ($stage['route'] ?? ''), true) ?: null,
             ], Rallies::stages($rally), array_keys(Rallies::stages($rally))),
             'crews' => $crews,
+        ];
+    }
+
+    private static function weather(array $rally): array
+    {
+        global $wpdb;
+        $at = $wpdb->get_var($wpdb->prepare(
+            'SELECT offset_s FROM ' . Tables::name('events') . " WHERE rally_id = %d AND type = 'weather' ORDER BY offset_s LIMIT 1",
+            $rally['id']
+        ));
+
+        return [
+            'start' => $rally['weather'] ?: 'dry',
+            'change' => $at !== null && !empty($rally['weather_change']) ? ['at' => (int) $at, 'to' => $rally['weather_change']] : null,
         ];
     }
 
