@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
-import { RaceScene, type CarMarker, type StageShape } from './scenes/RaceScene';
+import { RaceScene, type CameraMode, type CarMarker, type Environment, type StageShape } from './scenes/RaceScene';
 
 export interface StageView {
-  render(stage: StageShape, cars: CarMarker[], caption: string): void;
+  render(stage: StageShape, cars: CarMarker[], caption: string, env: Environment): void;
+  setCamera(mode: CameraMode): void;
   destroy(): void;
 }
 
@@ -22,9 +23,14 @@ export function createStageView(parent: HTMLElement): StageView {
   });
 
   return {
-    render(stage, cars, caption) {
+    render(stage, cars, caption, env) {
       if (scene.ready) {
-        scene.draw(stage, cars, caption);
+        scene.draw(stage, cars, caption, env);
+      }
+    },
+    setCamera(mode) {
+      if (scene.ready) {
+        scene.setCamera(mode);
       }
     },
     destroy() {

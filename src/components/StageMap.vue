@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { Leg, Timeline } from '../game';
 import type { StageView } from '../race';
-import type { CarMarker } from '../scenes/RaceScene';
+import { darkness } from '../scenes/map/effects';
+import type { CameraMode, CarMarker, Weather } from '../scenes/RaceScene';
 
 const props = defineProps<{ timeline: Timeline }>();
 
@@ -12,6 +13,15 @@ const container = ref<HTMLElement>();
 const replaying = ref(false);
 const manualSeq = ref<number | null>(null);
 const currentSeq = ref(1);
+const camera = ref<CameraMode>('all');
+const hasMe = computed(() => props.timeline.crews.some((crew) => crew.is_me));
+
+watch(camera, (mode) => view?.setCamera(mode));
+
+function weatherAt(t: number): Weather {
+  const { start, change } = props.timeline.weather;
+  return change && t >= change.at ? change.to : start;
+}
 let view: StageView | null = null;
 let frame = 0;
 let fetchedAt = performance.now();
@@ -124,7 +134,7 @@ function render(timestamp: number) {
     const caption = props.timeline.finished && !replaying.value
       ? 'Ралито приключи. Пусни повторението, за да го изгледаш отново.'
       : `Време от старта ${clock(t)} · на трасето ${running} · финиширали ${done}`;
-    view.render(stage, cars, caption);
+    view.render(stage, cars, caption, { weather: weatherAt(t), darkness: darkness(props.timeline.start_at, t) });
   }
 
   frame = requestAnimationFrame(render);
@@ -142,6 +152,7 @@ onMounted(async () => {
     return;
   }
   view = createStageView(container.value);
+  window.setTimeout(() => view?.setCamera(camera.value), 300);
   frame = requestAnimationFrame(render);
 });
 
@@ -166,7 +177,12 @@ onBeforeUnmount(() => {
           Етап {{ stage.seq }}
         </button>
       </div>
-      <button v-if="timeline.finished" class="bgr-small" @click="replay">{{ replaying ? 'Отначало' : 'Повторение' }}</button>
+      <div class="bgr-tabs">
+        <button :class="{ active: camera === 'all' }" @click="camera = 'all'">Цял етап</button>
+        <button v-if="hasMe" :class="{ active: camera === 'me' }" @click="camera = 'me'">Моята кола</button>
+        <button :class="{ active: camera === 'leader' }" @click="camera = 'leader'">Лидер</button>
+        <button v-if="timeline.finished" @click="replay">{{ replaying ? 'Отначало' : 'Повторение' }}</button>
+      </div>
     </div>
     <div ref="container" class="bgr-race"></div>
   </div>

@@ -57,8 +57,63 @@ export interface CrewMember {
   morale: number | null;
   reputation: number | null;
   energy: number | null;
+  physical: number | null;
+  fitness_today: boolean;
   salary: number;
   unpaid: boolean;
+}
+
+export interface TrainingStage {
+  id: number;
+  name: string;
+  length_km: number;
+  surface_label: string;
+  profile_label: string;
+  difficulty: number;
+  fuel: number;
+}
+
+export interface TrackInfo {
+  stages: TrainingStage[];
+  weekday: boolean;
+  trained_today: boolean;
+  energy: number;
+  skill_chance: number;
+  risk: number;
+  fine: number;
+}
+
+export interface BribeInfo {
+  active_until: string | null;
+  refused: boolean;
+  chance: number;
+  price: number;
+}
+
+export interface PoliceInfo {
+  police: BribeInfo;
+  mayor: BribeInfo & { level: number; days: number };
+  energy: number;
+  risks: { official: number; black: number };
+}
+
+export interface BlackInfo {
+  stages: TrainingStage[];
+  limits: { min: number; max: number };
+  energy: number;
+  risk: number;
+  fine: number;
+  skill_chance: number;
+  trained_today: boolean;
+  challenges: { id: number; team: string; stage: string; bet: number; mine: boolean }[];
+  history: { id: number; rival: string; stage: string; bet: number; won: boolean; my_ms: number; rival_ms: number; caught: boolean; at: string }[];
+}
+
+export interface MallInfo {
+  crew: CrewMember[];
+  energy: number;
+  price: number;
+  gain: number;
 }
 
 export interface GarageLevel {
@@ -209,7 +264,11 @@ export interface TimelineStage {
   turns: number;
   surface: string;
   difficulty: number;
+  route: StageRoute | null;
 }
+
+export type { StageRoute } from './scenes/map/layout';
+import type { StageRoute } from './scenes/map/layout';
 
 export interface Leg {
   start: number;
@@ -228,6 +287,8 @@ export interface TimelineCrew {
 }
 
 export interface Timeline {
+  start_at: string;
+  weather: { start: 'dry' | 'rain' | 'snow'; change: { at: number; to: 'dry' | 'rain' | 'snow' } | null };
   revealed: number;
   duration: number;
   scale: number;
@@ -367,6 +428,22 @@ export const negotiate = (id: number) => post<{ sponsors: Sponsors }>(`sponsors/
 
 export const getInbox = () => get<{ inbox: InboxItem[] }>('inbox');
 export const getCity = () => get<{ city: { name: string; privileges: string[] } }>('city');
+
+export const getTrack = () => get<{ track: TrackInfo }>('track');
+export const trainOfficial = (stageId: number) => post<{ track: TrackInfo }>('track/train', { stage_id: stageId });
+
+export const getPolice = () => get<{ police: PoliceInfo }>('police');
+export const bribe = (institution: 'police' | 'mayor') => post<{ police: PoliceInfo }>('police/bribe', { institution });
+
+export const getBlack = () => get<{ black: BlackInfo }>('black');
+export const postChallenge = (stageId: number, bet: number) => post<{ black: BlackInfo }>('black/challenge', { stage_id: stageId, bet });
+export const acceptChallenge = (id: number) => post<{ black: BlackInfo }>('black/accept', { challenge_id: id });
+export const cancelChallenge = (id: number) => post<{ black: BlackInfo }>('black/cancel', { challenge_id: id });
+export const raceBot = (stageId: number, bet: number) => post<{ black: BlackInfo }>('black/bot', { stage_id: stageId, bet });
+export const trainBlack = (stageId: number) => post<{ black: BlackInfo }>('black/train', { stage_id: stageId });
+
+export const getMall = () => get<{ mall: MallInfo }>('mall');
+export const trainFitness = (staffId: number) => post<{ mall: MallInfo }>('mall/fitness', { staff_id: staffId });
 
 export const getRallies = () => get<{ season: number; rallies: RallySummary[] }>('rallies');
 export const getRally = (id: number) => get<{ rally: RallyDetail }>(`rallies/${id}`);

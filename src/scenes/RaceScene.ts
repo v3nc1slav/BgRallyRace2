@@ -1,14 +1,11 @@
 import Phaser from 'phaser';
+import { Dust, Precipitation, type Weather } from './map/effects';
+import { HEADER, generatedLayout, tracedLayout, type Layout, type StageShape } from './map/layout';
+import { PALETTES, type Palette } from './map/palette';
+import { bridgesFromRivers, drawPois, drawRelief, drawScenery, roadGeometry, type RoadGeometry } from './map/terrain';
 
-export interface StageShape {
-  id: number;
-  seq: number;
-  name: string;
-  length_km: number;
-  turns: number;
-  surface: string;
-  difficulty: number;
-}
+export type { StageRoute, StageShape } from './map/layout';
+export type { Weather } from './map/effects';
 
 export interface CarMarker {
   id: number;
@@ -18,116 +15,187 @@ export interface CarMarker {
   f: number;
 }
 
-const COLORS: Record<string, { ground: number; road: number; edge: number }> = {
-  asphalt: { ground: 0x1f2a1c, road: 0x5b5f66, edge: 0x2b2e33 },
-  gravel: { ground: 0x332b1e, road: 0xa38b5c, edge: 0x5c4c31 },
-  snow: { ground: 0x8fa3b3, road: 0xeef3f7, edge: 0x6f8393 },
-};
-
-const MARKER = { run: 0xd0d7de, pause: 0xd29922, stop: 0x6e7681, me: 0xe63946 };
-
-function random(seed: number) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state + 0x6d2b79f5) | 0;
-    let t = Math.imul(state ^ (state >>> 15), 1 | state);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+export interface Environment {
+  weather: Weather;
+  darkness: number;
 }
 
-function buildPoints(stage: StageShape, width: number, height: number) {
-  const rnd = random(stage.id * 7919 + stage.turns * 31);
-  const count = Math.max(8, Math.min(36, Math.round(stage.turns / 2)));
-  const sharpness = 0.35 + stage.difficulty * 0.07;
+export type CameraMode = 'all' | 'me' | 'leader';
 
-  let angle = (rnd() - 0.5) * 0.6;
-  let x = 0;
-  let y = 0;
-  const raw = [{ x, y }];
-  for (let i = 0; i < count; i++) {
-    angle = Phaser.Math.Clamp(angle + (rnd() - 0.5) * sharpness * 2, -1.25, 1.25);
-    x += Math.cos(angle);
-    y += Math.sin(angle);
-    raw.push({ x, y });
-  }
+const CAR_COLORS = { run: 0xd0d7de, pause: 0xd29922, stop: 0x6e7681, me: 0xe63946 };
+const ZOOM = 2.2;
 
-  const xs = raw.map((p) => p.x);
-  const ys = raw.map((p) => p.y);
-  const minX = Math.min(...xs);
-  const minY = Math.min(...ys);
-  const spanX = Math.max(...xs) - minX || 1;
-  const spanY = Math.max(...ys) - minY || 1;
-  const scale = Math.min((width - 160) / spanX, (height - 200) / spanY);
-  const offsetX = (width - spanX * scale) / 2;
-  const offsetY = 120 + (height - 180 - spanY * scale) / 2;
-
-  return raw.map((p) => new Phaser.Math.Vector2(offsetX + (p.x - minX) * scale, offsetY + (p.y - minY) * scale));
+interface Car {
+  body: Phaser.GameObjects.Graphics;
+  label: Phaser.GameObjects.Text;
+  color: number;
+  f: number;
+  state: CarMarker['state'];
+  dustTimer: number;
 }
 
 export class RaceScene extends Phaser.Scene {
   ready = false;
   private stageId = 0;
+  private stage?: StageShape;
+  private palette: Palette = PALETTES.asphalt;
   private path?: Phaser.Curves.Spline;
-  private road!: Phaser.GameObjects.Graphics;
+  private road?: RoadGeometry;
+  private world!: Phaser.GameObjects.Layer;
+  private ui!: Phaser.GameObjects.Layer;
+  private terrain!: Phaser.GameObjects.Graphics;
+  private roadLayer!: Phaser.GameObjects.Graphics;
+  private tracks!: Phaser.GameObjects.Graphics;
+  private wet!: Phaser.GameObjects.Graphics;
+  private tint!: Phaser.GameObjects.Rectangle;
+  private night!: Phaser.GameObjects.Rectangle;
+  private windows!: Phaser.GameObjects.Graphics;
+  private beams!: Phaser.GameObjects.Graphics;
+  private dustLayer!: Phaser.GameObjects.Graphics;
+  private weatherLayer!: Phaser.GameObjects.Graphics;
   private title!: Phaser.GameObjects.Text;
   private caption!: Phaser.GameObjects.Text;
-  private markers = new Map<number, Phaser.GameObjects.Container>();
+  private labels: Phaser.GameObjects.Text[] = [];
+  private cars = new Map<number, Car>();
+  private dust = new Dust();
+  private precipitation!: Precipitation;
+  private tracksProgress = 0;
+  private lastFrame = 0;
+  private cameraMode: CameraMode = 'all';
+  private cameraTarget: Phaser.GameObjects.GameObject | null = null;
+  private cameraZoomed = false;
 
   constructor() {
     super('Race');
   }
 
   create() {
-    this.road = this.add.graphics();
-    this.title = this.add.text(32, 24, '', { fontFamily: 'system-ui, sans-serif', fontSize: '30px', color: '#ffffff' });
-    this.caption = this.add.text(32, 66, '', { fontFamily: 'system-ui, sans-serif', fontSize: '20px', color: '#d0d7de' });
-    this.title.setShadow(0, 2, '#000000', 4);
-    this.caption.setShadow(0, 2, '#000000', 4);
+    const { width, height } = this.scale;
+    this.world = this.add.layer();
+    this.ui = this.add.layer();
+
+    this.terrain = this.add.graphics().setDepth(0);
+    this.roadLayer = this.add.graphics().setDepth(1);
+    this.tracks = this.add.graphics().setDepth(1.1);
+    this.wet = this.add.graphics().setDepth(1.2);
+    this.tint = this.add.rectangle(0, 0, width, height, 0x000000, 0).setOrigin(0).setDepth(2.4);
+    this.night = this.add.rectangle(0, 0, width, height, 0x0b1630, 0).setOrigin(0).setDepth(2.5);
+    this.windows = this.add.graphics().setDepth(2.6);
+    this.beams = this.add.graphics().setDepth(2.7).setBlendMode(Phaser.BlendModes.ADD);
+    this.dustLayer = this.add.graphics().setDepth(2.8);
+    this.world.add([this.terrain, this.roadLayer, this.tracks, this.wet, this.tint, this.night, this.windows, this.beams, this.dustLayer]);
+
+    this.weatherLayer = this.add.graphics().setDepth(1);
+    const header = this.add.rectangle(0, 0, width, HEADER, 0x0d1117, 0.6).setOrigin(0).setDepth(5);
+    const font = { fontFamily: 'system-ui, sans-serif' };
+    this.title = this.add.text(32, 20, '', { ...font, fontSize: '30px', color: '#ffffff' }).setDepth(6);
+    this.caption = this.add.text(32, 62, '', { ...font, fontSize: '20px', color: '#d0d7de' }).setDepth(6);
+    this.ui.add([this.weatherLayer, header, this.title, this.caption]);
+
+    const uiCamera = this.cameras.add(0, 0, width, height);
+    uiCamera.ignore(this.world);
+    this.cameras.main.ignore(this.ui);
+    this.cameras.main.setBounds(0, 0, width, height);
+
+    this.precipitation = new Precipitation(width, height, HEADER);
+    this.lastFrame = performance.now();
     this.ready = true;
   }
 
-  draw(stage: StageShape, cars: CarMarker[], caption: string) {
+  setCamera(mode: CameraMode) {
+    this.cameraMode = mode;
+  }
+
+  draw(stage: StageShape, markers: CarMarker[], caption: string, env: Environment) {
+    const now = performance.now();
+    const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
+    this.lastFrame = now;
+
     if (stage.id !== this.stageId) {
       this.buildStage(stage);
     }
     this.caption.setText(caption);
-
-    const seen = new Set<number>();
-    for (const car of cars) {
-      seen.add(car.id);
-      const marker = this.markers.get(car.id) ?? this.createMarker(car);
-      const point = this.path!.getPointAt(Phaser.Math.Clamp(car.f, 0, 1));
-      marker.setPosition(point.x, point.y);
-      (marker.getAt(0) as Phaser.GameObjects.Arc).setFillStyle(car.me ? MARKER.me : MARKER[car.state]);
-      marker.setAlpha(car.state === 'stop' ? 0.75 : 1);
-      marker.setDepth(car.me ? 3 : 2);
-    }
-
-    for (const [id, marker] of this.markers) {
-      if (!seen.has(id)) {
-        marker.destroy();
-        this.markers.delete(id);
-      }
-    }
+    this.updateCars(markers, dt);
+    this.updateEnvironment(env, dt);
+    this.updateCamera(markers);
   }
 
   private buildStage(stage: StageShape) {
     this.stageId = stage.id;
-    this.markers.forEach((marker) => marker.destroy());
-    this.markers.clear();
+    this.stage = stage;
+    this.cars.forEach((car) => {
+      car.body.destroy();
+      car.label.destroy();
+    });
+    this.cars.clear();
+    this.labels.forEach((label) => label.destroy());
+    this.labels = [];
+    this.dust.clear();
+    this.tracksProgress = 0;
+    this.cameras.main.stopFollow();
+    this.cameraTarget = null;
 
-    const colors = COLORS[stage.surface] ?? COLORS.asphalt;
-    this.cameras.main.setBackgroundColor(colors.ground);
-    this.path = new Phaser.Curves.Spline(buildPoints(stage, this.scale.width, this.scale.height));
-    const points = this.path.getSpacedPoints(600);
+    const { width, height } = this.scale;
+    this.palette = PALETTES[stage.surface] ?? PALETTES.asphalt;
+    const layout: Layout = stage.route?.points?.length && stage.route.points.length >= 2
+      ? tracedLayout(stage.route, width, height)
+      : generatedLayout(stage, width, height);
 
-    const g = this.road;
+    this.cameras.main.setBackgroundColor(this.palette.ground);
+    this.path = new Phaser.Curves.Spline(layout.points);
+    this.road = roadGeometry(this.path.getSpacedPoints(Math.max(400, layout.points.length * 14)));
+
+    this.terrain.clear();
+    drawRelief(this.terrain, stage.id, width, height, HEADER);
+    const houses = drawScenery(this.terrain, layout, this.road, this.palette, stage.id, width, height, HEADER);
+    const pois = layout.traced ? layout.pois : [...layout.pois, ...bridgesFromRivers(layout, this.road)];
+
+    this.drawRoad(stage.surface);
+    drawPois(this.roadLayer, pois, this.road, stage.id);
+    this.drawWetShine();
+    this.tracks.clear();
+
+    this.windows.clear();
+    for (const house of houses) {
+      this.windows.fillStyle(0xffd77a, 1);
+      this.windows.fillRect(house.x - 3, house.y, 2, 2);
+      this.windows.fillRect(house.x + 1, house.y, 2, 2);
+    }
+
+    for (const label of layout.labels) {
+      const text = this.add
+        .text(label.x, label.y, label.name, {
+          fontFamily: 'system-ui, sans-serif',
+          fontSize: '16px',
+          fontStyle: 'bold',
+          color: this.palette.text,
+          stroke: this.palette.stroke,
+          strokeThickness: 4,
+        })
+        .setOrigin(0.5)
+        .setDepth(2.9);
+      this.world.add(text);
+      this.labels.push(text);
+    }
+
+    this.title.setText(`Етап ${stage.seq}: ${stage.name} · ${stage.length_km} км`);
+  }
+
+  private drawRoad(surface: string) {
+    const g = this.roadLayer;
+    const points = this.road!.points;
     g.clear();
-    g.lineStyle(30, colors.edge, 1);
+    g.lineStyle(30, this.palette.edge, 1);
     g.strokePoints(points);
-    g.lineStyle(20, colors.road, 1);
+    g.lineStyle(20, this.palette.road, 1);
     g.strokePoints(points);
+
+    if (surface === 'asphalt') {
+      g.lineStyle(2, this.palette.line, 0.7);
+      for (let i = 0; i + 3 < points.length; i += 8) {
+        g.lineBetween(points[i].x, points[i].y, points[i + 3].x, points[i + 3].y);
+      }
+    }
 
     const start = points[0];
     const finish = points[points.length - 1];
@@ -139,17 +207,181 @@ export class RaceScene extends Phaser.Scene {
         g.fillRect(finish.x - 16 + i * 8, finish.y - 16 + j * 8, 8, 8);
       }
     }
-
-    this.title.setText(`Етап ${stage.seq}: ${stage.name} · ${stage.length_km} км`);
   }
 
-  private createMarker(car: CarMarker) {
-    const circle = this.add.circle(0, 0, 13, MARKER.run).setStrokeStyle(2, 0x0d1117);
-    const label = this.add
-      .text(0, 0, String(car.number), { fontFamily: 'system-ui, sans-serif', fontSize: '14px', color: '#0d1117', fontStyle: 'bold' })
-      .setOrigin(0.5);
-    const marker = this.add.container(0, 0, [circle, label]);
-    this.markers.set(car.id, marker);
-    return marker;
+  private drawWetShine() {
+    const { points, normals } = this.road!;
+    this.wet.clear();
+    this.wet.lineStyle(3, 0xd8e6f3, 0.28);
+    for (let i = 0; i + 4 < points.length; i += 9) {
+      const o = (i % 18 === 0 ? 4 : -4);
+      this.wet.lineBetween(points[i].x + normals[i].x * o, points[i].y + normals[i].y * o, points[i + 4].x + normals[i + 4].x * o, points[i + 4].y + normals[i + 4].y * o);
+    }
+    this.wet.setVisible(false);
+  }
+
+  private drawTracks(progress: number) {
+    if (this.stage?.surface === 'asphalt' || progress < this.tracksProgress + 0.01) {
+      return;
+    }
+    this.tracksProgress = progress;
+    const { points, normals } = this.road!;
+    const end = Math.round(progress * (points.length - 1));
+    this.tracks.clear();
+    this.tracks.lineStyle(2, this.palette.tracks, 0.55);
+    for (const offset of [-4, 4]) {
+      this.tracks.beginPath();
+      for (let i = 0; i <= end; i += 2) {
+        const x = points[i].x + normals[i].x * offset;
+        const y = points[i].y + normals[i].y * offset;
+        if (i === 0) {
+          this.tracks.moveTo(x, y);
+        } else {
+          this.tracks.lineTo(x, y);
+        }
+      }
+      this.tracks.strokePath();
+    }
+  }
+
+  private drawCarBody(car: Car, color: number) {
+    const g = car.body;
+    g.clear();
+    g.fillStyle(0x000000, 0.35);
+    g.fillRoundedRect(-10, -5, 22, 12, 3);
+    g.fillStyle(color, 1);
+    g.fillRoundedRect(-11, -6, 22, 12, 3);
+    g.fillStyle(0x1b2430, 1);
+    g.fillRect(2, -4.5, 5, 9);
+    g.fillRect(-7, -4, 3, 8);
+    g.fillStyle(0xff4d4d, 1);
+    g.fillRect(-11, -5, 1.5, 3);
+    g.fillRect(-11, 2, 1.5, 3);
+    car.color = color;
+  }
+
+  private updateCars(markers: CarMarker[], dt: number) {
+    const seen = new Set<number>();
+    const dusty = this.stage?.surface !== 'asphalt';
+    let lead = 0;
+
+    for (const marker of markers) {
+      seen.add(marker.id);
+      let car = this.cars.get(marker.id);
+      if (!car) {
+        const body = this.add.graphics().setDepth(marker.me ? 3.2 : 3);
+        const label = this.add
+          .text(0, 0, String(marker.number), { fontFamily: 'system-ui, sans-serif', fontSize: '12px', fontStyle: 'bold', color: '#ffffff', stroke: '#0d1117', strokeThickness: 3 })
+          .setOrigin(0.5)
+          .setDepth(3.4);
+        this.world.add([body, label]);
+        car = { body, label, color: -1, f: marker.f, state: marker.state, dustTimer: 0 };
+        this.cars.set(marker.id, car);
+      }
+
+      const color = marker.me ? CAR_COLORS.me : CAR_COLORS[marker.state];
+      if (color !== car.color) {
+        this.drawCarBody(car, color);
+      }
+
+      const f = Phaser.Math.Clamp(marker.f, 0, 1);
+      const point = this.path!.getPointAt(f);
+      const tangent = this.path!.getTangentAt(f);
+      car.body.setPosition(point.x, point.y).setRotation(Math.atan2(tangent.y, tangent.x)).setAlpha(marker.state === 'stop' ? 0.7 : 1);
+      car.label.setPosition(point.x, point.y - 15);
+      car.f = f;
+      car.state = marker.state;
+
+      if (dusty && marker.state === 'run') {
+        car.dustTimer += dt;
+        if (car.dustTimer > 0.06) {
+          car.dustTimer = 0;
+          this.dust.add(point.x - tangent.x * 12, point.y - tangent.y * 12);
+        }
+      }
+      if (marker.state !== 'stop') {
+        lead = Math.max(lead, f);
+      }
+    }
+
+    for (const [id, car] of this.cars) {
+      if (!seen.has(id)) {
+        if (car.body === this.cameraTarget) {
+          this.cameras.main.stopFollow();
+          this.cameraTarget = null;
+        }
+        car.body.destroy();
+        car.label.destroy();
+        this.cars.delete(id);
+      }
+    }
+
+    this.dust.draw(this.dustLayer, this.palette.dust, dt);
+    this.drawTracks(lead);
+  }
+
+  private updateEnvironment(env: Environment, dt: number) {
+    const night = Phaser.Math.Clamp(env.darkness, 0, 1);
+    this.night.setFillStyle(0x0b1630, night * 0.62);
+    this.windows.setAlpha(night);
+    this.wet.setVisible(env.weather === 'rain');
+
+    if (env.weather === 'rain') {
+      this.tint.setFillStyle(0x1b2a3a, 0.22);
+    } else if (env.weather === 'snow') {
+      this.tint.setFillStyle(0xffffff, this.stage?.surface === 'snow' ? 0.08 : 0.25);
+    } else {
+      this.tint.setFillStyle(0x000000, 0);
+    }
+
+    this.beams.clear();
+    if (night > 0.05) {
+      for (const car of this.cars.values()) {
+        if (car.state === 'stop') {
+          continue;
+        }
+        const point = this.path!.getPointAt(car.f);
+        const t = this.path!.getTangentAt(car.f);
+        const n = { x: -t.y, y: t.x };
+        const tip = { x: point.x + t.x * 9, y: point.y + t.y * 9 };
+        const far = { x: point.x + t.x * 75, y: point.y + t.y * 75 };
+        this.beams.fillStyle(0xfff1c1, 0.3 * night);
+        this.beams.fillTriangle(tip.x, tip.y, far.x + n.x * 26, far.y + n.y * 26, far.x - n.x * 26, far.y - n.y * 26);
+        this.beams.fillStyle(0xfff1c1, 0.25 * night);
+        this.beams.fillCircle(tip.x, tip.y, 5);
+      }
+    }
+
+    this.precipitation.draw(this.weatherLayer, env.weather, dt);
+  }
+
+  private updateCamera(markers: CarMarker[]) {
+    const camera = this.cameras.main;
+    let target: Phaser.GameObjects.Graphics | null = null;
+
+    if (this.cameraMode === 'me') {
+      const mine = markers.find((marker) => marker.me && marker.state !== 'stop') ?? markers.find((marker) => marker.me);
+      target = mine ? this.cars.get(mine.id)?.body ?? null : null;
+    } else if (this.cameraMode === 'leader') {
+      const leader = markers.filter((marker) => marker.state !== 'stop').sort((a, b) => b.f - a.f)[0];
+      target = leader ? this.cars.get(leader.id)?.body ?? null : null;
+    }
+
+    if (target) {
+      if (target !== this.cameraTarget) {
+        camera.startFollow(target, false, 0.08, 0.08);
+        this.cameraTarget = target;
+      }
+      if (!this.cameraZoomed) {
+        camera.zoomTo(ZOOM, 600);
+        this.cameraZoomed = true;
+      }
+    } else if (this.cameraTarget || this.cameraZoomed) {
+      camera.stopFollow();
+      camera.pan(this.scale.width / 2, this.scale.height / 2, 500);
+      camera.zoomTo(1, 500);
+      this.cameraTarget = null;
+      this.cameraZoomed = false;
+    }
   }
 }

@@ -176,7 +176,7 @@ function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
         <div v-else class="bgr-scroll">
           <table class="bgr-table">
             <thead>
-              <tr><th>Роля</th><th>Име</th><th>Умение</th><th>Морал</th><th>Репутация</th><th>Заплата</th><th></th></tr>
+              <tr><th>Роля</th><th>Име</th><th>Умение</th><th>Морал</th><th>Физ.</th><th>Репутация</th><th>Заплата</th><th></th></tr>
             </thead>
             <tbody>
               <tr v-for="member in garage.crew" :key="member.id">
@@ -188,6 +188,7 @@ function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
                 </td>
                 <td><HealthBar :value="member.skill" /></td>
                 <td><HealthBar v-if="member.morale !== null" :value="member.morale" /></td>
+                <td>{{ member.physical ?? '' }}</td>
                 <td>{{ member.reputation ?? '' }}</td>
                 <td>{{ money(member.salary) }}/седм.</td>
                 <td class="bgr-right"><button class="bgr-small bgr-secondary" :disabled="busy" @click="fire(member)">Освободи</button></td>
