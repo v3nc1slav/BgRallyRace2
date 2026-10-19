@@ -98,7 +98,9 @@ final class CrudPage
     private function renderList(): void
     {
         $fields = array_filter($this->entity->fields, fn(Field $field) => $field->inList);
-        $items = $this->entity->all();
+        $searchable = $this->entity->hasField('name');
+        $search = $searchable ? sanitize_text_field(wp_unslash($_GET['s'] ?? '')) : '';
+        $items = $search !== '' ? $this->entity->search($search) : $this->entity->all();
 
         printf(
             '<h1 class="wp-heading-inline">%s</h1> <a href="%s" class="page-title-action">Добави</a><hr class="wp-header-end">',
@@ -107,6 +109,16 @@ final class CrudPage
         );
         Notices::render();
 
+        if ($searchable) {
+            printf(
+                '<form method="get" class="bgr-list-tools"><input type="hidden" name="page" value="%s"><input type="search" name="s" value="%s" placeholder="Търси по име"> <button class="button">Търси</button>%s<span class="description">%d записа</span></form>',
+                esc_attr('bgrally-' . $this->entity->slug),
+                esc_attr($search),
+                $search !== '' ? sprintf(' <a href="%s" class="button-link">Изчисти</a>', esc_url($this->url())) : '',
+                count($items)
+            );
+        }
+
         echo '<table class="widefat striped"><thead><tr>';
         foreach ($fields as $field) {
             printf('<th>%s</th>', esc_html($field->label));
@@ -114,7 +126,7 @@ final class CrudPage
         echo '<th></th></tr></thead><tbody>';
 
         if (!$items) {
-            printf('<tr><td colspan="%d">Няма записи.</td></tr>', count($fields) + 1);
+            printf('<tr><td colspan="%d">%s</td></tr>', count($fields) + 1, $search !== '' ? 'Няма намерени записи.' : 'Няма записи.');
         }
 
         foreach ($items as $item) {
@@ -160,16 +172,29 @@ final class CrudPage
         wp_nonce_field('bgr_save_' . $this->entity->slug);
         printf('<input type="hidden" name="bgr_action" value="save"><input type="hidden" name="id" value="%d">', $id);
 
-        echo '<table class="form-table" role="presentation">';
-        foreach ($this->entity->fields as $field) {
+        $wide = fn(Field $field) => in_array($field->type, ['route', 'textarea'], true);
+        $fields = array_merge(
+            array_filter($this->entity->fields, fn(Field $field) => !$wide($field)),
+            array_filter($this->entity->fields, $wide)
+        );
+
+        echo '<div class="bgr-admin-grid">';
+        foreach ($fields as $field) {
+            $input = $field->input($item[$field->name] ?? $field->defaultValue());
+            if ($field->type === 'bool') {
+                printf('<div class="bgr-admin-field bgr-check"><label>%s %s</label></div>', $input, esc_html($field->label));
+                continue;
+            }
             printf(
-                '<tr><th scope="row"><label for="bgr-%s">%s</label></th><td>%s</td></tr>',
+                '<div class="bgr-admin-field%s"><label for="bgr-%s">%s%s</label>%s</div>',
+                $wide($field) ? ' bgr-wide' : '',
                 esc_attr($field->name),
                 esc_html($field->label),
-                $field->input($item[$field->name] ?? $field->defaultValue())
+                $field->required ? ' <span class="required">*</span>' : '',
+                $input
             );
         }
-        echo '</table>';
+        echo '</div>';
 
         submit_button('Запази');
         echo '</form>';

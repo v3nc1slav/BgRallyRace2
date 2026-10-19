@@ -71,6 +71,25 @@ final class Entity
         return $wpdb->get_results("SELECT * FROM {$this->table()} ORDER BY {$this->orderBy}", ARRAY_A);
     }
 
+    public function hasField(string $name): bool
+    {
+        foreach ($this->fields as $field) {
+            if ($field->name === $name) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function search(string $term): array
+    {
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$this->table()} WHERE name LIKE %s ORDER BY {$this->orderBy}",
+            '%' . $wpdb->esc_like($term) . '%'
+        ), ARRAY_A);
+    }
+
     public function options(): array
     {
         $options = [];

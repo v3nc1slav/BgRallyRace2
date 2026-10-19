@@ -29,24 +29,35 @@ final class SettingsPage
 
     public static function render(): void
     {
-        echo '<div class="wrap"><h1>Настройки</h1>';
+        echo '<div class="wrap bgr-settings"><h1>Настройки</h1>';
         settings_errors();
+
+        echo '<div class="bgr-settings-tools">
+            <input type="search" data-role="search" placeholder="Търси настройка…">
+            <button type="button" class="button" data-role="expand">Отвори всички</button>
+            <button type="button" class="button" data-role="collapse">Затвори всички</button>
+        </div>';
 
         echo '<form method="post" action="options.php">';
         settings_fields(self::GROUP);
 
         foreach (Settings::SECTIONS as $section => $fields) {
-            printf('<h2>%s</h2><table class="form-table" role="presentation">', esc_html($section));
+            printf(
+                '<details class="bgr-section" data-section="%s"><summary>%s <span class="bgr-count">(%d)</span></summary><div class="bgr-admin-grid bgr-cols-3">',
+                esc_attr($section),
+                esc_html($section),
+                count($fields)
+            );
             foreach ($fields as $key => [$label]) {
                 printf(
-                    '<tr><th scope="row"><label for="bgr-%1$s">%2$s</label></th><td><input type="number" min="0" step="any" id="bgr-%1$s" name="%3$s[%1$s]" value="%4$s" class="small-text"></td></tr>',
+                    '<div class="bgr-admin-field"><label for="bgr-%1$s">%2$s</label><input type="number" min="0" step="any" id="bgr-%1$s" name="%3$s[%1$s]" value="%4$s"></div>',
                     esc_attr($key),
                     esc_html($label),
                     esc_attr(Settings::OPTION),
                     esc_attr((string) Settings::get($key))
                 );
             }
-            echo '</table>';
+            echo '</div></details>';
         }
 
         submit_button('Запази');

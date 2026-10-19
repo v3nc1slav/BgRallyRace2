@@ -16,6 +16,17 @@ final class Menu
         add_action('admin_post_bgr_unban', [PlayersPage::class, 'handleUnban']);
         TalkPage::register();
         AdsPage::register();
+        add_action('admin_enqueue_scripts', [self::class, 'assets']);
+    }
+
+    public static function assets(string $hook): void
+    {
+        if (!str_contains($hook, self::SLUG)) {
+            return;
+        }
+        $version = fn(string $file) => file_exists(BGR_DIR . '/assets/' . $file) ? filemtime(BGR_DIR . '/assets/' . $file) : false;
+        wp_enqueue_style('bgr-admin', plugin_dir_url(BGR_FILE) . 'assets/admin.css', [], $version('admin.css'));
+        wp_enqueue_script('bgr-admin', plugin_dir_url(BGR_FILE) . 'assets/admin.js', [], $version('admin.js'), true);
     }
 
     public static function addPages(): void

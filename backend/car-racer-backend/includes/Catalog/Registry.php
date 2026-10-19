@@ -152,7 +152,7 @@ final class Registry
             ], inUse: fn(int $id) => self::countWhere('entries', 'rally_id', $id) > 0, actions: [
                 'run' => ['Изчисли сега', [Rallies::class, 'adminRun']],
                 'reset' => ['Нулирай', [Rallies::class, 'adminReset']],
-            ], orderBy: 'start_at'),
+            ], orderBy: "status = 'finished', IF(status = 'finished', NULL, start_at), start_at DESC"),
         ];
     }
 
