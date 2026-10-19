@@ -63,9 +63,10 @@ function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
         </p>
         <p v-else class="bgr-muted">Гаражът е на максимално ниво.</p>
         <div class="bgr-actions">
-          <button v-if="garage.garage.next" class="bgr-small" :disabled="busy || !canUpgrade(garage.garage.next)" @click="act(upgradeGarage)">
+          <button v-if="garage.garage.next && garage.garage.permit" class="bgr-small" :disabled="busy || !canUpgrade(garage.garage.next)" @click="act(upgradeGarage)">
             Подобри гаража
           </button>
+          <RouterLink v-else-if="garage.garage.next" to="/city/hall" class="bgr-small-link">Нужно е разрешение от кмета</RouterLink>
           <RouterLink to="/city/bar" class="bgr-small-link">Наеми служители в бара</RouterLink>
         </div>
         <p class="bgr-muted">На ралито можеш да вземеш {{ garage.spares.tyres }} резервни гуми и {{ garage.spares.parts }} резервни части.</p>

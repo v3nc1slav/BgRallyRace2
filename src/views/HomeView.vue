@@ -31,6 +31,11 @@ onMounted(async () => {
       <dl class="bgr-stats-list">
         <dt>Град</dt>
         <dd>{{ session.player.city }}</dd>
+        <dt>Работа</dt>
+        <dd>
+          <template v-if="session.player.job">{{ session.player.job.name }} · {{ money(session.player.job.pay) }}/ден, {{ session.player.job.energy }} енергия</template>
+          <RouterLink v-else to="/city/jobs">потърси работа</RouterLink>
+        </dd>
         <dt>Ниво {{ session.player.level }}</dt>
         <dd>
           <HealthBar :value="levelProgress" />
@@ -40,6 +45,14 @@ onMounted(async () => {
         </dd>
         <dt>Пари</dt>
         <dd>{{ money(session.player.money) }}</dd>
+        <template v-if="session.player.loan">
+          <dt>Заем</dt>
+          <dd>
+            <RouterLink to="/city/bank">остават {{ money(session.player.loan.remaining) }}</RouterLink>
+            <small v-if="session.player.loan.overdue" class="bgr-error">просрочие {{ money(session.player.loan.overdue) }}</small>
+            <small v-else class="bgr-muted">вноска {{ money(session.player.loan.next) }} в понеделник</small>
+          </dd>
+        </template>
         <dt>Енергия</dt>
         <dd>
           <HealthBar :value="(session.player.energy / session.player.energy_max) * 100" />

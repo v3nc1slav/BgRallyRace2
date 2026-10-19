@@ -28,6 +28,7 @@ async function onLogout() {
         <RouterLink to="/rallies">Ралита</RouterLink>
         <RouterLink to="/sponsors">Спонсори</RouterLink>
         <RouterLink to="/standings">Класиране</RouterLink>
+        <RouterLink to="/forum">Форум</RouterLink>
       </nav>
       <div class="bgr-stats">
         <span>Ниво <b>{{ session.player.level }}</b></span>

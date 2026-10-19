@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import Feedback from '../components/Feedback.vue';
 import { money } from '../format';
-import { getTrack, trainOfficial, type TrackInfo } from '../game';
+import { getTrack, trainOfficial, trainOwn, type TrackInfo } from '../game';
 import { useAction } from '../useAction';
 
 const track = ref<TrackInfo | null>(null);
@@ -16,6 +16,14 @@ onMounted(() =>
 
 async function train(stageId: number) {
   const result = await run(() => trainOfficial(stageId));
+  if (result) {
+    track.value = result.track;
+    message.value = result.message;
+  }
+}
+
+async function trainOnOwn() {
+  const result = await run(() => trainOwn());
   if (result) {
     track.value = result.track;
     message.value = result.message;
@@ -42,7 +50,20 @@ async function train(stageId: number) {
         <dt>Цена</dt>
         <dd>{{ track.energy }} енергия + гориво</dd>
       </dl>
-      <p v-if="!track.weekday" class="bgr-error">Днес е почивен ден. Тренировки има само от понеделник до петък.</p>
+      <div v-if="track.own.status" class="bgr-panel">
+        <h3>Собствена тренировъчна писта</h3>
+        <template v-if="track.own.status === 'open'">
+          <p class="bgr-muted">
+            {{ track.own.km }} км, всеки ден и без полиция: {{ track.energy }} енергия и {{ money(track.own.fuel) }} гориво. Пилотът и навигаторът получават +1 умение със сигурност.
+          </p>
+          <p v-if="track.trained_today" class="bgr-muted">Екипажът вече тренира днес.</p>
+          <button v-else :disabled="busy" @click="trainOnOwn">Тренирай на собствената писта</button>
+        </template>
+        <p v-else-if="track.own.status === 'building'" class="bgr-muted">Пистата се строи. Виж <RouterLink to="/city/hall">кметството</RouterLink>.</p>
+        <p v-else class="bgr-muted">Пистата е затворена. Кметът може да я отвори отново – <RouterLink to="/city/hall">кметство</RouterLink>.</p>
+      </div>
+
+      <p v-if="!track.weekday" class="bgr-error">Днес е почивен ден. Тренировки на официалната писта има само от понеделник до петък.</p>
       <p v-else-if="track.trained_today" class="bgr-muted">Екипажът вече тренира днес.</p>
 
       <div class="bgr-scroll">

@@ -6,15 +6,16 @@ import { session } from '../session';
 const privileges = ref<string[]>([]);
 
 const buildings = [
-  { name: 'Бар', text: 'Наемане на служители', to: '/city/bar' },
+  { name: 'Бар', text: 'Наемане на служители и чат', to: '/city/bar' },
   { name: 'Магазин за авто части', text: 'Коли, части и гуми', to: '/shop' },
   { name: 'Официална писта', text: 'Тренировки през седмицата', to: '/city/track' },
   { name: 'Спонсорски офиси', text: 'Преговори и договори', to: '/sponsors' },
-  { name: 'Кметство', text: 'Подкуп на кмета', to: '/city/hall' },
+  { name: 'Кметство', text: 'Разрешения, собствена писта, подкуп', to: '/city/hall' },
+  { name: 'Работа', text: 'Заплата срещу енергия всеки ден', to: '/city/jobs' },
   { name: 'Полиция', text: 'Глоби и подкупи', to: '/city/police' },
-  { name: 'МОЛ', text: 'Фитнес', to: '/city/mall' },
-  { name: 'Пазар', text: 'Търговия между играчите' },
-  { name: 'Банка', text: 'Заеми' },
+  { name: 'МОЛ', text: 'Фитнес и дрехи', to: '/city/mall' },
+  { name: 'Пазар', text: 'Търговия между играчите', to: '/city/market' },
+  { name: 'Банка', text: 'Заеми', to: '/city/bank' },
   { name: 'Черна писта', text: 'Нелегални надпревари и тренировки', to: '/city/black' },
 ];
 

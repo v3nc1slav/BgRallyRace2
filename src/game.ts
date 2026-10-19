@@ -81,6 +81,7 @@ export interface TrackInfo {
   skill_chance: number;
   risk: number;
   fine: number;
+  own: { status: '' | 'building' | 'open' | 'closed'; km: number; fuel: number };
 }
 
 export interface BribeInfo {
@@ -95,6 +96,9 @@ export interface PoliceInfo {
   mayor: BribeInfo & { level: number; days: number };
   energy: number;
   risks: { official: number; black: number };
+  reports: { id: number; name: string; start_at: string }[];
+  report_energy: number;
+  report_days: number;
 }
 
 export interface BlackInfo {
@@ -109,14 +113,180 @@ export interface BlackInfo {
   history: { id: number; rival: string; stage: string; bet: number; won: boolean; my_ms: number; rival_ms: number; caught: boolean; at: string }[];
 }
 
+export interface ClothingItem {
+  id: number;
+  name: string;
+  slot: string;
+  slot_label: string;
+  bonus: number;
+  price: number;
+  min_level: number;
+  locked: boolean;
+  item_id: number | null;
+  equipped: boolean;
+}
+
 export interface MallInfo {
   crew: CrewMember[];
   energy: number;
   price: number;
   gain: number;
+  clothes: { bonus: number; items: ClothingItem[] };
+}
+
+export interface HallInfo {
+  energy: number;
+  clothes_bonus: number;
+  permit: { has: boolean; by_bribe: boolean; chance: number; refused_today: boolean; next_level: number | null };
+  track: {
+    status: '' | 'building' | 'open' | 'closed';
+    status_label: string;
+    ready_at: string | null;
+    level: number;
+    cost: number;
+    weeks: number;
+    chance: number;
+    refused_today: boolean;
+    banned: boolean;
+  };
+  bribe: BribeInfo & { level: number; days: number };
+}
+
+export interface JobInfo {
+  id: number;
+  name: string;
+  building: string;
+  pay: number;
+  energy: number;
+  min_level: number;
+  locked: boolean;
+}
+
+export interface JobsInfo {
+  season: number;
+  current: Omit<JobInfo, 'min_level' | 'locked'> | null;
+  can_take: boolean;
+  locked_reason: string;
+  jobs: JobInfo[];
+}
+
+export type MarketKind = 'part' | 'tyre' | 'spare_tyre' | 'car';
+
+export interface MarketDetails {
+  label: string;
+  health: number;
+  max_health: number;
+  defect: boolean | null;
+}
+
+export interface MarketListing {
+  id: number;
+  kind: MarketKind;
+  kind_label: string;
+  name: string;
+  details: MarketDetails;
+  base_price: number;
+  price: number;
+  delivery: number;
+  seller: string;
+  city: string;
+  expires_at: string;
+}
+
+export interface MarketAsset {
+  kind: MarketKind;
+  id: number;
+  name: string;
+  details: MarketDetails;
+  base: number;
+  dealer: number;
+  min: number;
+  max: number;
+}
+
+export interface MarketInfo {
+  listings: MarketListing[];
+  mine: MarketListing[];
+  sellable: MarketAsset[];
+  rules: { can_sell: boolean; sell_level: number; energy: number; days: number; fee: number; mechanic: boolean; blocked: boolean };
+}
+
+export interface MarketQuery {
+  scope: 'all' | 'city';
+  filter: '' | 'part' | 'tyre' | 'car';
+}
+
+export interface Loan {
+  principal: number;
+  interest: number;
+  weeks: number;
+  installment: number;
+  remaining: number;
+  overdue: number;
+  missed: number;
+  weeks_passed: number;
+  next: number;
+  payoff: number;
+  created_at: string;
+}
+
+export interface BankInfo {
+  max: number;
+  min: number;
+  energy: number;
+  penalty: number;
+  seize_after: number;
+  seize_pct: number;
+  terms: { weeks: number; rate: number }[];
+  loan: Loan | null;
+}
+
+export interface ChatMessage {
+  id: number;
+  author: string;
+  own: boolean;
+  text: string;
+  at: string;
+}
+
+export interface ChatInfo {
+  messages: ChatMessage[];
+  muted_until: string | null;
+  max_length: number;
+}
+
+export interface ForumTopic {
+  id: number;
+  section: string;
+  section_label: string;
+  title: string;
+  author: string;
+  posts: number;
+  last_post_at: string;
+}
+
+interface ForumRules {
+  can_create: boolean;
+  topic_level: number;
+  max_length: number;
+  muted_until: string | null;
+}
+
+export interface ForumInfo extends ForumRules {
+  section: string;
+  sections: { key: string; label: string; topics: number }[];
+  topics: ForumTopic[];
+}
+
+export interface TopicInfo extends ForumRules {
+  topic: ForumTopic;
+  posts: ChatMessage[];
+  page: number;
+  pages: number;
 }
 
 export interface GarageLevel {
+  permit: boolean;
   level: number;
   car_slots: number;
   next: { level: number; price: number; min_level: number; unlocks: string } | null;
@@ -376,7 +546,45 @@ export interface RallyDetail extends RallySummary {
   can_change_styles: boolean;
   style_options: Record<string, string>;
   start_list: { start_number: number; team: string; class_label: string; is_me: boolean }[];
+  intel: RallyIntel | null;
   broadcast: Broadcast | null;
+}
+
+export interface Suspect {
+  team: string;
+  chance: number;
+}
+
+export interface ScoutReport {
+  team: string;
+  car: string;
+  tyre: { name: string; health: number } | null;
+  parts: { label: string; name: string; health: number }[] | null;
+  crew: { pilot: number; navigator: number } | null;
+}
+
+export interface SabotagePanel {
+  saboteur: { name: string; skill: number };
+  open: boolean;
+  used_week: boolean;
+  cost: number;
+  energy: number;
+  level_gap: number;
+  kinds: Record<string, string>;
+  targets: { id: number; team: string; level: number }[];
+  orders: { team: string; kind_label: string; status_label: string; caught: boolean }[];
+}
+
+export interface RallyIntel {
+  informant: { name: string; skill: number } | null;
+  scouting: ScoutReport[] | null;
+  warnings: { at: string; suspects: Suspect[] | null }[];
+  sabotage: SabotagePanel | null;
+}
+
+export interface Rumor {
+  text: string;
+  at: string;
 }
 
 export interface StandingRow {
@@ -420,8 +628,15 @@ export const getShop = () => get<Shop>('shop');
 export const buyItem = (kind: 'part' | 'tyre' | 'spare_tyre', id: number) => post<object>('shop/buy', { kind, id });
 export const buyCar = (id: number) => post<Shop>('shop/buy-car', { id });
 
-export const getBar = () => get<{ bar: { city: string; roles: BarRole[] } }>('bar');
-export const hire = (candidateId: number) => post<{ bar: { city: string; roles: BarRole[] } }>('bar/hire', { candidate_id: candidateId });
+export interface BarInfo {
+  city: string;
+  roles: BarRole[];
+  rumors: Rumor[];
+  rumors_named: boolean;
+}
+
+export const getBar = () => get<{ bar: BarInfo }>('bar');
+export const hire = (candidateId: number) => post<{ bar: BarInfo }>('bar/hire', { candidate_id: candidateId });
 
 export const getSponsors = () => get<{ sponsors: Sponsors }>('sponsors');
 export const negotiate = (id: number) => post<{ sponsors: Sponsors }>(`sponsors/${id}/negotiate`);
@@ -434,6 +649,7 @@ export const trainOfficial = (stageId: number) => post<{ track: TrackInfo }>('tr
 
 export const getPolice = () => get<{ police: PoliceInfo }>('police');
 export const bribe = (institution: 'police' | 'mayor') => post<{ police: PoliceInfo }>('police/bribe', { institution });
+export const reportSabotage = (rallyId: number) => post<{ police: PoliceInfo }>('police/report', { rally_id: rallyId });
 
 export const getBlack = () => get<{ black: BlackInfo }>('black');
 export const postChallenge = (stageId: number, bet: number) => post<{ black: BlackInfo }>('black/challenge', { stage_id: stageId, bet });
@@ -444,6 +660,37 @@ export const trainBlack = (stageId: number) => post<{ black: BlackInfo }>('black
 
 export const getMall = () => get<{ mall: MallInfo }>('mall');
 export const trainFitness = (staffId: number) => post<{ mall: MallInfo }>('mall/fitness', { staff_id: staffId });
+export const buyClothes = (id: number) => post<{ mall: MallInfo }>('mall/buy', { id });
+export const wearClothes = (itemId: number) => post<{ mall: MallInfo }>('mall/wear', { item_id: itemId });
+
+export const getHall = () => get<{ hall: HallInfo }>('hall');
+export const negotiateMayor = (kind: 'garage' | 'track') => post<{ hall: HallInfo }>('hall/negotiate', { kind });
+export const trainOwn = () => post<{ track: TrackInfo }>('track/own');
+
+export const getJobs = () => get<{ jobs: JobsInfo }>('jobs');
+export const takeJob = (id: number) => post<{ jobs: JobsInfo }>('jobs/take', { id });
+export const quitJob = () => post<{ jobs: JobsInfo }>('jobs/quit');
+
+type MarketResult = { market: MarketInfo };
+export const getMarket = (query: MarketQuery) => get<MarketResult>(`market?scope=${query.scope}&filter=${query.filter}`);
+export const listOnMarket = (query: MarketQuery, kind: MarketKind, id: number, price: number) =>
+  post<MarketResult>('market/list', { ...query, kind, id, price });
+export const cancelListing = (query: MarketQuery, id: number) => post<MarketResult>('market/cancel', { ...query, id });
+export const buyListing = (query: MarketQuery, id: number) => post<MarketResult>('market/buy', { ...query, id });
+export const sellToDealer = (query: MarketQuery, kind: MarketKind, id: number) => post<MarketResult>('market/dealer', { ...query, kind, id });
+
+export const getBank = () => get<{ bank: BankInfo }>('bank');
+export const takeLoan = (amount: number, weeks: number) => post<{ bank: BankInfo }>('bank/loan', { amount, weeks });
+export const repayLoan = () => post<{ bank: BankInfo }>('bank/repay');
+export const payOverdue = () => post<{ bank: BankInfo }>('bank/pay');
+
+export const getChat = (after = 0) => get<{ chat: ChatInfo }>(`chat${after ? `?after=${after}` : ''}`);
+export const sendChat = (text: string, after: number) => post<{ chat: ChatInfo }>('chat', { text, after });
+export const reportMessage = (id: number) => post<object>('talk/report', { id });
+export const getForum = (section = '') => get<{ forum: ForumInfo }>(`forum${section ? `?section=${section}` : ''}`);
+export const getTopic = (id: number, page = 1) => get<{ topic: TopicInfo }>(`forum/topics/${id}?page=${page}`);
+export const createTopic = (section: string, title: string, text: string) => post<{ topic: TopicInfo }>('forum/topics', { section, title, text });
+export const replyTopic = (id: number, text: string) => post<{ topic: TopicInfo }>(`forum/topics/${id}/reply`, { text });
 
 export const getRallies = () => get<{ season: number; rallies: RallySummary[] }>('rallies');
 export const getRally = (id: number) => get<{ rally: RallyDetail }>(`rallies/${id}`);
@@ -452,6 +699,8 @@ export const registerRally = (id: number, styles: Record<string, string>, spares
 export const saveStyles = (id: number, styles: Record<string, string>, spares: SpareSelection) =>
   post<{ rally: RallyDetail }>(`rallies/${id}/styles`, { styles, spares });
 export const doRecon = (id: number) => post<{ rally: RallyDetail }>(`rallies/${id}/recon`);
+export const orderSabotage = (id: number, targetId: number, kind: string) =>
+  post<{ rally: RallyDetail }>(`rallies/${id}/sabotage`, { target_id: targetId, kind });
 
 export const getStandings = (season = 0) =>
   get<{ season: number; seasons: number[]; classes: ClassGroup<StandingRow>[] }>(`standings${season ? `?season=${season}` : ''}`);

@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import ChatBox from '../components/ChatBox.vue';
 import Feedback from '../components/Feedback.vue';
 import HealthBar from '../components/HealthBar.vue';
-import { money } from '../format';
-import { getBar, hire, type BarRole } from '../game';
+import { money, stamp } from '../format';
+import { getBar, hire, type BarRole, type Rumor } from '../game';
 import { useAction } from '../useAction';
 
 const roles = ref<BarRole[]>([]);
 const city = ref('');
+const rumors = ref<Rumor[]>([]);
+const rumorsNamed = ref(false);
 const { busy, message, error, run } = useAction();
 
 onMounted(() =>
@@ -15,6 +18,8 @@ onMounted(() =>
     const data = await getBar();
     roles.value = data.bar.roles;
     city.value = data.bar.city;
+    rumors.value = data.bar.rumors;
+    rumorsNamed.value = data.bar.rumors_named;
   }),
 );
 
@@ -38,6 +43,20 @@ async function hireCandidate(role: BarRole, id: number, name: string) {
       <p class="bgr-muted">Всеки понеделник идват нови кандидати. Който наемеш, вече не е на разположение за другите отбори.</p>
       <Feedback :message="message" :error="error" />
     </section>
+
+    <section class="bgr-card">
+      <h2>Слухове</h2>
+      <p v-if="!rumorsNamed" class="bgr-muted">С информатор ще знаеш и за кого се говори.</p>
+      <p v-if="!rumors.length" class="bgr-muted">Тихо е. Никой не говори за нищо.</p>
+      <ul v-else class="bgr-chronicle">
+        <li v-for="(rumor, index) in rumors" :key="index">
+          <small class="bgr-muted">{{ stamp(rumor.at) }}</small>
+          {{ rumor.text }}
+        </li>
+      </ul>
+    </section>
+
+    <ChatBox />
 
     <section v-for="role in roles" :key="role.role" class="bgr-card" :class="{ 'bgr-locked': !role.unlocked }">
       <h2>{{ role.label }}</h2>

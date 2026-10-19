@@ -2,6 +2,12 @@ const euro = new Intl.NumberFormat('bg-BG', { style: 'currency', currency: 'EUR'
 const dateTime = new Intl.DateTimeFormat('bg-BG', { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 const day = new Intl.DateTimeFormat('bg-BG', { weekday: 'long', day: 'numeric', month: 'long' });
 
+const short = new Intl.DateTimeFormat('bg-BG', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+export function stamp(iso: string) {
+  return short.format(new Date(iso));
+}
+
 export function money(value: number) {
   return euro.format(value);
 }

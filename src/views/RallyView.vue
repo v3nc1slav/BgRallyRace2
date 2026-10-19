@@ -2,9 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import Feedback from '../components/Feedback.vue';
+import RallyIntel from '../components/RallyIntel.vue';
 import StageMap from '../components/StageMap.vue';
 import { date, duration, gap, money, when } from '../format';
-import { doRecon, getRally, registerRally, saveStyles, type RallyDetail, type SpareSelection } from '../game';
+import { doRecon, getRally, orderSabotage, registerRally, saveStyles, type RallyDetail, type SpareSelection } from '../game';
 import { useAction } from '../useAction';
 import { statusLabels } from './rallyStatus';
 
@@ -221,6 +222,13 @@ onBeforeUnmount(() => window.clearInterval(timer));
         </ul>
       </template>
     </section>
+
+    <RallyIntel
+      v-if="rally.intel"
+      :intel="rally.intel"
+      :busy="busy"
+      @sabotage="(targetId, kind) => act(() => orderSabotage(id, targetId, kind))"
+    />
 
     <section v-if="rally.start_list.length" class="bgr-card">
       <h2>Стартов списък</h2>

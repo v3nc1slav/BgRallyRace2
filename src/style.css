@@ -109,7 +109,8 @@
 }
 
 .bgr input,
-.bgr select {
+.bgr select,
+.bgr textarea {
   width: 100%;
   padding: 10px 12px;
   font: inherit;
@@ -120,7 +121,8 @@
 }
 
 .bgr input:focus,
-.bgr select:focus {
+.bgr select:focus,
+.bgr textarea:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -660,4 +662,96 @@ body.bgr-game .bgr {
 
 .bgr .bgr-spaced {
   margin-top: 24px;
+}
+
+.bgr textarea {
+  resize: vertical;
+}
+
+.bgr-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.bgr .bgr-filters select {
+  width: auto;
+}
+
+.bgr .bgr-price {
+  width: 120px;
+  padding: 6px 8px;
+}
+
+.bgr-tabs.bgr-wrap {
+  flex-wrap: wrap;
+}
+
+.bgr-chat {
+  max-height: 360px;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.bgr-chat-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.bgr-chat-line:last-child {
+  border-bottom: 0;
+}
+
+.bgr-chat-line span {
+  flex: 1 1 200px;
+  overflow-wrap: anywhere;
+}
+
+.bgr-chat-line.own b,
+.bgr-post.own header b {
+  color: #ff8a93;
+}
+
+.bgr-chat-form {
+  display: flex;
+  gap: 8px;
+}
+
+.bgr .bgr-report {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.bgr-post {
+  margin-bottom: 10px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.bgr-post header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+
+.bgr-post p {
+  margin: 6px 0 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.bgr-topics {
+  margin-top: 16px;
 }

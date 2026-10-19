@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue';
 import Feedback from '../components/Feedback.vue';
 import HealthBar from '../components/HealthBar.vue';
 import { money } from '../format';
-import { getMall, trainFitness, type MallInfo } from '../game';
+import { buyClothes, getMall, trainFitness, wearClothes, type MallInfo } from '../game';
 import { useAction } from '../useAction';
 
 const mall = ref<MallInfo | null>(null);
@@ -14,6 +14,14 @@ onMounted(() =>
     mall.value = (await getMall()).mall;
   }),
 );
+
+async function act(task: () => Promise<{ mall: MallInfo; message: string }>) {
+  const result = await run(task);
+  if (result) {
+    mall.value = result.mall;
+    message.value = result.message;
+  }
+}
 
 async function train(staffId: number) {
   const result = await run(() => trainFitness(staffId));
@@ -53,6 +61,28 @@ async function train(staffId: number) {
     </template>
 
     <h2 class="bgr-spaced">Дрехи</h2>
-    <p class="bgr-muted">Магазинът за дрехи отваря в следващия етап.</p>
+    <template v-if="mall">
+      <p class="bgr-muted">
+        Облечените дрехи дават бонус в преговорите със спонсорите и с кмета. Сега: <b>+{{ mall.clothes.bonus }}%</b>.
+      </p>
+      <div class="bgr-scroll">
+        <table class="bgr-table">
+          <thead><tr><th>Дреха</th><th>Бонус</th><th>Цена</th><th></th></tr></thead>
+          <tbody>
+            <tr v-for="item in mall.clothes.items" :key="item.id" :class="{ 'bgr-locked': item.locked, 'bgr-me': item.equipped }">
+              <td>{{ item.name }}<small class="bgr-muted">{{ item.slot_label }}</small></td>
+              <td>+{{ item.bonus }}%</td>
+              <td>{{ money(item.price) }}</td>
+              <td class="bgr-right">
+                <small v-if="item.equipped" class="bgr-ok">облечена</small>
+                <button v-else-if="item.item_id" class="bgr-small bgr-secondary" :disabled="busy" @click="act(() => wearClothes(item.item_id!))">Облечи</button>
+                <small v-else-if="item.locked" class="bgr-muted">от ниво {{ item.min_level }}</small>
+                <button v-else class="bgr-small" :disabled="busy" @click="act(() => buyClothes(item.id))">Купи</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </template>
   </section>
 </template>
