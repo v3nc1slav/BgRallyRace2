@@ -374,11 +374,12 @@ final class Garage
         if (Bank::blocked((int) $manager['id'])) {
             return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
         }
-        $price = Shop::price($kind, $item, $manager);
+        $price = Ads::discount($manager, Shop::price($kind, $item, $manager));
         $label = $kind === 'spare_tyre' ? 'Резервна гума ' . $item['name'] : $item['name'];
         if (!Ledger::add((int) $manager['id'], -$price, 'shop', $label)) {
             return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
         }
+        Ads::useDiscount($manager);
 
         self::addItem((int) $manager['id'], $kind, $catalogId);
         return true;
@@ -433,7 +434,7 @@ final class Garage
         $owned = self::cars($managerId);
         $tradeIn = count($owned) >= GarageLevels::carSlots((int) $manager['garage_level']) ? self::car($managerId) : null;
         $tradeInValue = $tradeIn ? (int) round((int) $tradeIn['price'] * self::TRADE_IN) : 0;
-        $price = (int) $car['price'];
+        $price = Ads::discount($manager, (int) $car['price']);
 
         if ((int) $manager['money'] + $tradeInValue < $price) {
             return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са още %d €).', $price - $tradeInValue - (int) $manager['money']), ['status' => 400]);
@@ -448,6 +449,7 @@ final class Garage
         if (!Ledger::add($managerId, -$price, 'car_purchase', $car['name'])) {
             return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
         }
+        Ads::useDiscount($manager);
 
         self::addCar($managerId, $carId, (string) $car['class']);
         Rumors::about($managerId, '%s купи ' . $car['name'] . '.', sprintf('Отбор от града купи %s.', $car['name']));

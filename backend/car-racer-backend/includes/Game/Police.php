@@ -103,8 +103,9 @@ final class Police
         if (self::active($managerId, $institution)) {
             return new WP_Error('bgr_bribe', 'Подкупът още действа.', ['status' => 400]);
         }
-        if (self::refusedThisWeek($managerId, $institution)) {
-            return new WP_Error('bgr_bribe', sprintf('%s вече отказа подкуп тази седмица.', self::INSTITUTIONS[$institution]), ['status' => 400]);
+        $retry = self::refusedThisWeek($managerId, $institution);
+        if ($retry && !(int) $manager['ad_retry']) {
+            return new WP_Error('bgr_bribe', sprintf('%s вече отказа подкуп тази седмица. Можеш да вземеш втори опит срещу реклама.', self::INSTITUTIONS[$institution]), ['status' => 400]);
         }
 
         $price = Settings::int($institution === 'mayor' ? 'bribe_mayor_price' : 'bribe_police_price');
@@ -115,8 +116,12 @@ final class Police
         if (!Energy::spend($managerId, $energy)) {
             return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
         }
+        if ($retry && !Ads::useRetry($managerId)) {
+            Energy::refund($managerId, $energy);
+            return new WP_Error('bgr_bribe', sprintf('%s вече отказа подкуп тази седмица.', self::INSTITUTIONS[$institution]), ['status' => 400]);
+        }
 
-        $row = ['manager_id' => $managerId, 'institution' => $institution, 'week' => Rallies::week(), 'created_at' => current_time('mysql')];
+        $row =['manager_id' => $managerId, 'institution' => $institution, 'week' => Rallies::week(), 'created_at' => current_time('mysql')];
 
         if (mt_rand(1, 100) > self::chance($manager, $institution)) {
             $wpdb->insert(self::table(), $row + ['status' => 'refused']);

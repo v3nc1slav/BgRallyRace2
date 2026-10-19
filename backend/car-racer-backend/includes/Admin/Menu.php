@@ -15,6 +15,7 @@ final class Menu
         add_action('admin_post_bgr_ban', [PlayersPage::class, 'handleBan']);
         add_action('admin_post_bgr_unban', [PlayersPage::class, 'handleUnban']);
         TalkPage::register();
+        AdsPage::register();
     }
 
     public static function addPages(): void
@@ -29,6 +30,7 @@ final class Menu
         }
 
         add_submenu_page(self::SLUG, 'Чат и форум', 'Чат и форум', 'manage_options', TalkPage::SLUG, [TalkPage::class, 'render']);
+        add_submenu_page(self::SLUG, 'Реклами', 'Реклами', 'manage_options', AdsPage::SLUG, [AdsPage::class, 'render']);
         add_submenu_page(self::SLUG, 'Настройки', 'Настройки', 'manage_options', 'bgrally-settings', [SettingsPage::class, 'render']);
     }
 }

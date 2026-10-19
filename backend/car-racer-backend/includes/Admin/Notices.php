@@ -17,6 +17,7 @@ final class Notices
         'muted' => ['success', 'Играчът е заглушен.'],
         'unmuted' => ['success', 'Заглушаването е премахнато.'],
         'words_saved' => ['success', 'Списъкът със забранени думи е запазен.'],
+        'ads_saved' => ['success', 'Настройките на рекламите са запазени.'],
     ];
 
     public static function flash(string $text, string $type = 'success'): void

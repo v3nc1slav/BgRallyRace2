@@ -68,6 +68,10 @@ final class Routes
         self::route('/bank/repay', 'POST', [TradeController::class, 'repay'], $player);
         self::route('/bank/pay', 'POST', [TradeController::class, 'payOverdue'], $player);
 
+        self::route('/ads', 'GET', [AdsController::class, 'show'], $player);
+        self::route('/ads/start', 'POST', [AdsController::class, 'start'], $player);
+        self::route('/ads/claim', 'POST', [AdsController::class, 'claim'], $player);
+
         self::route('/chat', 'GET', [TalkController::class, 'chat'], $player);
         self::route('/chat', 'POST', [TalkController::class, 'say'], $player);
         self::route('/talk/report', 'POST', [TalkController::class, 'report'], $player);

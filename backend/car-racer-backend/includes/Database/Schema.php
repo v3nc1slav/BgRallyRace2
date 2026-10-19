@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '11';
+    private const VERSION = '12';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -77,6 +77,8 @@ final class Schema
   banned_at datetime DEFAULT NULL,
   ban_reason varchar(255) NOT NULL DEFAULT '',
   muted_until datetime DEFAULT NULL,
+  ad_retry tinyint(1) NOT NULL DEFAULT 0,
+  shop_discount smallint(5) unsigned NOT NULL DEFAULT 0,
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY user_id (user_id),
@@ -350,6 +352,17 @@ final class Schema
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   KEY city_id (city_id,id)",
+
+            'ad_views' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  manager_id bigint(20) unsigned NOT NULL,
+  reward varchar(10) NOT NULL,
+  provider varchar(10) NOT NULL,
+  token varchar(64) NOT NULL,
+  status varchar(10) NOT NULL,
+  created_at datetime NOT NULL,
+  claimed_at datetime DEFAULT NULL,
+  PRIMARY KEY  (id),
+  KEY manager_created (manager_id,created_at)",
 
             'inbox' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   manager_id bigint(20) unsigned NOT NULL,

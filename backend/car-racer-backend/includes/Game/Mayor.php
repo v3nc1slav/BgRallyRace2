@@ -138,12 +138,17 @@ final class Mayor
             return new WP_Error('bgr_kind', 'Няма такива преговори.', ['status' => 400]);
         }
 
-        if (self::refusedToday($managerId, $kind)) {
-            return new WP_Error('bgr_refused', 'Кметът вече ти отказа днес. Опитай утре.', ['status' => 400]);
+        $retry = self::refusedToday($managerId, $kind);
+        if ($retry && !(int) $manager['ad_retry']) {
+            return new WP_Error('bgr_refused', 'Кметът вече ти отказа днес. Опитай утре или вземи втори опит срещу реклама.', ['status' => 400]);
         }
         $energy = Settings::int('mayor_energy');
         if (!Energy::spend($managerId, $energy)) {
             return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+        }
+        if ($retry && !Ads::useRetry($managerId)) {
+            Energy::refund($managerId, $energy);
+            return new WP_Error('bgr_refused', 'Кметът вече ти отказа днес. Опитай утре.', ['status' => 400]);
         }
 
         if (mt_rand(1, 100) > $chance) {

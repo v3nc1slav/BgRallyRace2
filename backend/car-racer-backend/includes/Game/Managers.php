@@ -115,6 +115,7 @@ final class Managers
             'energy_max' => self::energyMax($level),
             'job' => ($job = Work::job($manager)) ? ['name' => $job['name'], 'pay' => (int) $job['pay'], 'energy' => (int) $job['energy']] : null,
             'loan' => Bank::summary((int) $manager['id']),
+            'perks' => ['discount' => (int) ($manager['shop_discount'] ?? 0), 'retry' => (bool) ($manager['ad_retry'] ?? false)],
         ];
     }
 
