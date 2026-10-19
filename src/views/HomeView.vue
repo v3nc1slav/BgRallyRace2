@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import AdOffers from '../components/AdOffers.vue';
 import HealthBar from '../components/HealthBar.vue';
 import { money, when } from '../format';
 import { getInbox, getRallies, type InboxItem, type RallySummary } from '../game';
@@ -60,6 +61,8 @@ onMounted(async () => {
         </dd>
       </dl>
     </section>
+
+    <AdOffers />
 
     <section v-if="next" class="bgr-card">
       <h2>Следващо рали</h2>

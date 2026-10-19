@@ -72,6 +72,9 @@ function affordable(price: number) {
       <button :class="{ active: tab === 'tyres' }" @click="tab = 'tyres'">Гуми</button>
     </div>
     <p v-if="privileges.length" class="bgr-muted">Привилегии на града: {{ privileges.join(', ') }}.</p>
+    <p v-if="session.player?.perks.discount" class="bgr-ok">
+      Имаш {{ session.player.perks.discount }}% отстъпка от рекламата. Прилага се при следващата покупка.
+    </p>
     <Feedback :message="message" :error="error" />
 
     <div v-if="tab === 'cars'" class="bgr-scroll">

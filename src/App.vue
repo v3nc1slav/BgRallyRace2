@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { errorMessage } from './api';
+import AdModal from './components/AdModal.vue';
 import { money } from './format';
 import { logout, session } from './session';
 
@@ -41,5 +42,6 @@ async function onLogout() {
     <main class="bgr-main">
       <RouterView />
     </main>
+    <AdModal />
   </div>
 </template>

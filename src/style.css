@@ -755,3 +755,42 @@ body.bgr-game .bgr {
 .bgr-topics {
   margin-top: 16px;
 }
+
+.bgr-ad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.bgr-ad {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 100%);
+  padding: 20px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.bgr-ad-screen {
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, #e63946, #1f232b);
+  border-radius: 6px;
+}
+
+.bgr-ad-screen b {
+  font-size: 1.6rem;
+}
+
+.bgr-ad p {
+  margin: 0;
+}

@@ -41,7 +41,7 @@ const give = () => act(() => bribe('police'));
         <dd>{{ police.risks.black }}%</dd>
       </dl>
 
-      <BribeCard title="Подкуп на полицията – до края на деня" :info="police.police" :energy="police.energy" :busy="busy" @bribe="give" />
+      <BribeCard title="Подкуп на полицията – до края на деня" :info="police.police" :energy="police.energy" :busy="busy" @bribe="give" @notice="(text) => (message = text)" />
 
       <p class="bgr-muted">
         <RouterLink to="/city/hall">Подкуп на кмета – по-скъп, но пази цяла седмица и дава разрешение за гаража</RouterLink>

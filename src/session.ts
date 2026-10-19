@@ -21,6 +21,7 @@ export interface Player {
   energy_max: number;
   job: { name: string; pay: number; energy: number } | null;
   loan: { remaining: number; next: number; overdue: number } | null;
+  perks: { discount: number; retry: boolean };
 }
 
 export interface City {

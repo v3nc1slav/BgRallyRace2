@@ -170,7 +170,30 @@ export interface JobsInfo {
   jobs: JobInfo[];
 }
 
-export type MarketKind = 'part' | 'tyre' | 'spare_tyre' | 'car';
+export interface AdReward {
+  key: 'energy' | 'money' | 'discount' | 'retry';
+  label: string;
+  daily: number;
+  left: number;
+  blocked: string;
+}
+
+export interface AdsInfo {
+  cooldown: number;
+  rewards: AdReward[];
+}
+
+export interface AdStart {
+  view_id: number;
+  token: string;
+  label: string;
+  seconds: number;
+  provider: 'test' | 'gpt';
+  gpt_unit: string;
+  publisher: string;
+}
+
+export type MarketKind ='part' | 'tyre' | 'spare_tyre' | 'car';
 
 export interface MarketDetails {
   label: string;
@@ -670,6 +693,10 @@ export const trainOwn = () => post<{ track: TrackInfo }>('track/own');
 export const getJobs = () => get<{ jobs: JobsInfo }>('jobs');
 export const takeJob = (id: number) => post<{ jobs: JobsInfo }>('jobs/take', { id });
 export const quitJob = () => post<{ jobs: JobsInfo }>('jobs/quit');
+
+export const getAds = () => get<{ ads: AdsInfo }>('ads');
+export const startAd = (reward: string) => post<{ ad: AdStart }>('ads/start', { reward });
+export const claimAd = (viewId: number, token: string) => post<{ ads: AdsInfo }>('ads/claim', { view_id: viewId, token });
 
 type MarketResult = { market: MarketInfo };
 export const getMarket = (query: MarketQuery) => get<MarketResult>(`market?scope=${query.scope}&filter=${query.filter}`);

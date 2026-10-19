@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import AdButton from '../components/AdButton.vue';
 import BribeCard from '../components/BribeCard.vue';
 import Feedback from '../components/Feedback.vue';
 import { date, money } from '../format';
@@ -57,7 +58,10 @@ async function giveBribe() {
           {{ hall.permit.by_bribe ? 'Подкупът на кмета ти дава разрешение.' : 'Имаш разрешение.' }}
           Можеш да подобриш гаража до ниво {{ hall.permit.next_level }} от <RouterLink to="/garage">гаража</RouterLink>.
         </p>
-        <p v-else-if="hall.permit.refused_today" class="bgr-error">Кметът отказа днес. Опитай утре.</p>
+        <template v-else-if="hall.permit.refused_today && !session.player?.perks.retry">
+          <p class="bgr-error">Кметът отказа днес. Опитай утре.</p>
+          <AdButton reward="retry" text="Гледай реклама за втори опит" @done="(text) => (message = text)" />
+        </template>
         <template v-else>
           <p class="bgr-muted">Нужно е за гараж ниво {{ hall.permit.next_level }}. Шанс: {{ hall.permit.chance }}%.</p>
           <button :disabled="busy" @click="negotiate('garage')">Поискай разрешение ({{ hall.energy }} енергия)</button>
@@ -72,7 +76,10 @@ async function giveBribe() {
         </template>
         <p v-else-if="hall.track.status === 'building'" class="bgr-muted">Строи се. Готова на {{ hall.track.ready_at ? date(hall.track.ready_at) : '' }}.</p>
         <p v-else-if="hall.track.banned" class="bgr-error">След разкрития саботаж кметът няма да преговаря за пистата до следващия сезон.</p>
-        <p v-else-if="hall.track.refused_today" class="bgr-error">Кметът отказа днес. Опитай утре.</p>
+        <template v-else-if="hall.track.refused_today && !session.player?.perks.retry">
+          <p class="bgr-error">Кметът отказа днес. Опитай утре.</p>
+          <AdButton reward="retry" text="Гледай реклама за втори опит" @done="(text) => (message = text)" />
+        </template>
         <template v-else>
           <p class="bgr-muted">
             <template v-if="hall.track.status === 'closed'">Пистата е затворена. При успех кметът я отваря веднага, без нов строеж.</template>
@@ -91,6 +98,7 @@ async function giveBribe() {
           :busy="busy"
           :locked="(session.player?.level ?? 0) < hall.bribe.level ? `Кметът приема подкупи от ниво ${hall.bribe.level}.` : undefined"
           @bribe="giveBribe"
+          @notice="(text) => (message = text)"
         />
         <p class="bgr-muted">Подкупът пази от глоби и дава разрешение за гаража без преговори.</p>
       </section>
