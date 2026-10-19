@@ -240,7 +240,7 @@ final class Garage
                 'class_label' => Labels::classLabel($row['class']),
                 'active' => $car && (int) $row['player_car_id'] === (int) $car['player_car_id'],
             ], self::cars($managerId)),
-            'garage' => GarageLevels::view((int) $manager['garage_level']),
+            'garage' => GarageLevels::view((int) $manager['garage_level']) + ['permit' => Mayor::hasPermit($managerId)],
             'spares' => GarageLevels::spares((int) $manager['garage_level']),
             'slots' => $slots,
             'tyre' => $snapshot && $snapshot['tyre'] ? self::tyreView($snapshot['tyre']) : null,
@@ -308,7 +308,7 @@ final class Garage
              FROM $items i
              LEFT JOIN $parts p ON i.kind = 'part' AND p.id = i.catalog_id
              LEFT JOIN $tyres t ON i.kind IN ('tyre', 'spare_tyre') AND t.id = i.catalog_id
-             WHERE i.manager_id = %d AND i.player_car_id = 0
+             WHERE i.manager_id = %d AND i.player_car_id = 0 AND i.kind IN ('part', 'tyre', 'spare_tyre')
              ORDER BY i.kind, i.id",
             $managerId
         ), ARRAY_A);
@@ -371,6 +371,9 @@ final class Garage
         if ((int) $item['min_level'] > (int) $manager['level']) {
             return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $item['min_level']), ['status' => 400]);
         }
+        if (Bank::blocked((int) $manager['id'])) {
+            return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
+        }
         $price = Shop::price($kind, $item, $manager);
         $label = $kind === 'spare_tyre' ? 'Резервна гума ' . $item['name'] : $item['name'];
         if (!Ledger::add((int) $manager['id'], -$price, 'shop', $label)) {
@@ -423,6 +426,9 @@ final class Garage
         if (Rallies::hasUpcomingEntry($managerId)) {
             return new WP_Error('bgr_registered', 'Не можеш да сменяш коли, докато си записан за предстоящо рали.', ['status' => 400]);
         }
+        if (Bank::blocked($managerId)) {
+            return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
+        }
 
         $owned = self::cars($managerId);
         $tradeIn = count($owned) >= GarageLevels::carSlots((int) $manager['garage_level']) ? self::car($managerId) : null;
@@ -444,8 +450,9 @@ final class Garage
         }
 
         self::addCar($managerId, $carId, (string) $car['class']);
+        Rumors::about($managerId, '%s купи ' . $car['name'] . '.', sprintf('Отбор от града купи %s.', $car['name']));
 
-        $message = sprintf('Купи %s. Колата е със стандартни части – монтирай ѝ гуми от склада.', $car['name']);
+        $message =sprintf('Купи %s. Колата е със стандартни части – монтирай ѝ гуми от склада.', $car['name']);
         return $tradeIn ? $message . sprintf(' %s е продадена за %d €, а частите и гумите от нея са в склада.', $tradeIn['name'], $tradeInValue) : $message;
     }
 
@@ -478,11 +485,15 @@ final class Garage
         if ((int) $manager['level'] < (int) $next['min_level']) {
             return new WP_Error('bgr_level', sprintf('Нужно е ниво на мениджъра %d.', $next['min_level']), ['status' => 400]);
         }
+        if (!Mayor::hasPermit($managerId)) {
+            return new WP_Error('bgr_permit', 'Нужно е разрешение от кмета. Поискай го в Кметството.', ['status' => 400]);
+        }
         if (!Ledger::add($managerId, -(int) $next['price'], 'garage', 'Гараж ниво ' . $next['level'])) {
             return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са %d €).', $next['price']), ['status' => 400]);
         }
 
         $wpdb->update(Tables::name('managers'), ['garage_level' => (int) $next['level']], ['id' => $managerId]);
+        Mayor::usePermit($managerId);
         return sprintf('Гаражът е подобрен до ниво %d. Отключено: %s.', $next['level'], GarageLevels::describe($next) ?: 'нищо ново');
     }
 

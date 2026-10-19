@@ -66,6 +66,8 @@ final class Rallies
             Simulator::publish((int) $id);
         }
         Sponsors::expire();
+        Work::runDaily();
+        Market::expire();
         Payroll::runAll();
     }
 
@@ -254,6 +256,7 @@ final class Rallies
             'can_change_styles' => $entry && $scheduled && self::now() < strtotime($rally['start_at']),
             'style_options' => Labels::STYLES,
             'start_list' => self::startList($id, $scheduled, $managerId),
+            'intel' => Intel::view($manager, $rally, $entry),
             'broadcast' => Broadcast::view($rally, $managerId),
         ];
     }

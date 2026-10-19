@@ -74,7 +74,13 @@ final class Bar
             ];
         }
 
-        return ['city' => $manager['city'] ?? '', 'roles' => $roles];
+        $named = isset($current['informant']);
+        return [
+            'city' => $manager['city'] ?? '',
+            'roles' => $roles,
+            'rumors' => Rumors::forCity((int) $manager['city_id'], $named),
+            'rumors_named' => $named,
+        ];
     }
 
     public static function hire(array $manager, int $candidateId): string|WP_Error

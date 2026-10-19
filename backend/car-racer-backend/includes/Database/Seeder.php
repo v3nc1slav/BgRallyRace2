@@ -36,6 +36,8 @@ final class Seeder
         self::seed('garage_levels', self::garageLevels());
         self::seed('sponsors', self::sponsors());
         self::seed('incidents', self::incidents());
+        self::seed('clothes', self::clothes());
+        self::seed('jobs', self::jobs());
 
         if ($fresh || (int) $from < 4) {
             self::addPrivileges();
@@ -168,6 +170,41 @@ final class Seeder
         $wpdb->query("UPDATE $table SET weather_change = 'rain', change_chance = 30 WHERE status = 'scheduled' AND weather = 'dry' AND weather_change = ''");
         $wpdb->query("UPDATE $table SET weather_change = 'dry', change_chance = 40 WHERE status = 'scheduled' AND weather = 'rain' AND weather_change = ''");
         $wpdb->query("UPDATE $table SET weather_change = 'dry', change_chance = 25 WHERE status = 'scheduled' AND weather = 'snow' AND weather_change = ''");
+    }
+
+    private static function clothes(): array
+    {
+        $clothes = [
+            ['Спортно яке', 'suit', 2, 800, 1],
+            ['Елегантен костюм', 'suit', 5, 4000, 10],
+            ['Костюм по поръчка', 'suit', 9, 15000, 25],
+            ['Маратонки', 'shoes', 1, 300, 1],
+            ['Кожени обувки', 'shoes', 3, 1500, 8],
+            ['Италиански обувки', 'shoes', 5, 6000, 20],
+            ['Дигитален часовник', 'watch', 1, 200, 1],
+            ['Хронограф', 'watch', 4, 3000, 12],
+            ['Швейцарски часовник', 'watch', 7, 20000, 30],
+            ['Слънчеви очила', 'accessory', 1, 250, 1],
+            ['Кожена чанта', 'accessory', 3, 2000, 10],
+            ['Златни ръкавели', 'accessory', 6, 12000, 28],
+        ];
+
+        return array_map(fn($item) => array_combine(['name', 'slot', 'bonus', 'price', 'min_level'], $item) + ['active' => 1], $clothes);
+    }
+
+    private static function jobs(): array
+    {
+        $jobs = [
+            ['Сервитьор в бара', 'bar', 60, 25, 1],
+            ['Продавач в МОЛ-а', 'mall', 80, 30, 3],
+            ['Хамалин на пазара', 'market', 100, 40, 5],
+            ['Консултант в магазина за части', 'shop', 140, 30, 10],
+            ['Инструктор по безопасно шофиране', 'track', 220, 30, 20],
+            ['Охрана в банката', 'bank', 300, 35, 30],
+            ['Управител на автосалон', 'shop', 450, 35, 40],
+        ];
+
+        return array_map(fn($job) => array_combine(['name', 'building', 'pay', 'energy', 'min_level'], $job) + ['active' => 1], $jobs);
     }
 
     private static function incidents(): array

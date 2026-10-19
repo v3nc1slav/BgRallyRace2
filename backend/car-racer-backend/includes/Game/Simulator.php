@@ -40,6 +40,7 @@ final class Simulator
     private string $weather;
     private ?string $newWeather = null;
     private ?int $changeStage = null;
+    private array $sabotage = [];
 
     private function __construct(private readonly array $rally)
     {
@@ -67,6 +68,7 @@ final class Simulator
         mt_srand($seed);
 
         $simulator = new self(Registry::get('rallies')->find($rallyId));
+        $simulator->sabotage = Sabotage::resolve($rallyId);
         $simulator->forecast();
         $simulator->loadCrews();
         $simulator->race();
@@ -117,6 +119,8 @@ final class Simulator
                 Sponsors::afterRally($manager, $entry, $name);
             }
         }
+
+        Seasons::maybeClose((int) ($rally['season'] ?? 0));
     }
 
     public static function wearAmount(float $ratePer100km, float $km, string $surface, string $style): float
@@ -253,6 +257,7 @@ final class Simulator
             'physical' => (float) $crew['physical'],
             'time_factor' => Staff::engineerFactor($crew['engineer']),
             'tyre_factor' => Staff::chemistTyreFactor($crew['chemist']),
+            'breakdown_factor' => (float) ($this->sabotage[$managerId]['engine'] ?? 1),
             'home' => $manager && (int) $manager['city_id'] === (int) $this->rally['city_id'],
             'recon' => (bool) $entry['recon'],
             'styles' => json_decode((string) $entry['styles'], true) ?: [],
@@ -368,6 +373,7 @@ final class Simulator
             'physical' => 50.0,
             'time_factor' => 1.0,
             'tyre_factor' => 1.0,
+            'breakdown_factor' => 1.0,
             'home' => false,
             'recon' => false,
             'styles' => [],
@@ -789,7 +795,7 @@ final class Simulator
                     $risk = ($part['health'] < 50 ? 1 + 2 * (50 - $part['health']) / 50 : 1) * ($part['defect'] ? 2 : 1);
                     $worn = max($worn, $risk);
                 }
-                return $factor * $reliability * $worn;
+                return $factor * $reliability * $worn * $crew['breakdown_factor'];
 
             case 'crash':
             case 'chassis':

@@ -3,9 +3,13 @@
 namespace BgRally\Rest;
 
 use BgRally\Game\BlackTrack;
+use BgRally\Game\Clothes;
+use BgRally\Game\Mayor;
 use BgRally\Game\Police;
+use BgRally\Game\Sabotage;
 use BgRally\Game\Staff;
 use BgRally\Game\Training;
+use BgRally\Game\Work;
 use WP_REST_Request;
 
 final class TownController
@@ -29,6 +33,12 @@ final class TownController
     public static function bribe(WP_REST_Request $request)
     {
         $result = Police::bribe(Auth::manager(), (string) $request->get_param('institution'));
+        return is_wp_error($result) ? $result : Auth::respond(['police' => Police::view(Auth::manager())], $result);
+    }
+
+    public static function report(WP_REST_Request $request)
+    {
+        $result = Sabotage::report(Auth::manager(), absint($request->get_param('rally_id')));
         return is_wp_error($result) ? $result : Auth::respond(['police' => Police::view(Auth::manager())], $result);
     }
 
@@ -87,6 +97,59 @@ final class TownController
             'energy' => \BgRally\Settings::int('fitness_energy'),
             'price' => \BgRally\Settings::int('fitness_price'),
             'gain' => \BgRally\Settings::int('fitness_gain'),
+            'clothes' => Clothes::view($manager),
         ]], $message);
+    }
+
+    public static function buyClothes(WP_REST_Request $request)
+    {
+        $result = Clothes::buy(Auth::manager(), absint($request->get_param('id')));
+        return is_wp_error($result) ? $result : self::mallView($result);
+    }
+
+    public static function wearClothes(WP_REST_Request $request)
+    {
+        $result = Clothes::wear(Auth::manager(), absint($request->get_param('item_id')));
+        return is_wp_error($result) ? $result : self::mallView($result);
+    }
+
+    public static function hall()
+    {
+        return self::hallView();
+    }
+
+    public static function negotiate(WP_REST_Request $request)
+    {
+        $result = Mayor::negotiate(Auth::manager(), (string) $request->get_param('kind'));
+        return is_wp_error($result) ? $result : self::hallView($result);
+    }
+
+    private static function hallView(string $message = '')
+    {
+        $manager = Auth::manager();
+        return Auth::respond(['hall' => Mayor::view($manager) + ['bribe' => Police::view($manager)['mayor']]], $message);
+    }
+
+    public static function trackOwn()
+    {
+        $result = Training::own(Auth::manager());
+        return is_wp_error($result) ? $result : Auth::respond(['track' => Training::view(Auth::manager())], $result);
+    }
+
+    public static function jobs()
+    {
+        return Auth::respond(['jobs' => Work::view(Auth::manager())]);
+    }
+
+    public static function takeJob(WP_REST_Request $request)
+    {
+        $result = Work::take(Auth::manager(), absint($request->get_param('id')));
+        return is_wp_error($result) ? $result : Auth::respond(['jobs' => Work::view(Auth::manager())], $result);
+    }
+
+    public static function quitJob()
+    {
+        $result = Work::quit(Auth::manager());
+        return is_wp_error($result) ? $result : Auth::respond(['jobs' => Work::view(Auth::manager())], $result);
     }
 }

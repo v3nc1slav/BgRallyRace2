@@ -52,6 +52,8 @@ final class Payroll
             Inbox::add($managerId, sprintf('Платени заплати: %d €.', $paid));
         }
 
+        Bank::weekly($managerId);
+
         $boost = Staff::cheerUp($managerId);
         if ($boost) {
             Inbox::add($managerId, sprintf('Психологът вдигна морала на екипажа с %d.', $boost));

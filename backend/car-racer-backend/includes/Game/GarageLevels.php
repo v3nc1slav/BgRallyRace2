@@ -56,6 +56,11 @@ final class GarageLevels
         return 0;
     }
 
+    public static function hasSecurity(int $level): bool
+    {
+        return (bool) (self::current($level)['security'] ?? false);
+    }
+
     public static function carSlots(int $level): int
     {
         return max(1, (int) (self::current($level)['cars'] ?? 1));

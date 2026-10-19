@@ -1,0 +1,50 @@
+<?php
+
+namespace BgRally\Game;
+
+use BgRally\Database\Tables;
+
+final class Rumors
+{
+    private const KEEP = 50;
+
+    private static function table(): string
+    {
+        return Tables::name('rumors');
+    }
+
+    public static function add(int $cityId, string $named, string $anon): void
+    {
+        global $wpdb;
+        $wpdb->insert(self::table(), [
+            'city_id' => $cityId,
+            'named' => mb_strimwidth($named, 0, 255, '…'),
+            'anon' => mb_strimwidth($anon, 0, 255, '…'),
+            'created_at' => current_time('mysql'),
+        ]);
+
+        $edge = $wpdb->get_var($wpdb->prepare('SELECT id FROM ' . self::table() . ' WHERE city_id = %d ORDER BY id DESC LIMIT 1 OFFSET %d', $cityId, self::KEEP - 1));
+        if ($edge) {
+            $wpdb->query($wpdb->prepare('DELETE FROM ' . self::table() . ' WHERE city_id = %d AND id < %d', $cityId, $edge));
+        }
+    }
+
+    public static function about(int $managerId, string $named, string $anon): void
+    {
+        $manager = Managers::find($managerId);
+        if ($manager) {
+            self::add((int) $manager['city_id'], sprintf($named, Managers::name($managerId)), $anon);
+        }
+    }
+
+    public static function forCity(int $cityId, bool $named, int $limit = 10): array
+    {
+        global $wpdb;
+        $rows = $wpdb->get_results($wpdb->prepare('SELECT named, anon, created_at FROM ' . self::table() . ' WHERE city_id = %d ORDER BY id DESC LIMIT %d', $cityId, $limit), ARRAY_A);
+
+        return array_map(fn($row) => [
+            'text' => $named ? $row['named'] : $row['anon'],
+            'at' => str_replace(' ', 'T', $row['created_at']),
+        ], $rows);
+    }
+}

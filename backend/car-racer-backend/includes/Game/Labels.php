@@ -39,6 +39,8 @@ final class Labels
         'engineer' => 'Инженер',
         'psychologist' => 'Психолог',
         'chemist' => 'Химик',
+        'informant' => 'Информатор',
+        'saboteur' => 'Саботьор',
     ];
 
     public const UNLOCKABLE_ROLES = [
@@ -79,7 +81,30 @@ final class Labels
         'sponsor_local' => 'По-бързи преговори с местни спонсори',
     ];
 
-    public const RALLY_STATUSES =['scheduled' => 'Предстои', 'computing' => 'Изчислява се', 'finished' => 'Изчислено'];
+    public const CLOTHING_SLOTS = ['suit' => 'Костюм', 'shoes' => 'Обувки', 'watch' => 'Часовник', 'accessory' => 'Аксесоар'];
+
+    public const BUILDINGS = [
+        'bar' => 'Бар',
+        'mall' => 'МОЛ',
+        'market' => 'Пазар',
+        'shop' => 'Магазин за авто части',
+        'track' => 'Официална писта',
+        'bank' => 'Банка',
+        'hall' => 'Кметство',
+        'police' => 'Полиция',
+    ];
+
+    public const TRACK_STATUSES = ['' => 'Няма', 'building' => 'Строи се', 'open' => 'Отворена', 'closed' => 'Затворена'];
+
+    public const MARKET_KINDS = ['part' => 'Част', 'tyre' => 'Гуми', 'spare_tyre' => 'Резервна гума', 'car' => 'Кола'];
+
+    public const SABOTAGE_KINDS = ['tyres' => 'Гуми', 'engine' => 'Двигател'];
+
+    public const SABOTAGE_STATUSES = ['planned' => 'Подготвя се', 'success' => 'Успя', 'failed' => 'Не успя'];
+
+    public const FORUM_SECTIONS =['general' => 'Общи', 'rallies' => 'Ралита', 'market' => 'Пазар', 'ideas' => 'Предложения и грешки'];
+
+    public const RALLY_STATUSES = ['scheduled' => 'Предстои', 'computing' => 'Изчислява се', 'finished' => 'Изчислено'];
 
     public static function classLabel(int|string $class): string
     {

@@ -56,7 +56,42 @@ final class Training
             'skill_chance' => Settings::int('training_skill_chance'),
             'risk' => Police::officialRisk($managerId),
             'fine' => Settings::int('fine_official'),
+            'own' => [
+                'status' => Mayor::refreshTrack($manager)['track_status'],
+                'km' => Settings::get('track_km'),
+                'fuel' => Rallies::fuelForKm(Settings::get('track_km'), $managerId),
+            ],
         ];
+    }
+
+    private static function ownStage(): array
+    {
+        return [
+            'id' => 0,
+            'name' => 'Собствена писта',
+            'length_km' => Settings::get('track_km'),
+            'surface' => 'asphalt',
+            'profile' => 'technical',
+            'difficulty' => 5,
+            'turns' => 30,
+        ];
+    }
+
+    public static function own(array $manager): string|WP_Error
+    {
+        if (Mayor::refreshTrack($manager)['track_status'] !== 'open') {
+            return new WP_Error('bgr_track', 'Нямаш отворена собствена тренировъчна писта.', ['status' => 400]);
+        }
+        return self::train($manager, 0, [
+            'stage' => self::ownStage(),
+            'energy' => Settings::int('training_energy'),
+            'fuel' => true,
+            'wear' => 1.0,
+            'chance' => 100,
+            'risk' => 0,
+            'fine' => 0,
+            'place' => 'собствената писта',
+        ]);
     }
 
     public static function official(array $manager, int $stageId): string|WP_Error
@@ -96,7 +131,7 @@ final class Training
         if (self::trainedToday($manager)) {
             return new WP_Error('bgr_trained', 'Екипажът вече тренира днес.', ['status' => 400]);
         }
-        $stage = self::stage($manager, $stageId);
+        $stage = $rules['stage'] ?? self::stage($manager, $stageId);
         if (!$stage) {
             return new WP_Error('bgr_stage', 'Тренира се само на етапите в твоя град.', ['status' => 400]);
         }

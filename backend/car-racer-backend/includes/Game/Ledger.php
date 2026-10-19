@@ -19,9 +19,10 @@ final class Ledger
         $wpdb->query('START TRANSACTION');
 
         $updated = $wpdb->query($wpdb->prepare(
-            "UPDATE $managers SET money = money + %d WHERE id = %d AND (money + %d >= 0 OR %d = 1)",
+            "UPDATE $managers SET money = money + %d WHERE id = %d AND (%d > 0 OR money + %d >= 0 OR %d = 1)",
             $amount,
             $managerId,
+            $amount,
             $amount,
             $allowDebt ? 1 : 0
         ));

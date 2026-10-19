@@ -57,7 +57,7 @@ final class Managers
             $manager = $wpdb->get_row($query, ARRAY_A);
         }
 
-        return $manager ? self::refreshEnergy($manager) : null;
+        return $manager ? self::refreshDay($manager) : null;
     }
 
     public static function energyMax(int $level): int
@@ -65,7 +65,7 @@ final class Managers
         return Settings::int('energy_base') + ($level - 1) * Settings::int('energy_per_level');
     }
 
-    private static function refreshEnergy(array $manager): array
+    public static function refreshDay(array $manager): array
     {
         global $wpdb;
         $today = wp_date('Y-m-d');
@@ -74,9 +74,25 @@ final class Managers
             return $manager;
         }
 
-        $manager['energy'] = self::energyMax((int) $manager['level']);
+        $claimed = $wpdb->query($wpdb->prepare(
+            'UPDATE ' . self::table() . ' SET energy_date = %s WHERE id = %d AND (energy_date IS NULL OR energy_date <> %s)',
+            $today,
+            $manager['id'],
+            $today
+        ));
+        if ($claimed !== 1) {
+            return self::find((int) $manager['id']) + $manager;
+        }
+
+        $shift = Work::dailyShift($manager, $today);
+        $manager['energy'] = max(0, self::energyMax((int) $manager['level']) - $shift);
         $manager['energy_date'] = $today;
-        $wpdb->update(self::table(), ['energy' => $manager['energy'], 'energy_date' => $today], ['id' => $manager['id']]);
+        $wpdb->update(self::table(), ['energy' => $manager['energy']], ['id' => $manager['id']]);
+
+        if ($shift) {
+            $manager['money'] = (int) $wpdb->get_var($wpdb->prepare('SELECT money FROM ' . self::table() . ' WHERE id = %d', $manager['id']));
+            $manager['job_date'] = $today;
+        }
 
         return $manager;
     }
@@ -97,6 +113,8 @@ final class Managers
             'garage_level' => (int) $manager['garage_level'],
             'energy' => (int) $manager['energy'],
             'energy_max' => self::energyMax($level),
+            'job' => ($job = Work::job($manager)) ? ['name' => $job['name'], 'pay' => (int) $job['pay'], 'energy' => (int) $job['energy']] : null,
+            'loan' => Bank::summary((int) $manager['id']),
         ];
     }
 
@@ -160,5 +178,24 @@ final class Managers
     {
         global $wpdb;
         $wpdb->update(self::table(), ['banned_at' => null, 'ban_reason' => ''], ['id' => $id]);
+    }
+
+    public static function name(int $id): string
+    {
+        $manager = self::find($id);
+        $user = $manager ? get_userdata((int) $manager['user_id']) : null;
+        return $user ? $user->display_name : 'Отбор';
+    }
+
+    public static function mute(int $id, int $hours): void
+    {
+        global $wpdb;
+        $wpdb->update(self::table(), ['muted_until' => date('Y-m-d H:i:s', Rallies::now() + $hours * HOUR_IN_SECONDS)], ['id' => $id]);
+    }
+
+    public static function unmute(int $id): void
+    {
+        global $wpdb;
+        $wpdb->update(self::table(), ['muted_until' => null], ['id' => $id]);
     }
 }

@@ -41,7 +41,7 @@ final class Sponsors
         $chance = Settings::get('sponsor_chance_base')
             + (int) $manager['level'] * Settings::get('sponsor_chance_level')
             + ($local ? Settings::get('sponsor_chance_local') : 0);
-        return min(Settings::get('sponsor_chance_max'), $chance);
+        return min(Settings::get('sponsor_chance_max'), $chance + Clothes::bonus((int) $manager['id']));
     }
 
     public static function stepRisk(array $manager, bool $local): float

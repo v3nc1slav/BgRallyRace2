@@ -62,7 +62,7 @@ final class PlayersPage
     private static function status(array $player): string
     {
         if (!$player['banned_at']) {
-            return 'Активен';
+            return 'Активен' . TalkPage::mutedLabel($player['muted_until']);
         }
 
         return sprintf(
@@ -88,6 +88,10 @@ final class PlayersPage
             );
         }
 
+        $mute = TalkPage::mutedLabel($player['muted_until'])
+            ? TalkPage::form('unmute', ['manager_id' => $id], '<button class="button">Премахни заглушаването</button>')
+            : TalkPage::muteForm($id);
+
         return sprintf(
             $form,
             esc_url(admin_url('admin-post.php')),
@@ -95,7 +99,7 @@ final class PlayersPage
             $id,
             wp_nonce_field('bgr_ban_' . $id, '_wpnonce', true, false),
             '<input type="text" name="reason" placeholder="Причина" required> <button class="button">Блокирай</button>'
-        );
+        ) . $mute;
     }
 
     public static function handleBan(): void

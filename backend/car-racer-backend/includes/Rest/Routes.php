@@ -49,12 +49,40 @@ final class Routes
         self::route('/black/train', 'POST', [TownController::class, 'blackTrain'], $player);
         self::route('/mall', 'GET', [TownController::class, 'mall'], $player);
         self::route('/mall/fitness', 'POST', [TownController::class, 'fitness'], $player);
+        self::route('/mall/buy', 'POST', [TownController::class, 'buyClothes'], $player);
+        self::route('/mall/wear', 'POST', [TownController::class, 'wearClothes'], $player);
+        self::route('/hall', 'GET', [TownController::class, 'hall'], $player);
+        self::route('/hall/negotiate', 'POST', [TownController::class, 'negotiate'], $player);
+        self::route('/track/own', 'POST', [TownController::class, 'trackOwn'], $player);
+        self::route('/jobs', 'GET', [TownController::class, 'jobs'], $player);
+        self::route('/jobs/take', 'POST', [TownController::class, 'takeJob'], $player);
+        self::route('/jobs/quit', 'POST', [TownController::class, 'quitJob'], $player);
+
+        self::route('/market', 'GET', [TradeController::class, 'market'], $player);
+        self::route('/market/list', 'POST', [TradeController::class, 'listItem'], $player);
+        self::route('/market/cancel', 'POST', [TradeController::class, 'cancel'], $player);
+        self::route('/market/buy', 'POST', [TradeController::class, 'buy'], $player);
+        self::route('/market/dealer', 'POST', [TradeController::class, 'dealer'], $player);
+        self::route('/bank', 'GET', [TradeController::class, 'bank'], $player);
+        self::route('/bank/loan', 'POST', [TradeController::class, 'loan'], $player);
+        self::route('/bank/repay', 'POST', [TradeController::class, 'repay'], $player);
+        self::route('/bank/pay', 'POST', [TradeController::class, 'payOverdue'], $player);
+
+        self::route('/chat', 'GET', [TalkController::class, 'chat'], $player);
+        self::route('/chat', 'POST', [TalkController::class, 'say'], $player);
+        self::route('/talk/report', 'POST', [TalkController::class, 'report'], $player);
+        self::route('/forum', 'GET', [TalkController::class, 'forum'], $player);
+        self::route('/forum/topics', 'POST', [TalkController::class, 'createTopic'], $player);
+        self::route('/forum/topics/(?P<id>\d+)', 'GET', [TalkController::class, 'topic'], $player);
+        self::route('/forum/topics/(?P<id>\d+)/reply', 'POST', [TalkController::class, 'reply'], $player);
 
         self::route('/rallies', 'GET', [RallyController::class, 'index'], $player);
         self::route($rally, 'GET', [RallyController::class, 'show'], $player);
         self::route($rally . '/register', 'POST', [RallyController::class, 'register'], $player);
         self::route($rally . '/styles', 'POST', [RallyController::class, 'styles'], $player);
         self::route($rally . '/recon', 'POST', [RallyController::class, 'recon'], $player);
+        self::route($rally . '/sabotage', 'POST', [RallyController::class, 'sabotage'], $player);
+        self::route('/police/report', 'POST', [TownController::class, 'report'], $player);
         self::route('/standings', 'GET', [RallyController::class, 'standings'], $player);
     }
 

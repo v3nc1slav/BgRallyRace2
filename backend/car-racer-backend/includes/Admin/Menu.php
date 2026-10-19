@@ -14,6 +14,7 @@ final class Menu
         add_action('admin_init', [SettingsPage::class, 'registerSettings']);
         add_action('admin_post_bgr_ban', [PlayersPage::class, 'handleBan']);
         add_action('admin_post_bgr_unban', [PlayersPage::class, 'handleUnban']);
+        TalkPage::register();
     }
 
     public static function addPages(): void
@@ -27,6 +28,7 @@ final class Menu
             add_action("load-$hook", [$page, 'handle']);
         }
 
+        add_submenu_page(self::SLUG, 'Чат и форум', 'Чат и форум', 'manage_options', TalkPage::SLUG, [TalkPage::class, 'render']);
         add_submenu_page(self::SLUG, 'Настройки', 'Настройки', 'manage_options', 'bgrally-settings', [SettingsPage::class, 'render']);
     }
 }

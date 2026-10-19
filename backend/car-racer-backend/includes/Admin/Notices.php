@@ -11,6 +11,12 @@ final class Notices
         'banned' => ['success', 'Играчът е блокиран.'],
         'unbanned' => ['success', 'Играчът е отблокиран.'],
         'cannot_ban_admin' => ['error', 'Администратор не може да бъде блокиран.'],
+        'talk_deleted' => ['success', 'Съобщението е изтрито.'],
+        'talk_dismissed' => ['success', 'Докладът е отхвърлен.'],
+        'topic_deleted' => ['success', 'Темата е изтрита.'],
+        'muted' => ['success', 'Играчът е заглушен.'],
+        'unmuted' => ['success', 'Заглушаването е премахнато.'],
+        'words_saved' => ['success', 'Списъкът със забранени думи е запазен.'],
     ];
 
     public static function flash(string $text, string $type = 'success'): void

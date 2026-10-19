@@ -3,6 +3,7 @@
 namespace BgRally\Rest;
 
 use BgRally\Game\Rallies;
+use BgRally\Game\Sabotage;
 use WP_REST_Request;
 
 final class RallyController
@@ -31,6 +32,11 @@ final class RallyController
     public static function recon(WP_REST_Request $request)
     {
         return self::act($request, Rallies::recon(Auth::manager(), (int) $request['id']));
+    }
+
+    public static function sabotage(WP_REST_Request $request)
+    {
+        return self::act($request, Sabotage::order(Auth::manager(), (int) $request['id'], absint($request->get_param('target_id')), (string) $request->get_param('kind')));
     }
 
     public static function standings(WP_REST_Request $request)

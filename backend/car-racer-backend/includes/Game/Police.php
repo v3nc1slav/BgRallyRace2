@@ -67,6 +67,7 @@ final class Police
     public static function fine(int $managerId, int $amount, string $note): void
     {
         Ledger::add($managerId, -$amount, 'fine', $note, true);
+        Rumors::about($managerId, 'Полицията глоби %s с ' . $amount . ' €.', sprintf('Полицията глоби отбор от града с %d €.', $amount));
     }
 
     public static function chance(array $manager, string $institution): int
@@ -158,6 +159,9 @@ final class Police
                 'official' => self::officialRisk($managerId),
                 'black' => self::blackRisk($managerId),
             ],
+            'reports' => Sabotage::reportable($manager),
+            'report_energy' => Settings::int('report_energy'),
+            'report_days' => Settings::int('report_days'),
         ];
     }
 }

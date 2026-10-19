@@ -106,6 +106,24 @@ final class Registry
                 new Field('active', 'Активен', 'bool', default: 1),
             ], inUse: fn(int $id) => self::countWhere('contracts', 'sponsor_id', $id) > 0, orderBy: 'slot, min_level, payment'),
 
+            new Entity('clothes', 'Дрехи', [
+                new Field('name', 'Име', required: true),
+                new Field('slot', 'Място', 'select', options: Labels::CLOTHING_SLOTS),
+                new Field('bonus', 'Бонус в преговорите (%)', 'int', default: 1),
+                new Field('price', 'Цена (€)', 'int'),
+                new Field('min_level', 'Нужно ниво', 'int', default: 1),
+                new Field('active', 'Активна', 'bool', default: 1),
+            ], inUse: fn(int $id) => self::countItems('clothes', $id) > 0, orderBy: "FIELD(slot, 'suit', 'shoes', 'watch', 'accessory'), price"),
+
+            new Entity('jobs', 'Работи', [
+                new Field('name', 'Име', required: true),
+                new Field('building', 'Сграда', 'select', options: Labels::BUILDINGS),
+                new Field('pay', 'Заплата (€ на ден)', 'int', default: 60),
+                new Field('energy', 'Енергия на ден', 'int', default: 25),
+                new Field('min_level', 'Нужно ниво', 'int', default: 1),
+                new Field('active', 'Активна', 'bool', default: 1),
+            ], inUse: fn(int $id) => self::countWhere('managers', 'job_id', $id) > 0, orderBy: 'min_level, pay'),
+
             new Entity('incidents', 'Случайни събития', [
                 new Field('name', 'Име', required: true),
                 new Field('type', 'Вид', 'select', options: Labels::EVENT_TYPES),
