@@ -8,11 +8,15 @@
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
     "build:app": "vue-tsc && vite build --mode app && cap sync android",
-    "android": "cap open android"
+    "android": "cap open android",
+    "test": "node tests/run.mjs",
+    "test:browser": "node tests/run.mjs --browser",
+    "screenshots": "node tests/browser/shots.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.3",
     "@vitejs/plugin-vue": "^6.0.10",
+    "puppeteer-core": "^24.43.1",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vue-tsc": "^3.3.13"
