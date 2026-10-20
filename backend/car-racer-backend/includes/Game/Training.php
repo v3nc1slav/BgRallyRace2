@@ -91,6 +91,7 @@ final class Training
             'risk' => 0,
             'fine' => 0,
             'place' => 'собствената писта',
+            'xp' => 'xp_own',
         ]);
     }
 
@@ -107,6 +108,7 @@ final class Training
             'risk' => Police::officialRisk((int) $manager['id']),
             'fine' => Settings::int('fine_official'),
             'place' => 'официалната писта',
+            'xp' => 'xp_official',
         ]);
     }
 
@@ -120,6 +122,7 @@ final class Training
             'risk' => Police::blackRisk((int) $manager['id']),
             'fine' => Settings::int('fine_black'),
             'place' => 'черната писта',
+            'xp' => 'xp_black_training',
         ]);
     }
 
@@ -166,6 +169,7 @@ final class Training
 
         $message = sprintf('Тренировка на „%s“ (%s): %s.', $stage['name'], $rules['place'], Simulator::formatTime($time));
         $message .= $improved ? ' +1 умение: ' . implode(' и ', $improved) . '.' : ' Без нови умения този път.';
+        $message .= Progress::addDaily($managerId, $rules['xp']);
 
         if (Police::caught($rules['risk'])) {
             Police::fine($managerId, $rules['fine'], 'Тренировка на ' . $rules['place']);

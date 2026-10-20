@@ -26,6 +26,16 @@ final class Police
         ), ARRAY_A);
     }
 
+    public static function expireAll(int $managerId): bool
+    {
+        global $wpdb;
+        return (bool) $wpdb->query($wpdb->prepare(
+            'UPDATE ' . self::table() . " SET status = 'expired' WHERE manager_id = %d AND status = 'active' AND expires_at > %s",
+            $managerId,
+            current_time('mysql')
+        ));
+    }
+
     private static function refusedThisWeek(int $managerId, string $institution): bool
     {
         global $wpdb;

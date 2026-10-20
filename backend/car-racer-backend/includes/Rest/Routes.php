@@ -57,6 +57,7 @@ final class Routes
         self::route('/mall/wear', 'POST', [TownController::class, 'wearClothes'], $player);
         self::route('/hall', 'GET', [TownController::class, 'hall'], $player);
         self::route('/hall/negotiate', 'POST', [TownController::class, 'negotiate'], $player);
+        self::route('/hall/move', 'POST', [TownController::class, 'move'], $player);
         self::route('/track/own', 'POST', [TownController::class, 'trackOwn'], $player);
         self::route('/jobs', 'GET', [TownController::class, 'jobs'], $player);
         self::route('/jobs/take', 'POST', [TownController::class, 'takeJob'], $player);
@@ -68,6 +69,7 @@ final class Routes
         self::route('/market/buy', 'POST', [TradeController::class, 'buy'], $player);
         self::route('/market/dealer', 'POST', [TradeController::class, 'dealer'], $player);
         self::route('/bank', 'GET', [TradeController::class, 'bank'], $player);
+        self::route('/finance', 'GET', [TradeController::class, 'finance'], $player);
         self::route('/bank/loan', 'POST', [TradeController::class, 'loan'], $player);
         self::route('/bank/repay', 'POST', [TradeController::class, 'repay'], $player);
         self::route('/bank/pay', 'POST', [TradeController::class, 'payOverdue'], $player);

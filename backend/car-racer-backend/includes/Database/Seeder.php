@@ -53,6 +53,31 @@ final class Seeder
         if ($fresh || (int) $from < 13) {
             Pages::ensure();
         }
+        if ($fresh || (int) $from < 15) {
+            self::addCityShops();
+        }
+    }
+
+    private static function addCityShops(): void
+    {
+        global $wpdb;
+        $cities = Registry::get('cities')->table();
+        $parts = Registry::get('parts')->table();
+        $tyres = Registry::get('tyres')->table();
+        $ids = self::cityIds();
+        $list = fn(array $names) => implode(',', array_filter(array_map(fn($name) => (int) ($ids[$name] ?? 0), $names)));
+
+        foreach (['София' => 110, 'Пловдив' => 105, 'Смолян' => 95, 'Велико Търново' => 100, 'Благоевград' => 95, 'Габрово' => 100] as $city => $pct) {
+            $wpdb->query($wpdb->prepare("UPDATE $cities SET shop_price_pct = %d WHERE name = %s AND shop_price_pct = 0", $pct, $city));
+        }
+        $wpdb->query("UPDATE $cities SET shop_price_pct = 100 WHERE shop_price_pct = 0");
+
+        $wpdb->query($wpdb->prepare("UPDATE $parts SET city_ids = %s WHERE name LIKE %s AND city_ids = ''", $list(['София', 'Пловдив', 'Велико Търново']), 'Състезател%'));
+        $wpdb->query($wpdb->prepare("UPDATE $tyres SET city_ids = %s WHERE type = 'snow' AND city_ids = ''", $list(['Смолян', 'Благоевград', 'Габрово'])));
+
+        foreach (['Спортен двигател' => 5, 'Състезателен двигател' => 10] as $name => $pct) {
+            $wpdb->query($wpdb->prepare("UPDATE $parts SET fuel_pct = %d WHERE name = %s AND fuel_pct = 0", $pct, $name));
+        }
     }
 
     private static function addShushnyaScenery(): void

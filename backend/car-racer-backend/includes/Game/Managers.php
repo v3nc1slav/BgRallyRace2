@@ -85,10 +85,19 @@ final class Managers
             return self::find((int) $manager['id']) + $manager;
         }
 
+        $yesterday = date('Y-m-d', strtotime($today) - DAY_IN_SECONDS);
+        $spent = $manager['energy_date'] === $yesterday && (int) $manager['energy'] < Settings::int('tired_energy');
+        $manager['tired_days'] = $spent ? (int) $manager['tired_days'] + 1 : 0;
+        $manager['energy_pct'] = self::fatiguePct((int) $manager['tired_days']);
+
         $shift = Work::dailyShift($manager, $today);
-        $manager['energy'] = max(0, self::energyMax((int) $manager['level']) - $shift);
+        $manager['energy'] = max(0, (int) round(self::energyMax((int) $manager['level']) * $manager['energy_pct'] / 100) - $shift);
         $manager['energy_date'] = $today;
-        $wpdb->update(self::table(), ['energy' => $manager['energy']], ['id' => $manager['id']]);
+        $wpdb->update(self::table(), [
+            'energy' => $manager['energy'],
+            'tired_days' => $manager['tired_days'],
+            'energy_pct' => $manager['energy_pct'],
+        ], ['id' => $manager['id']]);
 
         if ($shift) {
             $manager['money'] = (int) $wpdb->get_var($wpdb->prepare('SELECT money FROM ' . self::table() . ' WHERE id = %d', $manager['id']));
@@ -96,6 +105,15 @@ final class Managers
         }
 
         return $manager;
+    }
+
+    public static function fatiguePct(int $tiredDays): int
+    {
+        $limit = max(1, Settings::int('tired_days'));
+        if ($tiredDays < $limit) {
+            return 100;
+        }
+        return min(100, $tiredDays === $limit ? Settings::int('tired_first_pct') : Settings::int('tired_pct'));
     }
 
     public static function toApi(array $manager): array
@@ -114,6 +132,14 @@ final class Managers
             'garage_level' => (int) $manager['garage_level'],
             'energy' => (int) $manager['energy'],
             'energy_max' => self::energyMax($level),
+            'fatigue' => [
+                'pct' => (int) ($manager['energy_pct'] ?? 100),
+                'days' => (int) ($manager['tired_days'] ?? 0),
+                'limit' => Settings::int('tired_days'),
+                'threshold' => Settings::int('tired_energy'),
+            ],
+            'xp_today' => Progress::usedToday($manager),
+            'xp_cap' => Settings::int('xp_daily_cap'),
             'job' => ($job = Work::job($manager)) ? ['name' => $job['name'], 'pay' => (int) $job['pay'], 'energy' => (int) $job['energy']] : null,
             'loan' => Bank::summary((int) $manager['id']),
             'perks' => ['discount' => (int) ($manager['shop_discount'] ?? 0), 'retry' => (bool) ($manager['ad_retry'] ?? false)],

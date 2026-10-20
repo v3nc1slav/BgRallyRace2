@@ -2,12 +2,110 @@
 
 namespace BgRally\Game;
 
+use BgRally\Catalog\Registry;
 use BgRally\Database\Tables;
 use BgRally\Settings;
 use WP_Error;
 
 final class Mayor
 {
+    public static function moveCost(array $manager): int
+    {
+        return Settings::int('move_price') + Settings::int('move_per_level') * (int) $manager['level'];
+    }
+
+    private static function moveBlocked(array $manager): string
+    {
+        if ((int) $manager['city_season'] >= Rallies::currentSeason()) {
+            return 'Градът може да се сменя веднъж на сезон. Следващата смяна – през новия сезон.';
+        }
+        if (Rallies::hasUpcomingEntry((int) $manager['id'])) {
+            return 'Не можеш да се преместиш, докато си записан за предстоящо рали.';
+        }
+        return '';
+    }
+
+    public static function move(array $manager, int $cityId): string|WP_Error
+    {
+        global $wpdb;
+        $managerId = (int) $manager['id'];
+        $oldCityId = (int) $manager['city_id'];
+        $city = Registry::get('cities')->find($cityId);
+
+        if (!$city || !(int) $city['active']) {
+            return new WP_Error('bgr_city', 'Няма такъв град.', ['status' => 404]);
+        }
+        if ($cityId === $oldCityId) {
+            return new WP_Error('bgr_city', 'Вече живееш в този град.', ['status' => 400]);
+        }
+        $blocked = self::moveBlocked($manager);
+        if ($blocked) {
+            return new WP_Error('bgr_move', $blocked, ['status' => 400]);
+        }
+        $cost = self::moveCost($manager);
+        if ((int) $manager['money'] < $cost) {
+            return new WP_Error('bgr_money', sprintf('Преместването струва %d €.', $cost), ['status' => 400]);
+        }
+        $energy = Settings::int('move_energy');
+        if (!Energy::spend($managerId, $energy)) {
+            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+        }
+        if (!Ledger::add($managerId, -$cost, 'move', 'Преместване в ' . $city['name'])) {
+            Energy::refund($managerId, $energy);
+            return new WP_Error('bgr_money', sprintf('Преместването струва %d €.', $cost), ['status' => 400]);
+        }
+
+        $notes = [];
+        if (Work::job($manager)) {
+            $notes[] = 'работата ти приключи, но можеш веднага да започнеш нова';
+        }
+        if ($manager['track_status'] !== '') {
+            $notes[] = 'губиш собствената си тренировъчна писта';
+        }
+
+        $wpdb->update(Tables::name('managers'), [
+            'city_id' => $cityId,
+            'city_season' => Rallies::currentSeason(),
+            'job_id' => 0,
+            'job_season' => 0,
+            'track_status' => '',
+            'track_ready_at' => null,
+        ], ['id' => $managerId]);
+
+        $notes = array_merge($notes, Sponsors::leaveCity($managerId, $oldCityId));
+        $refund = BlackTrack::cancelOpen($managerId);
+        if ($refund) {
+            $notes[] = sprintf('предизвикателствата на черната писта са отменени и %d € са върнати', $refund);
+        }
+        if (Police::expireAll($managerId)) {
+            $notes[] = 'подкупите в стария град вече не важат';
+        }
+
+        $details = implode('; ', $notes);
+        $message = sprintf('Премести се в %s за %d €.', $city['name'], $cost) . ($details !== '' ? ' ' . mb_strtoupper(mb_substr($details, 0, 1)) . mb_substr($details, 1) . '.' : '');
+        Inbox::add($managerId, $message);
+        return $message;
+    }
+
+    private static function moveView(array $manager): array
+    {
+        global $wpdb;
+        $rows = $wpdb->get_results('SELECT id, name FROM ' . Registry::get('cities')->table() . ' WHERE active = 1 AND id <> ' . (int) $manager['city_id'] . ' ORDER BY name', ARRAY_A);
+
+        return [
+            'cost' => self::moveCost($manager),
+            'energy' => Settings::int('move_energy'),
+            'sponsor_risk' => Settings::int('move_sponsor_risk'),
+            'blocked' => self::moveBlocked($manager),
+            'cities' => array_map(fn($row) => [
+                'id' => (int) $row['id'],
+                'name' => $row['name'],
+                'privileges' => Privileges::describe((int) $row['id']),
+                'price_pct' => Shop::cityPct((int) $row['id']),
+            ], $rows),
+        ];
+    }
+
     private static function table(): string
     {
         return Tables::name('mayor_requests');
@@ -187,6 +285,7 @@ final class Mayor
         return [
             'energy' => Settings::int('mayor_energy'),
             'clothes_bonus' => Clothes::bonus($managerId),
+            'move' => self::moveView($manager),
             'permit' => [
                 'has' => self::hasPermit($managerId),
                 'by_bribe' => Police::active($managerId, 'mayor') !== null,

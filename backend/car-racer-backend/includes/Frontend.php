@@ -111,7 +111,7 @@ final class Frontend
 
         $offline = wp_json_encode(home_url('/?bgr_offline=1'));
         $image = wp_json_encode(plugins_url('assets/error.jpg', BGR_FILE));
-        $cache = wp_json_encode('bgr-offline-' . BGR_VERSION . '-' . filemtime(BGR_DIR . '/dropins/error-page.tpl'));
+        $cache = wp_json_encode('bgr-offline-' . BGR_VERSION . '-' . filemtime(BGR_DIR . '/dropins/error-page.tpl') . '-' . filemtime(BGR_DIR . '/assets/error.jpg'));
         $icon = wp_json_encode(plugins_url('assets/icon-192.png', BGR_FILE));
         $start = wp_json_encode(self::gameUrl());
 

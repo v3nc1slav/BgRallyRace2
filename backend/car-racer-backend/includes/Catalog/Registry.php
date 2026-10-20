@@ -25,6 +25,7 @@ final class Registry
                 new Field('privilege_1_value', 'Привилегия 1: стойност (%)', 'int', inList: false),
                 new Field('privilege_2', 'Привилегия 2', 'select', options: Labels::PRIVILEGES),
                 new Field('privilege_2_value', 'Привилегия 2: стойност (%)', 'int', inList: false),
+                new Field('shop_price_pct', 'Цени в магазина (%)', 'int', default: 100),
                 new Field('active', 'Активен', 'bool', default: 1),
             ], inUse: fn(int $id) => Managers::countInCity($id) > 0 || self::countWhere('stages', 'city_id', $id) > 0),
 
@@ -51,6 +52,7 @@ final class Registry
                 new Field('fuel_consumption', 'Разход (л/100 км)', 'float', default: 35),
                 new Field('price', 'Цена (€)', 'int'),
                 new Field('min_level', 'Нужно ниво', 'int', default: 1),
+                new Field('city_ids', 'Продава се в градовете (празно = всички)', 'refs', ref: 'cities', inList: false),
                 new Field('active', 'Активна', 'bool', default: 1),
             ], inUse: fn(int $id) => self::countWhere('player_cars', 'car_id', $id) > 0 || self::countWhere('bots', 'car_id', $id) > 0, orderBy: 'class DESC, price'),
 
@@ -63,8 +65,10 @@ final class Registry
                 new Field('braking_bonus', 'Бонус спирачки', 'int'),
                 new Field('reliability_bonus', 'Бонус надеждност', 'int'),
                 new Field('wear_per_100km', 'Износване (% на 100 км)', 'float', default: 8, inList: false),
+                new Field('fuel_pct', 'Разход на гориво (%)', 'int', inList: false),
                 new Field('price', 'Цена (€)', 'int'),
                 new Field('min_level', 'Нужно ниво', 'int', default: 1),
+                new Field('city_ids', 'Продава се в градовете (празно = всички)', 'refs', ref: 'cities', inList: false),
                 new Field('active', 'Активна', 'bool', default: 1),
             ], inUse: fn(int $id) => self::countItems('part', $id) > 0, orderBy: 'type, price'),
 
@@ -79,6 +83,7 @@ final class Registry
                 new Field('wear_per_100km', 'Износване (% на 100 км)', 'float', default: 25),
                 new Field('price', 'Цена за комплект (€)', 'int'),
                 new Field('min_level', 'Нужно ниво', 'int', default: 1),
+                new Field('city_ids', 'Продава се в градовете (празно = всички)', 'refs', ref: 'cities', inList: false),
                 new Field('active', 'Активна', 'bool', default: 1),
             ], inUse: fn(int $id) => self::countItems('tyre', $id) > 0, orderBy: 'type, compound'),
 

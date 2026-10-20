@@ -237,7 +237,7 @@ final class Staff
         $physical = min(100, (int) $row['physical'] + Settings::int('fitness_gain'));
         $wpdb->update(self::table(), ['physical' => $physical, 'fitness_date' => wp_date('Y-m-d')], ['id' => $staffId]);
 
-        return sprintf('%s тренира във фитнеса. Физически умения: %d.', $row['name'], $physical);
+        return sprintf('%s тренира във фитнеса. Физически умения: %d.', $row['name'], $physical) . Progress::addDaily($managerId, 'xp_fitness');
     }
 
     public static function afterRally(int $managerId, int $place, int $classSize, string $status): void

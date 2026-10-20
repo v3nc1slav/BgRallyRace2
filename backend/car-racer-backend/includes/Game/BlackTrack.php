@@ -170,6 +170,21 @@ final class BlackTrack
         return 'Предизвикателството е отменено и залогът е върнат.';
     }
 
+    public static function cancelOpen(int $managerId): int
+    {
+        global $wpdb;
+        $refund = 0;
+        $rows = $wpdb->get_results($wpdb->prepare('SELECT id, bet FROM ' . self::table() . " WHERE challenger_id = %d AND status = 'open'", $managerId), ARRAY_A);
+
+        foreach ($rows as $row) {
+            if ($wpdb->query($wpdb->prepare('UPDATE ' . self::table() . " SET status = 'cancelled' WHERE id = %d AND status = 'open'", $row['id'])) === 1) {
+                Ledger::add($managerId, (int) $row['bet'], 'black_refund', 'Отменено предизвикателство');
+                $refund += (int) $row['bet'];
+            }
+        }
+        return $refund;
+    }
+
     public static function accept(array $manager, int $id): string|WP_Error
     {
         global $wpdb;
@@ -253,8 +268,13 @@ final class BlackTrack
             $caught[$who] ? sprintf(' Полицията ви хвана: глоба %d € и конфискуван залог.', Settings::int('fine_black')) : ($payout[$who] ? sprintf(' Получавате %d €.', $payout[$who]) : '')
         );
 
-        Inbox::add($challengerId, $describe($challengerId, self::teamName($managerId)));
-        return $describe($managerId, self::teamName($challengerId));
+        $xp = [];
+        foreach ([$challengerId, $managerId] as $who) {
+            $xp[$who] = Progress::addDaily($who, $who === $winner ? 'xp_black_win' : 'xp_black_loss');
+        }
+
+        Inbox::add($challengerId, $describe($challengerId, self::teamName($managerId)) . $xp[$challengerId]);
+        return $describe($managerId, self::teamName($challengerId)) . $xp[$managerId];
     }
 
     public static function botRace(array $manager, int $stageId, int $bet): string|WP_Error
@@ -300,10 +320,11 @@ final class BlackTrack
             'resolved_at' => current_time('mysql'),
         ]);
 
+        $xp = Progress::addDaily($managerId, $won ? 'xp_black_win' : 'xp_black_loss');
         $message = sprintf('„%s“ срещу %s: %s срещу %s – %s.', $stage['name'], $bot['pilot'], Simulator::formatTime($mine), Simulator::formatTime($theirs), $won ? 'победа' : 'загуба');
         if ($caught) {
-            return $message . sprintf(' Полицията ви хвана: глоба %d € и конфискуван залог.', Settings::int('fine_black'));
+            return $message . sprintf(' Полицията ви хвана: глоба %d € и конфискуван залог.', Settings::int('fine_black')) . $xp;
         }
-        return $message . ($won ? sprintf(' Печелиш %d €.', 2 * $bet) : ' Губиш залога.');
+        return $message . ($won ? sprintf(' Печелиш %d €.', 2 * $bet) : ' Губиш залога.') . $xp;
     }
 }

@@ -124,6 +124,12 @@ final class TownController
         return is_wp_error($result) ? $result : self::hallView($result);
     }
 
+    public static function move(WP_REST_Request $request)
+    {
+        $result = Mayor::move(Auth::manager(), absint($request->get_param('city_id')));
+        return is_wp_error($result) ? $result : self::hallView($result);
+    }
+
     private static function hallView(string $message = '')
     {
         $manager = Auth::manager();

@@ -147,7 +147,7 @@ final class Rallies
     public static function fuelForKm(float $km, int $managerId): int
     {
         $car = Garage::car($managerId);
-        return $car ? self::fuelCost($km, (float) $car['fuel_consumption'], $managerId) : 0;
+        return $car ? self::fuelCost($km, Garage::consumption($car), $managerId) : 0;
     }
 
     public static function seasonPosition(int $managerId): ?int
@@ -183,7 +183,7 @@ final class Rallies
             $fee = (int) round($fee * Privileges::factor((int) $manager['city_id'], 'home_fee'));
         }
         $travel = Travel::cost((int) $manager['city_id'], (int) $rally['city_id']);
-        $fuel = $car ? self::fuelCost($km, (float) $car['fuel_consumption'], (int) $manager['id']) : 0;
+        $fuel = $car ? self::fuelCost($km, Garage::consumption($car), (int) $manager['id']) : 0;
         $cities = Registry::get('cities')->options();
 
         return [
@@ -514,7 +514,7 @@ final class Rallies
 
         $stages = self::stages($rally);
         $km = array_sum(array_map(fn($stage) => (float) $stage['length_km'], $stages));
-        $fuel = self::fuelCost($km, (float) $snapshot['car']['fuel_consumption'], $managerId);
+        $fuel = self::fuelCost($km, Garage::consumption($snapshot['car'], $snapshot['parts']), $managerId);
         $energy = Settings::int('energy_recon');
 
         if ((int) $manager['money'] < $fuel) {

@@ -126,7 +126,7 @@ final class Garage
         $parts = Registry::get('parts')->table();
 
         $rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT i.id, i.health, i.max_health, i.defect, p.name, p.type, p.class, p.power_bonus, p.handling_bonus, p.braking_bonus, p.reliability_bonus, p.wear_per_100km, p.price
+            "SELECT i.id, i.health, i.max_health, i.defect, p.name, p.type, p.class, p.power_bonus, p.handling_bonus, p.braking_bonus, p.reliability_bonus, p.wear_per_100km, p.fuel_pct, p.price
              FROM $items i JOIN $parts p ON p.id = i.catalog_id
              WHERE i.kind = 'part' AND i.player_car_id = %d",
             $playerCarId
@@ -137,6 +137,13 @@ final class Garage
             $byType[$row['type']] = $row;
         }
         return $byType;
+    }
+
+    public static function consumption(array $car, ?array $parts = null): float
+    {
+        $parts ??= self::mountedParts((int) $car['player_car_id']);
+        $pct = array_sum(array_map(fn($part) => (int) $part['fuel_pct'], $parts));
+        return round((float) $car['fuel_consumption'] * max(0, 1 + $pct / 100), 2);
     }
 
     public static function mountedTyre(int $playerCarId): ?array
@@ -230,7 +237,8 @@ final class Garage
                     'reliability' => (int) $car['reliability'],
                 ],
                 'stats' => $snapshot['stats'],
-                'fuel_consumption' => (float) $car['fuel_consumption'],
+                'fuel_consumption' => self::consumption($car, $snapshot['parts']),
+                'fuel_base' => (float) $car['fuel_consumption'],
                 'health' => round($snapshot['health'], 1),
                 'problems' => array_merge($snapshot['problems'], Staff::problems($managerId)),
             ] : null,
@@ -272,6 +280,7 @@ final class Garage
                 'braking' => (int) $part['braking_bonus'],
                 'reliability' => (int) $part['reliability_bonus'],
             ],
+            'fuel_pct' => (int) $part['fuel_pct'],
             'can_repair' => $newMax > (float) $part['health'],
             'repair_cost' => self::repairCost((int) $part['price'], (float) $part['health'], (float) $part['max_health'], $cityId),
         ];
@@ -371,6 +380,9 @@ final class Garage
         if ((int) $item['min_level'] > (int) $manager['level']) {
             return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $item['min_level']), ['status' => 400]);
         }
+        if (!Shop::sold($item, (int) $manager['city_id'])) {
+            return new WP_Error('bgr_city', Shop::NOT_SOLD, ['status' => 400]);
+        }
         if (Bank::blocked((int) $manager['id'])) {
             return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
         }
@@ -424,6 +436,9 @@ final class Garage
         if ((int) $car['min_level'] > (int) $manager['level']) {
             return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $car['min_level']), ['status' => 400]);
         }
+        if (!Shop::sold($car, (int) $manager['city_id'])) {
+            return new WP_Error('bgr_city', Shop::NOT_SOLD, ['status' => 400]);
+        }
         if (Rallies::hasUpcomingEntry($managerId)) {
             return new WP_Error('bgr_registered', 'Не можеш да сменяш коли, докато си записан за предстоящо рали.', ['status' => 400]);
         }
@@ -434,7 +449,7 @@ final class Garage
         $owned = self::cars($managerId);
         $tradeIn = count($owned) >= GarageLevels::carSlots((int) $manager['garage_level']) ? self::car($managerId) : null;
         $tradeInValue = $tradeIn ? (int) round((int) $tradeIn['price'] * self::TRADE_IN) : 0;
-        $price = Ads::discount($manager, (int) $car['price']);
+        $price = Ads::discount($manager, Shop::price('car', $car, $manager));
 
         if ((int) $manager['money'] + $tradeInValue < $price) {
             return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са още %d €).', $price - $tradeInValue - (int) $manager['money']), ['status' => 400]);
@@ -544,7 +559,7 @@ final class Garage
         }
         $wpdb->update($items, ['player_car_id' => $playerCarId], ['id' => $itemId]);
 
-        return $worker['mechanic'] ? sprintf('Майсторът %s монтира артикула.', $worker['mechanic']['name']) : 'Монтирано.';
+        return $worker['mechanic'] ? sprintf('Майсторът %s монтира артикула.', $worker['mechanic']['name']) : 'Монтирано.' . Progress::addDaily($managerId, 'xp_mount');
     }
 
     public static function repair(array $manager, int $itemId): string|WP_Error
@@ -588,9 +603,10 @@ final class Garage
         $wpdb->update($items, ['health' => $newHealth, 'max_health' => $newMax, 'defect' => $poor ? 1 : 0], ['id' => $itemId]);
 
         $who = $worker['mechanic'] ? 'Майсторът ' . $worker['mechanic']['name'] : 'Ти';
-        return $poor
+        $xp = $worker['mechanic'] ? '' : Progress::addDaily($managerId, 'xp_repair');
+        return ($poor
             ? sprintf('%s направи некачествен ремонт: частта е възстановена само до %d%%.', $who, round($newHealth))
-            : sprintf('%s ремонтира частта до %d%%.', $who, round($newHealth));
+            : sprintf('%s ремонтира частта до %d%%.', $who, round($newHealth))) . $xp;
     }
 
     public static function applyWear(array $wear): void

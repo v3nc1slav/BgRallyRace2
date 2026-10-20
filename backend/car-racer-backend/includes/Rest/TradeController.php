@@ -3,6 +3,7 @@
 namespace BgRally\Rest;
 
 use BgRally\Game\Bank;
+use BgRally\Game\Finance;
 use BgRally\Game\Market;
 use WP_REST_Request;
 
@@ -41,6 +42,12 @@ final class TradeController
     {
         $scope = $request->get_param('scope') === 'city' ? 'city' : 'all';
         return Auth::respond(['market' => Market::view(Auth::manager(), $scope, (string) $request->get_param('filter'))], $message);
+    }
+
+    public static function finance(WP_REST_Request $request)
+    {
+        $season = $request->get_param('season');
+        return Auth::respond(['finance' => Finance::view(Auth::manager(), $season === null || $season === '' ? -1 : (int) $season)]);
     }
 
     public static function bank()

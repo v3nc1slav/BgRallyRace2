@@ -242,4 +242,24 @@ final class Sponsors
             Inbox::add((int) $row['manager_id'], sprintf('Договорът със „%s“ изтече.', $row['name']));
         }
     }
+
+    public static function leaveCity(int $managerId, int $oldCityId): array
+    {
+        global $wpdb;
+        $notes = [];
+
+        foreach (self::open($managerId) as $contract) {
+            if ((int) $contract['city_id'] !== $oldCityId) {
+                continue;
+            }
+            if ($contract['status'] === 'negotiating') {
+                $wpdb->update(self::table(), ['status' => 'failed'], ['id' => $contract['id']]);
+                $notes[] = sprintf('преговорите със „%s“ са прекратени', $contract['name']);
+            } elseif (mt_rand(1, 100) <= Settings::int('move_sponsor_risk')) {
+                $wpdb->update(self::table(), ['status' => 'terminated'], ['id' => $contract['id']]);
+                $notes[] = sprintf('„%s“ прекрати договора', $contract['name']);
+            }
+        }
+        return $notes;
+    }
 }

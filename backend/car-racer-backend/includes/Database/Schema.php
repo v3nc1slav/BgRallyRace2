@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '14';
+    private const VERSION = '15';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -80,6 +80,11 @@ final class Schema
   ad_retry tinyint(1) NOT NULL DEFAULT 0,
   shop_discount smallint(5) unsigned NOT NULL DEFAULT 0,
   notify_off varchar(100) NOT NULL DEFAULT '',
+  city_season int(11) NOT NULL DEFAULT 0,
+  xp_date date DEFAULT NULL,
+  xp_today smallint(5) unsigned NOT NULL DEFAULT 0,
+  tired_days smallint(5) unsigned NOT NULL DEFAULT 0,
+  energy_pct smallint(5) unsigned NOT NULL DEFAULT 100,
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY user_id (user_id),
