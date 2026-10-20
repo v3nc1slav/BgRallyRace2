@@ -64,6 +64,9 @@ export class RaceScene extends Phaser.Scene {
   private cameraMode: CameraMode = 'all';
   private cameraTarget: Phaser.GameObjects.GameObject | null = null;
   private cameraZoomed = false;
+  private userZoom = 1;
+  private followZoom = ZOOM;
+  private pinch: { distance: number; zoom: number } | null = null;
 
   constructor() {
     super('Race');
@@ -98,12 +101,58 @@ export class RaceScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, width, height);
 
     this.precipitation = new Precipitation(width, height, HEADER);
+    this.input.addPointer(1);
+    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => this.onPointerMove(pointer));
+    this.input.on('pointerup', () => (this.pinch = null));
+    this.input.on('wheel', (_pointer: Phaser.Input.Pointer, _objects: unknown, _dx: number, dy: number) => this.zoomBy(dy > 0 ? 0.85 : 1.15));
     this.lastFrame = performance.now();
     this.ready = true;
   }
 
   setCamera(mode: CameraMode) {
     this.cameraMode = mode;
+    this.userZoom = 1;
+    this.updateTouch();
+  }
+
+  zoomBy(factor: number) {
+    const camera = this.cameras.main;
+    if (this.cameraMode === 'all') {
+      this.userZoom = Phaser.Math.Clamp(this.userZoom * factor, 1, 4);
+      camera.setZoom(this.userZoom);
+      if (this.userZoom === 1) {
+        camera.centerOn(this.scale.width / 2, this.scale.height / 2);
+      }
+    } else {
+      this.followZoom = Phaser.Math.Clamp(this.followZoom * factor, 1.2, 4);
+      if (this.cameraZoomed) {
+        camera.setZoom(this.followZoom);
+      }
+    }
+    this.updateTouch();
+  }
+
+  private onPointerMove(pointer: Phaser.Input.Pointer) {
+    const down = this.input.manager.pointers.filter((p) => p.isDown);
+    if (down.length >= 2) {
+      const distance = Phaser.Math.Distance.Between(down[0].x, down[0].y, down[1].x, down[1].y);
+      const zoom = this.cameraMode === 'all' ? this.userZoom : this.followZoom;
+      if (!this.pinch) {
+        this.pinch = { distance, zoom };
+      } else if (this.pinch.distance > 0) {
+        this.zoomBy((this.pinch.zoom * distance) / this.pinch.distance / zoom);
+      }
+      return;
+    }
+    if (pointer.isDown && this.cameraMode === 'all' && this.userZoom > 1) {
+      const camera = this.cameras.main;
+      camera.scrollX -= (pointer.x - pointer.prevPosition.x) / camera.zoom;
+      camera.scrollY -= (pointer.y - pointer.prevPosition.y) / camera.zoom;
+    }
+  }
+
+  private updateTouch() {
+    this.game.canvas.style.touchAction = this.cameraMode === 'all' && this.userZoom > 1 ? 'none' : 'pan-y';
   }
 
   draw(stage: StageShape, markers: CarMarker[], caption: string, env: Environment) {
@@ -373,10 +422,11 @@ export class RaceScene extends Phaser.Scene {
         this.cameraTarget = target;
       }
       if (!this.cameraZoomed) {
-        camera.zoomTo(ZOOM, 600);
+        camera.zoomTo(this.followZoom, 600);
         this.cameraZoomed = true;
       }
     } else if (this.cameraTarget || this.cameraZoomed) {
+      this.userZoom = 1;
       camera.stopFollow();
       camera.pan(this.scale.width / 2, this.scale.height / 2, 500);
       camera.zoomTo(1, 500);

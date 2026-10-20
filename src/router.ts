@@ -15,9 +15,11 @@ import LoginView from './views/LoginView.vue';
 import MallView from './views/MallView.vue';
 import MarketView from './views/MarketView.vue';
 import PoliceView from './views/PoliceView.vue';
+import ProfileView from './views/ProfileView.vue';
 import RalliesView from './views/RalliesView.vue';
 import RallyView from './views/RallyView.vue';
 import RegisterView from './views/RegisterView.vue';
+import SettingsView from './views/SettingsView.vue';
 import ShopView from './views/ShopView.vue';
 import SponsorsView from './views/SponsorsView.vue';
 import StandingsView from './views/StandingsView.vue';
@@ -41,6 +43,8 @@ export const router = createRouter({
     { path: '/city/bank', component: BankView },
     { path: '/forum', component: ForumView },
     { path: '/forum/:id', component: ForumTopicView },
+    { path: '/profile', component: ProfileView },
+    { path: '/settings', component: SettingsView },
     { path: '/shop', component: ShopView },
     { path: '/sponsors', component: SponsorsView },
     { path: '/rallies', component: RalliesView },
@@ -58,7 +62,7 @@ router.beforeEach(async (to) => {
     try {
       await loadSession();
     } catch (error) {
-      session.error = errorMessage(error);
+      session.fatal = errorMessage(error);
       session.loaded = true;
     }
   }

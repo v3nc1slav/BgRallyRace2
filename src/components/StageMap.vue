@@ -182,6 +182,8 @@ onBeforeUnmount(() => {
         <button v-if="hasMe" :class="{ active: camera === 'me' }" @click="camera = 'me'">Моята кола</button>
         <button :class="{ active: camera === 'leader' }" @click="camera = 'leader'">Лидер</button>
         <button v-if="timeline.finished" @click="replay">{{ replaying ? 'Отначало' : 'Повторение' }}</button>
+        <button title="Отдалечи" @click="view?.zoomBy(0.8)">−</button>
+        <button title="Приближи" @click="view?.zoomBy(1.25)">+</button>
       </div>
     </div>
     <div ref="container" class="bgr-race"></div>

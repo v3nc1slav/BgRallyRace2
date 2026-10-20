@@ -1,6 +1,8 @@
+import { AdMob, AdmobConsentStatus, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { reactive } from 'vue';
 import { ApiError } from './api';
 import { claimAd, startAd, type AdStart } from './game';
+import { platform } from './platform';
 
 interface RewardedEvent {
   slot: unknown;
@@ -120,11 +122,61 @@ async function showGpt(ad: AdStart): Promise<boolean> {
   });
 }
 
+let admobReady: Promise<void> | null = null;
+
+function initAdmob() {
+  admobReady ??= (async () => {
+    await AdMob.initialize();
+    const consent = await AdMob.requestConsentInfo();
+    if (consent.isConsentFormAvailable && consent.status === AdmobConsentStatus.REQUIRED) {
+      await AdMob.showConsentForm();
+    }
+  })();
+  return admobReady;
+}
+
+async function showAdmob(ad: AdStart): Promise<boolean> {
+  await initAdmob();
+  await AdMob.prepareRewardVideoAd({ adId: ad.admob_unit, ssv: { customData: ad.ssv_data, userId: ad.user } });
+  let rewarded = false;
+  const listener = await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => {
+    rewarded = true;
+  });
+  try {
+    const item = await AdMob.showRewardVideoAd();
+    return rewarded || (item?.amount ?? 0) > 0;
+  } finally {
+    await listener.remove();
+  }
+}
+
+function show(ad: AdStart): Promise<boolean> {
+  if (ad.provider === 'admob' && ad.admob_unit) {
+    return showAdmob(ad).catch(() => false);
+  }
+  if (ad.provider === 'gpt' && ad.gpt_unit) {
+    return showGpt(ad).catch(() => false);
+  }
+  return showTest(ad);
+}
+
+async function claim(ad: AdStart) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await claimAd(ad.view_id, ad.token);
+    } catch (error) {
+      if (!(error instanceof ApiError) || error.status !== 409 || attempt >= 8) {
+        throw error;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+    }
+  }
+}
+
 export async function watchAd(reward: string) {
-  const { ad } = await startAd(reward);
-  const watched = ad.provider === 'gpt' && ad.gpt_unit ? await showGpt(ad).catch(() => false) : await showTest(ad);
-  if (!watched) {
+  const { ad } = await startAd(reward, platform);
+  if (!(await show(ad))) {
     throw new ApiError('Рекламата не беше изгледана докрай, затова няма награда.', 0);
   }
-  return claimAd(ad.view_id, ad.token);
+  return claim(ad);
 }

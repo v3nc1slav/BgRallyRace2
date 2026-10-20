@@ -4,6 +4,7 @@ import { RaceScene, type CameraMode, type CarMarker, type Environment, type Stag
 export interface StageView {
   render(stage: StageShape, cars: CarMarker[], caption: string, env: Environment): void;
   setCamera(mode: CameraMode): void;
+  zoomBy(factor: number): void;
   destroy(): void;
 }
 
@@ -19,6 +20,7 @@ export function createStageView(parent: HTMLElement): StageView {
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
+    input: { touch: { capture: false } },
     scene: [scene],
   });
 
@@ -31,6 +33,11 @@ export function createStageView(parent: HTMLElement): StageView {
     setCamera(mode) {
       if (scene.ready) {
         scene.setCamera(mode);
+      }
+    },
+    zoomBy(factor) {
+      if (scene.ready) {
+        scene.zoomBy(factor);
       }
     },
     destroy() {

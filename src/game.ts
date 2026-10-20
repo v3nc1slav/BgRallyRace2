@@ -170,6 +170,13 @@ export interface JobsInfo {
   jobs: JobInfo[];
 }
 
+export interface NotifyInfo {
+  enabled: boolean;
+  web: { apiKey: string; messagingSenderId: string; appId: string; vapidKey: string; projectId: string } | null;
+  devices: number;
+  types: { key: string; label: string; on: boolean }[];
+}
+
 export interface AdReward {
   key: 'energy' | 'money' | 'discount' | 'retry';
   label: string;
@@ -188,9 +195,12 @@ export interface AdStart {
   token: string;
   label: string;
   seconds: number;
-  provider: 'test' | 'gpt';
+  provider: 'test' | 'gpt' | 'admob';
   gpt_unit: string;
   publisher: string;
+  admob_unit: string;
+  ssv_data: string;
+  user: string;
 }
 
 export type MarketKind ='part' | 'tyre' | 'spare_tyre' | 'car';
@@ -694,8 +704,14 @@ export const getJobs = () => get<{ jobs: JobsInfo }>('jobs');
 export const takeJob = (id: number) => post<{ jobs: JobsInfo }>('jobs/take', { id });
 export const quitJob = () => post<{ jobs: JobsInfo }>('jobs/quit');
 
+type NotifyResult = { notifications: NotifyInfo };
+export const getNotifications = () => get<NotifyResult>('notifications');
+export const saveNotificationPreferences = (on: string[]) => post<NotifyResult>('notifications/preferences', { on });
+export const addPushDevice = (token: string, platform: string) => post<NotifyResult>('notifications/device', { token, platform });
+export const removePushDevice = (token: string) => post<NotifyResult>('notifications/device/remove', { token });
+
 export const getAds = () => get<{ ads: AdsInfo }>('ads');
-export const startAd = (reward: string) => post<{ ad: AdStart }>('ads/start', { reward });
+export const startAd = (reward: string, platform: string) => post<{ ad: AdStart }>('ads/start', { reward, platform });
 export const claimAd = (viewId: number, token: string) => post<{ ads: AdsInfo }>('ads/claim', { view_id: viewId, token });
 
 type MarketResult = { market: MarketInfo };

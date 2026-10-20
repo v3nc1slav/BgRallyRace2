@@ -2,6 +2,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { errorMessage } from '../api';
+import PrivacyLinks from '../components/PrivacyLinks.vue';
+import SocialButtons from '../components/SocialButtons.vue';
 import { login } from '../session';
 
 const router = useRouter();
@@ -40,6 +42,8 @@ async function submit() {
     </label>
     <p v-if="error" class="bgr-error">{{ error }}</p>
     <button :disabled="busy">Влез</button>
+    <SocialButtons />
     <p class="bgr-muted">Нямаш профил? <RouterLink to="/register">Регистрирай се</RouterLink></p>
+    <PrivacyLinks />
   </form>
 </template>
