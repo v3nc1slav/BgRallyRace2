@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import AdButton from '../components/AdButton.vue';
 import BribeCard from '../components/BribeCard.vue';
 import Feedback from '../components/Feedback.vue';
 import { date, money } from '../format';
-import { bribe, getHall, negotiateMayor, type HallInfo } from '../game';
+import { bribe, getHall, moveCity, negotiateMayor, type HallInfo } from '../game';
 import { session } from '../session';
 import { useAction } from '../useAction';
 
@@ -25,6 +25,24 @@ async function negotiate(kind: 'garage' | 'track') {
   if (result) {
     hall.value = result.hall;
     message.value = result.message;
+  }
+}
+
+const target = ref(0);
+const targetCity = computed(() => hall.value?.move.cities.find((city) => city.id === target.value) ?? null);
+
+async function move() {
+  if (!targetCity.value || !hall.value) {
+    return;
+  }
+  if (!window.confirm(`Да се преместиш ли в ${targetCity.value.name} за ${money(hall.value.move.cost)}? Следващата смяна – чак през новия сезон.`)) {
+    return;
+  }
+  const result = await run(() => moveCity(target.value));
+  if (result) {
+    hall.value = result.hall;
+    message.value = result.message;
+    target.value = 0;
   }
 }
 
@@ -101,6 +119,28 @@ async function giveBribe() {
           @notice="(text) => (message = text)"
         />
         <p class="bgr-muted">Подкупът пази от глоби и дава разрешение за гаража без преговори.</p>
+      </section>
+
+      <section class="bgr-card">
+        <h2>Смяна на града</h2>
+        <p class="bgr-muted">
+          Веднъж на сезон, срещу {{ money(hall.move.cost) }} и {{ hall.move.energy }} енергия. Губиш привилегиите на {{ session.player?.city }},
+          работата (нова можеш да започнеш веднага), собствената писта и подкупите. Отворените ти предизвикателства на черната писта се отменят и залогът се връща.
+          Всеки договор с местен спонсор се прекратява с шанс {{ hall.move.sponsor_risk }}%, а преговорите с местни спонсори спират.
+        </p>
+        <p v-if="hall.move.blocked" class="bgr-error">{{ hall.move.blocked }}</p>
+        <template v-else>
+          <div class="bgr-filters">
+            <select v-model.number="target">
+              <option :value="0" disabled>Избери град</option>
+              <option v-for="city in hall.move.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
+            </select>
+            <button :disabled="busy || !targetCity" @click="move">Премести се</button>
+          </div>
+          <p v-if="targetCity" class="bgr-muted">
+            Привилегии: {{ targetCity.privileges.length ? targetCity.privileges.join(', ') : 'няма' }} · Цени в магазина: {{ targetCity.price_pct }}%
+          </p>
+        </template>
       </section>
     </template>
   </div>

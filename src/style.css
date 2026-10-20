@@ -226,6 +226,12 @@
   font-weight: 600;
 }
 
+.bgr-stats-list dd small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
 .bgr-race {
   width: 100%;
   margin-top: 16px;
@@ -1146,4 +1152,97 @@ body.bgr-game .bgr {
 .bgr-guest .bgr-card input,
 .bgr-guest .bgr-card select {
   background: rgba(21, 23, 28, 0.75);
+}
+
+.bgr {
+  --series-income: #3987e5;
+  --series-expense: #d95926;
+}
+
+.bgr-chart {
+  margin: 8px 0 12px;
+}
+
+.bgr-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.bgr-chart-legend i,
+.bgr-chart-tip i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-radius: 1px;
+}
+
+.bgr-chart-plot {
+  position: relative;
+}
+
+.bgr-chart-plot svg {
+  display: block;
+  touch-action: pan-y;
+  outline: none;
+}
+
+.bgr-chart-plot svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.bgr-chart-grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.bgr-chart-grid text {
+  font-size: 12px;
+  fill: var(--muted);
+}
+
+.bgr-chart-cross {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.bgr-chart-dot {
+  stroke: var(--panel);
+  stroke-width: 2;
+}
+
+.bgr-chart-tip {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
+  display: grid;
+  gap: 4px;
+  width: 190px;
+  padding: 8px 10px;
+  font-size: 0.82rem;
+  pointer-events: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.bgr-chart-tip strong {
+  color: var(--text);
+}
+
+.bgr-finance-lists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px 32px;
+  margin-top: 16px;
+}
+
+.bgr-finance h2 {
+  margin-top: 20px;
 }

@@ -12,6 +12,7 @@ const tradeIn = ref<Shop['trade_in']>(null);
 const parts = ref<ShopPart[]>([]);
 const tyres = ref<ShopTyre[]>([]);
 const privileges = ref<string[]>([]);
+const pricePct = ref(100);
 const { busy, message, error, run } = useAction();
 
 const short: Record<keyof Stats, string> = { power: 'к.с.', handling: 'упр.', braking: 'спир.', reliability: 'надежд.' };
@@ -22,6 +23,7 @@ function apply(shop: Shop) {
   parts.value = shop.parts;
   tyres.value = shop.tyres;
   privileges.value = shop.privileges;
+  pricePct.value = shop.price_pct;
 }
 
 onMounted(() =>
@@ -53,8 +55,11 @@ async function buy(kind: 'part' | 'tyre' | 'spare_tyre', id: number) {
   }
 }
 
-function bonuses(stats: Stats) {
+function bonuses(stats: Stats, fuel = 0) {
   const list = (Object.keys(short) as (keyof Stats)[]).filter((key) => stats[key]).map((key) => `+${stats[key]} ${short[key]}`);
+  if (fuel) {
+    list.push(`${fuel > 0 ? '+' : ''}${fuel}% гориво`);
+  }
   return list.length ? list.join(', ') : '—';
 }
 
@@ -71,7 +76,10 @@ function affordable(price: number) {
       <button :class="{ active: tab === 'parts' }" @click="tab = 'parts'">Части</button>
       <button :class="{ active: tab === 'tyres' }" @click="tab = 'tyres'">Гуми</button>
     </div>
-    <p v-if="privileges.length" class="bgr-muted">Привилегии на града: {{ privileges.join(', ') }}.</p>
+    <p class="bgr-muted">
+      Цени в магазина на {{ session.player?.city }}: {{ pricePct }}%.<template v-if="privileges.length"> Привилегии на града: {{ privileges.join(', ') }}.</template>
+      Асортиментът е различен в различните градове – каквото липсва тук, потърси на <RouterLink to="/city/market">пазара</RouterLink>.
+    </p>
     <p v-if="session.player?.perks.discount" class="bgr-ok">
       Имаш {{ session.player.perks.discount }}% отстъпка от рекламата. Прилага се при следващата покупка.
     </p>
@@ -93,7 +101,7 @@ function affordable(price: number) {
             <td>{{ car.stats.braking }}</td>
             <td>{{ car.stats.reliability }}</td>
             <td>{{ car.fuel_consumption }} л</td>
-            <td>{{ money(car.price) }}</td>
+            <td>{{ money(car.price) }}<small v-if="car.price < car.base_price" class="bgr-muted"><s>{{ money(car.base_price) }}</s></small></td>
             <td class="bgr-right">
               <small v-if="car.owned" class="bgr-ok">в гаража</small>
               <small v-else-if="car.locked" class="bgr-muted">от ниво {{ car.min_level }}</small>
@@ -112,9 +120,9 @@ function affordable(price: number) {
         <tbody>
           <tr v-for="part in parts" :key="part.id" :class="{ 'bgr-locked': part.locked }">
             <td>{{ part.name }}<small class="bgr-muted">{{ part.type_label }} · {{ part.class_label }}</small></td>
-            <td>{{ bonuses(part.bonuses) }}</td>
+            <td>{{ bonuses(part.bonuses, part.fuel_pct) }}</td>
             <td>{{ part.wear }}% / 100 км</td>
-            <td>{{ money(part.price) }}<small v-if="part.price !== part.base_price" class="bgr-muted"><s>{{ money(part.base_price) }}</s></small></td>
+            <td>{{ money(part.price) }}<small v-if="part.price < part.base_price" class="bgr-muted"><s>{{ money(part.base_price) }}</s></small></td>
             <td class="bgr-right">
               <small v-if="part.locked" class="bgr-muted">от ниво {{ part.min_level }}</small>
               <button v-else class="bgr-small" :disabled="busy || !affordable(part.price)" @click="buy('part', part.id)">Купи</button>
@@ -137,7 +145,7 @@ function affordable(price: number) {
             <td>{{ percent(tyre.grip.gravel) }}</td>
             <td>{{ percent(tyre.grip.snow) }}</td>
             <td>{{ tyre.wear }}% / 100 км</td>
-            <td>{{ money(tyre.price) }}<small v-if="tyre.price !== tyre.base_price" class="bgr-muted"><s>{{ money(tyre.base_price) }}</s></small></td>
+            <td>{{ money(tyre.price) }}<small v-if="tyre.price < tyre.base_price" class="bgr-muted"><s>{{ money(tyre.base_price) }}</s></small></td>
             <td>{{ money(tyre.single_price) }}</td>
             <td class="bgr-right">
               <small v-if="tyre.locked" class="bgr-muted">от ниво {{ tyre.min_level }}</small>

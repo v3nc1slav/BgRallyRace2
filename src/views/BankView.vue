@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import Feedback from '../components/Feedback.vue';
+import FinancePanel from '../components/FinancePanel.vue';
 import { date, money } from '../format';
 import { getBank, payOverdue, repayLoan, takeLoan, type BankInfo } from '../game';
 import { useAction } from '../useAction';
 
 const bank = ref<BankInfo | null>(null);
+const tab = ref<'loans' | 'finance'>('loans');
 const amount = ref(0);
 const weeks = ref(4);
 const { busy, message, error, run } = useAction();
@@ -52,9 +54,16 @@ function repay() {
   <section class="bgr-card">
     <p><RouterLink to="/city">&larr; Градът</RouterLink></p>
     <h1>Банка</h1>
-    <Feedback :message="message" :error="error" />
+    <div class="bgr-tabs">
+      <button :class="{ active: tab === 'loans' }" @click="tab = 'loans'">Заеми</button>
+      <button :class="{ active: tab === 'finance' }" @click="tab = 'finance'">Финанси</button>
+    </div>
 
-    <template v-if="bank">
+    <FinancePanel v-if="tab === 'finance'" />
+
+    <Feedback v-if="tab === 'loans'" :message="message" :error="error" />
+
+    <template v-if="bank && tab === 'loans'">
       <div v-if="bank.loan" class="bgr-panel">
         <h2>Твоят заем</h2>
         <p v-if="bank.loan.overdue" class="bgr-error">

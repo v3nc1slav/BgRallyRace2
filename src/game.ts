@@ -24,6 +24,7 @@ export interface PartItem {
   max_health: number;
   defect: boolean;
   bonuses: Stats;
+  fuel_pct: number;
   can_repair: boolean;
   repair_cost: number;
 }
@@ -150,6 +151,13 @@ export interface HallInfo {
     banned: boolean;
   };
   bribe: BribeInfo & { level: number; days: number };
+  move: {
+    cost: number;
+    energy: number;
+    sponsor_risk: number;
+    blocked: string;
+    cities: { id: number; name: string; privileges: string[]; price_pct: number }[];
+  };
 }
 
 export interface JobInfo {
@@ -249,6 +257,31 @@ export interface MarketQuery {
   filter: '' | 'part' | 'tyre' | 'car';
 }
 
+export interface FinanceCategory {
+  key: string;
+  label: string;
+  amount: number;
+}
+
+export interface FinancePoint {
+  id: number;
+  name: string;
+  income: number;
+  expense: number;
+  balance: number;
+  current: boolean;
+}
+
+export interface FinanceInfo {
+  season: number;
+  seasons: number[];
+  current: boolean;
+  totals: { income: number; expense: number; opening: number; closing: number };
+  income: FinanceCategory[];
+  expense: FinanceCategory[];
+  rallies: FinancePoint[];
+}
+
 export interface Loan {
   principal: number;
   interest: number;
@@ -337,6 +370,7 @@ export interface Garage {
     base: Stats;
     stats: Stats;
     fuel_consumption: number;
+    fuel_base: number;
     health: number;
     problems: string[];
   } | null;
@@ -355,6 +389,7 @@ export interface ShopCar {
   stats: Stats;
   fuel_consumption: number;
   price: number;
+  base_price: number;
   min_level: number;
   locked: boolean;
   owned: boolean;
@@ -366,6 +401,7 @@ export interface Shop {
   parts: ShopPart[];
   tyres: ShopTyre[];
   privileges: string[];
+  price_pct: number;
 }
 
 export interface BarRole {
@@ -427,6 +463,7 @@ export interface ShopPart {
   class_label: string;
   bonuses: Stats;
   wear: number;
+  fuel_pct: number;
   price: number;
   base_price: number;
   min_level: number;
@@ -698,6 +735,7 @@ export const wearClothes = (itemId: number) => post<{ mall: MallInfo }>('mall/we
 
 export const getHall = () => get<{ hall: HallInfo }>('hall');
 export const negotiateMayor = (kind: 'garage' | 'track') => post<{ hall: HallInfo }>('hall/negotiate', { kind });
+export const moveCity = (cityId: number) => post<{ hall: HallInfo }>('hall/move', { city_id: cityId });
 export const trainOwn = () => post<{ track: TrackInfo }>('track/own');
 
 export const getJobs = () => get<{ jobs: JobsInfo }>('jobs');
@@ -723,6 +761,7 @@ export const buyListing = (query: MarketQuery, id: number) => post<MarketResult>
 export const sellToDealer = (query: MarketQuery, kind: MarketKind, id: number) => post<MarketResult>('market/dealer', { ...query, kind, id });
 
 export const getBank = () => get<{ bank: BankInfo }>('bank');
+export const getFinance = (season?: number) => get<{ finance: FinanceInfo }>(`finance${season === undefined ? '' : `?season=${season}`}`);
 export const takeLoan = (amount: number, weeks: number) => post<{ bank: BankInfo }>('bank/loan', { amount, weeks });
 export const repayLoan = () => post<{ bank: BankInfo }>('bank/repay');
 export const payOverdue = () => post<{ bank: BankInfo }>('bank/pay');

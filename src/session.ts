@@ -20,6 +20,9 @@ export interface Player {
   level: number;
   energy: number;
   energy_max: number;
+  fatigue: { pct: number; days: number; limit: number; threshold: number };
+  xp_today: number;
+  xp_cap: number;
   job: { name: string; pay: number; energy: number } | null;
   loan: { remaining: number; next: number; overdue: number } | null;
   perks: { discount: number; retry: boolean };

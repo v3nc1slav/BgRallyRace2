@@ -37,11 +37,14 @@ function fire(member: CrewMember) {
   }
 }
 
-function bonuses(stats: Stats) {
-  return (Object.keys(statLabels) as (keyof Stats)[])
+function bonuses(stats: Stats, fuel = 0) {
+  const list = (Object.keys(statLabels) as (keyof Stats)[])
     .filter((key) => stats[key])
-    .map((key) => `+${stats[key]} ${statLabels[key].toLowerCase()}`)
-    .join(', ');
+    .map((key) => `+${stats[key]} ${statLabels[key].toLowerCase()}`);
+  if (fuel) {
+    list.push(`${fuel > 0 ? '+' : ''}${fuel}% гориво`);
+  }
+  return list.join(', ');
 }
 
 function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
@@ -101,7 +104,7 @@ function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
           <div class="bgr-tile">
             <span>Разход</span>
             <b>{{ garage.car.fuel_consumption }}</b>
-            <small>л/100 км</small>
+            <small>л/100 км<template v-if="garage.car.fuel_consumption !== garage.car.fuel_base"> · база {{ garage.car.fuel_base }}</template></small>
           </div>
         </div>
       </section>
@@ -117,7 +120,7 @@ function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
                 <td>
                   <template v-if="slot.item">
                     {{ slot.item.name }}
-                    <small v-if="bonuses(slot.item.bonuses)" class="bgr-muted">{{ bonuses(slot.item.bonuses) }}</small>
+                    <small v-if="bonuses(slot.item.bonuses, slot.item.fuel_pct)" class="bgr-muted">{{ bonuses(slot.item.bonuses, slot.item.fuel_pct) }}</small>
                     <small v-if="slot.item.defect" class="bgr-error">некачествен ремонт</small>
                   </template>
                   <span v-else class="bgr-error">липсва</span>

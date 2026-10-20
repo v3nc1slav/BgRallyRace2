@@ -15,7 +15,7 @@ const levelProgress = computed(() => {
   if (!player || player.xp_next === null) {
     return 100;
   }
-  return ((player.xp - player.xp_level) / (player.xp_next - player.xp_level)) * 100;
+  return Math.min(100, Math.max(0, ((player.xp - player.xp_level) / (player.xp_next - player.xp_level)) * 100));
 });
 
 onMounted(async () => {
@@ -43,6 +43,7 @@ onMounted(async () => {
           <small class="bgr-muted">
             {{ session.player.xp }}{{ session.player.xp_next !== null ? ` / ${session.player.xp_next}` : '' }} опит
           </small>
+          <small class="bgr-muted">Днес от тренировки, черна писта, гараж и фитнес: {{ session.player.xp_today }} / {{ session.player.xp_cap }} опит</small>
         </dd>
         <dt>Пари</dt>
         <dd>{{ money(session.player.money) }}</dd>
@@ -58,6 +59,12 @@ onMounted(async () => {
         <dd>
           <HealthBar :value="(session.player.energy / session.player.energy_max) * 100" />
           <small class="bgr-muted">{{ session.player.energy }} / {{ session.player.energy_max }}</small>
+          <small v-if="session.player.fatigue.pct < 100" class="bgr-error">
+            Умора: днес започна с {{ session.player.fatigue.pct }}% енергия. Остави поне {{ session.player.fatigue.threshold }} енергия до полунощ и утре си отново на 100%.
+          </small>
+          <small v-else-if="session.player.fatigue.days > 0" class="bgr-muted">
+            Изтощителни дни поред: {{ session.player.fatigue.days }} от {{ session.player.fatigue.limit }}. След {{ session.player.fatigue.limit }} поред идва умора и по-малко енергия.
+          </small>
         </dd>
       </dl>
     </section>
