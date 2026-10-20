@@ -18,6 +18,9 @@ final class Notices
         'unmuted' => ['success', 'Заглушаването е премахнато.'],
         'words_saved' => ['success', 'Списъкът със забранени думи е запазен.'],
         'ads_saved' => ['success', 'Настройките на рекламите са запазени.'],
+        'auth_saved' => ['success', 'Настройките за вход са запазени.'],
+        'tokens_revoked' => ['success', 'Достъпът от приложението е отнет.'],
+        'push_invalid' => ['error', 'Service account файлът не е валиден JSON. Останалите настройки са запазени.'],
     ];
 
     public static function flash(string $text, string $type = 'success'): void

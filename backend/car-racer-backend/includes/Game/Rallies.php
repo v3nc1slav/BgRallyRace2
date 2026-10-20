@@ -68,6 +68,8 @@ final class Rallies
         Sponsors::expire();
         Work::runDaily();
         Market::expire();
+        Push::reminders();
+        Push::flush();
         Payroll::runAll();
     }
 

@@ -24,5 +24,6 @@ spl_autoload_register(function ($class) {
 
 register_activation_hook(__FILE__, [BgRally\Database\Schema::class, 'install']);
 register_deactivation_hook(__FILE__, [BgRally\Cron::class, 'unschedule']);
+register_deactivation_hook(__FILE__, [BgRally\Dropins::class, 'remove']);
 
 BgRally\Plugin::boot();

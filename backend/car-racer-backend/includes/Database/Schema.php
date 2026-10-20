@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '12';
+    private const VERSION = '14';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -79,6 +79,7 @@ final class Schema
   muted_until datetime DEFAULT NULL,
   ad_retry tinyint(1) NOT NULL DEFAULT 0,
   shop_discount smallint(5) unsigned NOT NULL DEFAULT 0,
+  notify_off varchar(100) NOT NULL DEFAULT '',
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY user_id (user_id),
@@ -363,6 +364,35 @@ final class Schema
   claimed_at datetime DEFAULT NULL,
   PRIMARY KEY  (id),
   KEY manager_created (manager_id,created_at)",
+
+            'app_tokens' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  user_id bigint(20) unsigned NOT NULL,
+  token_hash char(64) NOT NULL,
+  device varchar(100) NOT NULL DEFAULT '',
+  created_at datetime NOT NULL,
+  last_used_at datetime DEFAULT NULL,
+  expires_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY token_hash (token_hash),
+  KEY user_id (user_id)",
+
+            'push_devices' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  user_id bigint(20) unsigned NOT NULL,
+  token varchar(255) NOT NULL,
+  platform varchar(10) NOT NULL,
+  created_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  UNIQUE KEY token (token),
+  KEY user_id (user_id)",
+
+            'push_queue' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  user_id bigint(20) unsigned NOT NULL,
+  type varchar(20) NOT NULL,
+  title varchar(150) NOT NULL,
+  body varchar(255) NOT NULL,
+  url varchar(255) NOT NULL DEFAULT '',
+  created_at datetime NOT NULL,
+  PRIMARY KEY  (id)",
 
             'inbox' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   manager_id bigint(20) unsigned NOT NULL,

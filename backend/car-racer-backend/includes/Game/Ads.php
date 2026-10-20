@@ -26,6 +26,8 @@ final class Ads
             'provider' => isset(self::PROVIDERS[$provider]) ? $provider : 'test',
             'gpt_unit' => (string) ($config['gpt_unit'] ?? ''),
             'publisher' => (string) ($config['publisher'] ?? ''),
+            'admob_unit' => (string) ($config['admob_unit'] ?? ''),
+            'admob_ssv' => (bool) ($config['admob_ssv'] ?? true),
         ];
     }
 
@@ -92,7 +94,7 @@ final class Ads
         ];
     }
 
-    public static function start(array $manager, string $reward): array|WP_Error
+    public static function start(array $manager, string $reward, string $platform = 'web'): array|WP_Error
     {
         global $wpdb;
         $managerId = (int) $manager['id'];
@@ -113,22 +115,30 @@ final class Ads
         }
 
         $config = self::config();
+        $provider = $platform === 'app' ? ($config['admob_unit'] !== '' ? 'admob' : 'test') : $config['provider'];
         $token = wp_generate_password(32, false);
         $wpdb->insert(self::table(), [
             'manager_id' => $managerId,
             'reward' => $reward,
-            'provider' => $config['provider'],
+            'provider' => $provider,
             'token' => $token,
             'status' => 'started',
             'created_at' => current_time('mysql'),
         ]);
+        $viewId = (int) $wpdb->insert_id;
 
         return [
-            'view_id' => (int) $wpdb->insert_id,
+            'view_id' => $viewId,
             'token' => $token,
             'label' => self::label($reward),
             'seconds' => Settings::int('ad_test_seconds'),
-        ] + $config;
+            'provider' => $provider,
+            'gpt_unit' => $config['gpt_unit'],
+            'publisher' => $config['publisher'],
+            'admob_unit' => $config['admob_unit'],
+            'ssv_data' => $viewId . '.' . $token,
+            'user' => (string) $managerId,
+        ];
     }
 
     public static function claim(array $manager, int $viewId, string $token): string|WP_Error
@@ -138,11 +148,14 @@ final class Ads
         $managers = Tables::name('managers');
         $view = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . ' WHERE id = %d AND manager_id = %d', $viewId, $managerId), ARRAY_A);
 
-        if (!$view || $view['status'] !== 'started' || !hash_equals($view['token'], $token)) {
+        if (!$view || !in_array($view['status'], ['started', 'verified'], true) || !hash_equals($view['token'], $token)) {
             return new WP_Error('bgr_ad', 'Рекламата не е намерена.', ['status' => 400]);
         }
+        if ($view['provider'] === 'admob' && self::config()['admob_ssv'] && $view['status'] !== 'verified') {
+            return new WP_Error('bgr_ad_pending', 'Изчакваме потвърждение от Google за рекламата.', ['status' => 409]);
+        }
         $minimum = $view['provider'] === 'test' ? Settings::int('ad_test_seconds') : Settings::int('ad_min_seconds');
-        if (Rallies::now() - strtotime($view['created_at']) < $minimum - 1) {
+        if ($view['status'] !== 'verified' && Rallies::now() - strtotime($view['created_at']) < $minimum - 1) {
             return new WP_Error('bgr_ad', 'Рекламата не е изгледана докрай.', ['status' => 400]);
         }
         $reward = $view['reward'];
@@ -150,7 +163,7 @@ final class Ads
             return new WP_Error('bgr_limit', 'Тази награда вече не е налична днес.', ['status' => 400]);
         }
         $claimed = $wpdb->query($wpdb->prepare(
-            'UPDATE ' . self::table() . " SET status = 'claimed', claimed_at = %s WHERE id = %d AND status = 'started'",
+            'UPDATE ' . self::table() . " SET status = 'claimed', claimed_at = %s WHERE id = %d AND status IN ('started', 'verified')",
             current_time('mysql'),
             $viewId
         ));
@@ -173,6 +186,51 @@ final class Ads
         }
 
         return 'Получи: ' . self::label($reward) . '.';
+    }
+
+    private static function admobKeys(): array
+    {
+        $keys = get_transient('bgr_admob_keys');
+        if (!is_array($keys)) {
+            $response = wp_remote_get('https://www.gstatic.com/admob/reward/verifier-keys.json', ['timeout' => 10]);
+            $data = is_wp_error($response) ? null : json_decode((string) wp_remote_retrieve_body($response), true);
+            $keys = [];
+            foreach ((array) ($data['keys'] ?? []) as $key) {
+                if (isset($key['keyId'], $key['pem'])) {
+                    $keys[(string) $key['keyId']] = (string) $key['pem'];
+                }
+            }
+            if ($keys) {
+                set_transient('bgr_admob_keys', $keys, DAY_IN_SECONDS);
+            }
+        }
+        return (array) apply_filters('bgrally_admob_keys', $keys);
+    }
+
+    public static function verifySsv(string $query): bool
+    {
+        global $wpdb;
+        if (str_starts_with($query, 'rest_route=')) {
+            $query = (string) substr($query, (int) strpos($query . '&', '&') + 1);
+        }
+        $position = strpos($query, '&signature=');
+        if ($position === false) {
+            return false;
+        }
+        parse_str($query, $params);
+        $pem = self::admobKeys()[(string) ($params['key_id'] ?? '')] ?? null;
+        $signature = base64_decode(strtr((string) ($params['signature'] ?? ''), '-_', '+/'), true);
+        if (!$pem || !$signature || openssl_verify(substr($query, 0, $position), $signature, $pem, OPENSSL_ALGO_SHA256) !== 1) {
+            return false;
+        }
+
+        [$viewId, $token] = array_pad(explode('.', (string) ($params['custom_data'] ?? ''), 2), 2, '');
+        $view = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . " WHERE id = %d AND provider = 'admob'", (int) $viewId), ARRAY_A);
+        if (!$view || !hash_equals($view['token'], $token) || (string) $view['manager_id'] !== (string) ($params['user_id'] ?? '')) {
+            return false;
+        }
+        $wpdb->update(self::table(), ['status' => 'verified'], ['id' => $view['id'], 'status' => 'started']);
+        return true;
     }
 
     public static function useRetry(int $managerId): bool

@@ -2,7 +2,9 @@
 
 namespace BgRally\Rest;
 
+use BgRally\Auth\Social;
 use BgRally\Catalog\Cities;
+use BgRally\Pages;
 use BgRally\Game\Managers;
 use WP_Error;
 use WP_REST_Request;
@@ -18,6 +20,8 @@ final class PlayerController
             'user' => $user->exists() ? ['id' => $user->ID, 'name' => $user->display_name] : null,
             'player' => $manager ? Managers::toApi($manager) : null,
             'nonce' => wp_create_nonce('wp_rest'),
+            'providers' => Social::providers(),
+            'links' => Pages::links(),
         ];
     }
 

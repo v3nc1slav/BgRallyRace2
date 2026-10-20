@@ -110,9 +110,11 @@ final class Simulator
             Garage::applyEffects($managerId, (int) $entry['player_car_id'], json_decode((string) $entry['effects'], true) ?: []);
             Staff::afterRally($managerId, $place, $sizes[$entry['class']] ?? 1, $entry['status']);
 
-            Inbox::add($managerId, $entry['status'] === 'finished'
+            $result = $entry['status'] === 'finished'
                 ? sprintf('%s: %d място в %s, %d € награда и %d опит.', $name, $place, Labels::classLabel($entry['class']), $entry['prize'], $entry['xp'])
-                : sprintf('%s: отпаднахте. Получавате %d опит.', $name, $entry['xp']));
+                : sprintf('%s: отпаднахте. Получавате %d опит.', $name, $entry['xp']);
+            Inbox::add($managerId, $result);
+            Push::notify($managerId, 'results', 'Резултати от ралито', $result, 'rallies/' . $rallyId);
 
             $manager = Managers::find($managerId);
             if ($manager) {

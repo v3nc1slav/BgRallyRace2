@@ -306,7 +306,9 @@ final class Market
         $sellerId = (int) $listing['seller_id'];
         $fee = (int) round($price * Settings::get('market_fee') / 100);
         Ledger::add($sellerId, $price - $fee, 'market_sale', $listing['name']);
-        Inbox::add($sellerId, sprintf('Продаде „%s“ на пазара за %d € (комисиона %d €).', $listing['name'], $price, $fee));
+        $sold = sprintf('Продаде „%s“ на пазара за %d € (комисиона %d €).', $listing['name'], $price, $fee);
+        Inbox::add($sellerId, $sold);
+        Push::notify($sellerId, 'market', 'Продадено на пазара', $sold, 'city/market');
         if ($price >= Settings::int('rumor_market_min')) {
             Rumors::about(
                 $sellerId,

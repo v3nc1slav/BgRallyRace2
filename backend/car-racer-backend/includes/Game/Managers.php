@@ -2,6 +2,7 @@
 
 namespace BgRally\Game;
 
+use BgRally\Auth\Tokens;
 use BgRally\Catalog\Registry;
 use BgRally\Database\Tables;
 use BgRally\Settings;
@@ -173,6 +174,7 @@ final class Managers
 
         $wpdb->update(self::table(), ['banned_at' => current_time('mysql', true), 'ban_reason' => $reason], ['id' => $id]);
         WP_Session_Tokens::get_instance((int) $manager['user_id'])->destroy_all();
+        Tokens::revokeAll((int) $manager['user_id']);
     }
 
     public static function unban(int $id): void

@@ -73,7 +73,7 @@ final class Chat
         $rows = $wpdb->get_results($wpdb->prepare(
             "SELECT msg.id, msg.manager_id, msg.text, msg.created_at, u.display_name AS author
              FROM $messages msg
-             JOIN $managers m ON m.id = msg.manager_id
+             LEFT JOIN $managers m ON m.id = msg.manager_id
              LEFT JOIN {$wpdb->users} u ON u.ID = m.user_id
              WHERE msg.channel = %s AND msg.deleted = 0 AND msg.id > %d
              ORDER BY msg.id " . ($newest ? 'DESC' : 'ASC') . ' LIMIT %d OFFSET %d',
@@ -90,7 +90,7 @@ final class Chat
     {
         return array_map(fn($row) => [
             'id' => (int) $row['id'],
-            'author' => $row['author'] ?: 'Отбор',
+            'author' => $row['author'] ?: Account::DELETED,
             'own' => (int) $row['manager_id'] === $viewerId,
             'text' => $row['text'],
             'at' => str_replace(' ', 'T', $row['created_at']),

@@ -16,6 +16,8 @@ final class Menu
         add_action('admin_post_bgr_unban', [PlayersPage::class, 'handleUnban']);
         TalkPage::register();
         AdsPage::register();
+        AuthPage::register();
+        add_action('admin_post_bgr_revoke_tokens', [PlayersPage::class, 'handleRevoke']);
         add_action('admin_enqueue_scripts', [self::class, 'assets']);
     }
 
@@ -41,6 +43,7 @@ final class Menu
         }
 
         add_submenu_page(self::SLUG, 'Чат и форум', 'Чат и форум', 'manage_options', TalkPage::SLUG, [TalkPage::class, 'render']);
+        add_submenu_page(self::SLUG, 'Вход и приложение', 'Вход и приложение', 'manage_options', AuthPage::SLUG, [AuthPage::class, 'render']);
         add_submenu_page(self::SLUG, 'Реклами', 'Реклами', 'manage_options', AdsPage::SLUG, [AdsPage::class, 'render']);
         add_submenu_page(self::SLUG, 'Настройки', 'Настройки', 'manage_options', 'bgrally-settings', [SettingsPage::class, 'render']);
     }

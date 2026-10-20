@@ -16,9 +16,13 @@ final class Routes
         self::route('/auth/register', 'POST', [AuthController::class, 'register'], $public);
         self::route('/auth/login', 'POST', [AuthController::class, 'login'], $public);
         self::route('/auth/logout', 'POST', [AuthController::class, 'logout'], $loggedIn);
+        self::route('/auth/social', 'POST', [AuthController::class, 'social'], $public);
+        self::route('/account/delete', 'POST', [AuthController::class, 'deleteAccount'], $loggedIn);
+        self::route('/ads/admob-ssv', 'GET', [AdsController::class, 'admobSsv'], $public);
         self::route('/me', 'GET', [PlayerController::class, 'me'], $public);
         self::route('/player', 'POST', [PlayerController::class, 'create'], $loggedIn);
         self::route('/cities', 'GET', [CatalogController::class, 'cities'], $public);
+        self::route('/manifest', 'GET', [\BgRally\Frontend::class, 'manifest'], $public);
 
         self::route('/garage', 'GET', [GarageController::class, 'show'], $player);
         self::route('/garage/mount', 'POST', [GarageController::class, 'mount'], $player);
@@ -67,6 +71,11 @@ final class Routes
         self::route('/bank/loan', 'POST', [TradeController::class, 'loan'], $player);
         self::route('/bank/repay', 'POST', [TradeController::class, 'repay'], $player);
         self::route('/bank/pay', 'POST', [TradeController::class, 'payOverdue'], $player);
+
+        self::route('/notifications', 'GET', [NotifyController::class, 'show'], $player);
+        self::route('/notifications/preferences', 'POST', [NotifyController::class, 'preferences'], $player);
+        self::route('/notifications/device', 'POST', [NotifyController::class, 'addDevice'], $player);
+        self::route('/notifications/device/remove', 'POST', [NotifyController::class, 'removeDevice'], $player);
 
         self::route('/ads', 'GET', [AdsController::class, 'show'], $player);
         self::route('/ads/start', 'POST', [AdsController::class, 'start'], $player);

@@ -3,6 +3,7 @@
 namespace BgRally\Database;
 
 use BgRally\Catalog\Registry;
+use BgRally\Pages;
 use DateTimeImmutable;
 
 final class Seeder
@@ -48,6 +49,9 @@ final class Seeder
         }
         if ($fresh || (int) $from < 8) {
             self::addShushnyaScenery();
+        }
+        if ($fresh || (int) $from < 13) {
+            Pages::ensure();
         }
     }
 

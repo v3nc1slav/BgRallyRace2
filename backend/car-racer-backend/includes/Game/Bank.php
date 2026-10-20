@@ -206,9 +206,12 @@ final class Bank
         $wpdb->update(self::table(), ['remaining' => $remaining, 'overdue' => $overdue, 'missed' => $missed, 'weeks_passed' => $passed], ['id' => $loanId]);
 
         if ($missed < Settings::int('loan_seize_after')) {
-            Inbox::add($managerId, sprintf('Нямаш пари за вноската по заема (%d €). Наказателна лихва %d €. Плати просрочието в банката, иначе следва запор.', $due, $penalty));
+            $text = sprintf('Нямаш пари за вноската по заема (%d €). Наказателна лихва %d €. Плати просрочието в банката, иначе следва запор.', $due, $penalty);
+            Inbox::add($managerId, $text);
+            Push::notify($managerId, 'loan', 'Неплатена вноска', $text, 'city/bank');
             return;
         }
+        Push::notify($managerId, 'loan', 'Запор от банката', 'Пропусна вноските по заема и банката наложи запор.', 'city/bank');
         self::seize($managerId, $loanId, $remaining, $overdue);
     }
 

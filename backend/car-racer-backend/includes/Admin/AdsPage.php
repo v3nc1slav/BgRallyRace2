@@ -39,6 +39,16 @@ final class AdsPage
             '<tr><th scope="row"><label for="bgr-pub">Publisher ID за съгласието</label></th><td><input id="bgr-pub" name="publisher" class="regular-text" value="%s" placeholder="pub-1234567890123456"><p class="description">Зарежда прозореца за съгласие на Google (GDPR). Без него рекламите са с ограничени данни.</p></td></tr>',
             esc_attr($config['publisher'])
         );
+        echo '<tr><th colspan="2"><h2 style="margin:0">Приложение (AdMob)</h2></th></tr>';
+        printf(
+            '<tr><th scope="row"><label for="bgr-admob">AdMob: rewarded единица</label></th><td><input id="bgr-admob" name="admob_unit" class="regular-text" value="%s" placeholder="ca-app-pub-1234567890123456/1234567890"><p class="description">Без нея приложението показва тестовата реклама. Тестова единица на Google за Android: ca-app-pub-3940256099942544/5224354917.</p></td></tr>',
+            esc_attr($config['admob_unit'])
+        );
+        printf(
+            '<tr><th scope="row">Потвърждение от Google</th><td><label><input type="checkbox" name="admob_ssv" value="1"%s> Наградата се дава само след потвърждение от сървъра на Google (SSV)</label><p class="description">Адрес за SSV в AdMob: <code>%s</code></p></td></tr>',
+            checked($config['admob_ssv'], true, false),
+            esc_html(rest_url('bgrally/v1/ads/admob-ssv'))
+        );
         echo '</table>';
         submit_button('Запази');
         echo '</form>';
@@ -67,6 +77,8 @@ final class AdsPage
             'provider' => isset(Ads::PROVIDERS[$provider]) ? $provider : 'test',
             'gpt_unit' => sanitize_text_field(wp_unslash($_POST['gpt_unit'] ?? '')),
             'publisher' => preg_replace('/[^a-z0-9-]/', '', strtolower(wp_unslash($_POST['publisher'] ?? ''))),
+            'admob_unit' => preg_replace('/[^a-z0-9~\/-]/i', '', (string) wp_unslash($_POST['admob_unit'] ?? '')),
+            'admob_ssv' => !empty($_POST['admob_ssv']),
         ], false);
 
         wp_safe_redirect(add_query_arg('bgr_msg', 'ads_saved', admin_url('admin.php?page=' . self::SLUG)));

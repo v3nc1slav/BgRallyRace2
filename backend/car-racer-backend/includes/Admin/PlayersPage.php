@@ -2,6 +2,7 @@
 
 namespace BgRally\Admin;
 
+use BgRally\Auth\Tokens;
 use BgRally\Game\Managers;
 
 final class PlayersPage
@@ -91,6 +92,17 @@ final class PlayersPage
         $mute = TalkPage::mutedLabel($player['muted_until'])
             ? TalkPage::form('unmute', ['manager_id' => $id], '<button class="button">Премахни заглушаването</button>')
             : TalkPage::muteForm($id);
+        $sessions = Tokens::count((int) $player['user_id']);
+        if ($sessions) {
+            $mute .= sprintf(
+                $form,
+                esc_url(admin_url('admin-post.php')),
+                'bgr_revoke_tokens',
+                $id,
+                wp_nonce_field('bgr_revoke_tokens_' . $id, '_wpnonce', true, false),
+                sprintf('<button class="button">Изход от приложението (%d)</button>', $sessions)
+            );
+        }
 
         return sprintf(
             $form,
@@ -125,6 +137,19 @@ final class PlayersPage
 
         Managers::unban($id);
         self::back('unbanned');
+    }
+
+    public static function handleRevoke(): void
+    {
+        $id = absint($_POST['manager_id'] ?? 0);
+        check_admin_referer('bgr_revoke_tokens_' . $id);
+        self::authorize();
+
+        $manager = Managers::find($id);
+        if ($manager) {
+            Tokens::revokeAll((int) $manager['user_id']);
+        }
+        self::back('tokens_revoked');
     }
 
     private static function authorize(): void

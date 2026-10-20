@@ -65,7 +65,7 @@ final class TalkPage
         $rows = $wpdb->get_results(
             "SELECT msg.*, u.display_name AS author, m.muted_until, t.id AS topic_id, t.title, c.name AS city
              FROM $messages msg
-             JOIN $managers m ON m.id = msg.manager_id
+             LEFT JOIN $managers m ON m.id = msg.manager_id
              LEFT JOIN {$wpdb->users} u ON u.ID = m.user_id
              LEFT JOIN $topics t ON msg.channel = CONCAT('topic-', t.id)
              LEFT JOIN $cities c ON msg.channel = CONCAT('city-', c.id)

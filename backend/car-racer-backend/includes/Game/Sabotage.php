@@ -151,6 +151,7 @@ final class Sabotage
         }
 
         Inbox::add($targetId, mb_strimwidth($text, 0, 255, '…'));
+        Push::notify($targetId, 'sabotage', 'Готви се саботаж', $text, 'rallies/' . $rally['id']);
     }
 
     private static function split(int $total, int $parts): array

@@ -20,7 +20,7 @@ final class Forum
     {
         global $wpdb;
         return 'SELECT t.*, u.display_name AS author FROM ' . self::table() . ' t
-                JOIN ' . Tables::name('managers') . " m ON m.id = t.manager_id
+                LEFT JOIN ' . Tables::name('managers') . " m ON m.id = t.manager_id
                 LEFT JOIN {$wpdb->users} u ON u.ID = m.user_id";
     }
 
@@ -31,7 +31,7 @@ final class Forum
             'section' => $row['section'],
             'section_label' => Labels::FORUM_SECTIONS[$row['section']] ?? $row['section'],
             'title' => $row['title'],
-            'author' => $row['author'] ?: 'Отбор',
+            'author' => $row['author'] ?: Account::DELETED,
             'posts' => (int) $row['posts'],
             'last_post_at' => str_replace(' ', 'T', $row['last_post_at']),
         ];
