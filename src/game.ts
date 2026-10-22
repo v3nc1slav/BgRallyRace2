@@ -712,7 +712,7 @@ export const getSponsors = () => get<{ sponsors: Sponsors }>('sponsors');
 export const negotiate = (id: number) => post<{ sponsors: Sponsors }>(`sponsors/${id}/negotiate`);
 
 export const getInbox = () => get<{ inbox: InboxItem[] }>('inbox');
-export const getCity = () => get<{ city: { name: string; privileges: string[] } }>('city');
+export const getCity = () => get<{ city: { name: string; privileges: string[]; perks: string } }>('city');
 
 export const getTrack = () => get<{ track: TrackInfo }>('track');
 export const trainOfficial = (stageId: number) => post<{ track: TrackInfo }>('track/train', { stage_id: stageId });
