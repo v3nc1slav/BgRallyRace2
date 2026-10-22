@@ -44,6 +44,7 @@ final class CityController
         return Auth::respond(['city' => [
             'name' => $manager['city'] ?? '',
             'privileges' => Privileges::describe((int) $manager['city_id']),
+            'perks' => Privileges::sentence((int) $manager['city_id']),
         ]]);
     }
 

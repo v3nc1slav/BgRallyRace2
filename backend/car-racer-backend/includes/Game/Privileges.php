@@ -43,4 +43,28 @@ final class Privileges
         }
         return $list;
     }
+
+    private const PHRASES = [
+        'travel' => 'транспортните разходи са с %d%% по-евтини',
+        'parts' => 'частите в магазина са с %d%% по-евтини',
+        'tyres' => 'гумите в магазина са с %d%% по-евтини',
+        'repair' => 'ремонтите са с %d%% по-евтини',
+        'home_fee' => 'таксата за местното рали е с %d%% по-ниска',
+        'sponsor_local' => 'преговорите с местните спонсори вървят с %d%% по-бързо',
+    ];
+
+    public static function sentence(int $cityId): string
+    {
+        $parts = [];
+        foreach (self::of($cityId) as $type => $value) {
+            if (isset(self::PHRASES[$type]) && $value) {
+                $parts[] = sprintf(self::PHRASES[$type], $value);
+            }
+        }
+        if (!$parts) {
+            return 'Градът няма привилегии за отборите си.';
+        }
+        $last = array_pop($parts);
+        return 'Тук ' . ($parts ? implode(', ', $parts) . ' и ' : '') . $last . '.';
+    }
 }
