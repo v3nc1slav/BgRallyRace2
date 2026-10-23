@@ -1,0 +1,100 @@
+{
+  "_game-effects-mIwpQDlh.js": {
+    "file": "game-effects-mIwpQDlh.js",
+    "name": "effects"
+  },
+  "_game-index.esm-0zm88QH2.js": {
+    "file": "game-index.esm-0zm88QH2.js",
+    "name": "index.esm"
+  },
+  "index.html": {
+    "file": "game-CAhetvms.js",
+    "name": "index",
+    "src": "index.html",
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/@capacitor-community/admob/dist/esm/web.js",
+      "node_modules/firebase/app/dist/esm/index.esm.js",
+      "node_modules/firebase/messaging/dist/esm/index.esm.js",
+      "src/city.ts",
+      "node_modules/@capgo/capacitor-social-login/dist/esm/web.js",
+      "src/race.ts"
+    ],
+    "css": [
+      "game-DJstVlbc.css"
+    ],
+    "assets": [
+      "assets/BGRallyHD.png",
+      "assets/error.jpg",
+      "assets/background.jpg"
+    ]
+  },
+  "node_modules/@capacitor-community/admob/dist/esm/web.js": {
+    "file": "game-web-G-m9uyLy.js",
+    "name": "web",
+    "src": "node_modules/@capacitor-community/admob/dist/esm/web.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "node_modules/@capgo/capacitor-social-login/dist/esm/web.js": {
+    "file": "game-web-DRCEv6q2.js",
+    "name": "web",
+    "src": "node_modules/@capgo/capacitor-social-login/dist/esm/web.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html"
+    ]
+  },
+  "node_modules/firebase/app/dist/esm/index.esm.js": {
+    "file": "game-index.esm-D0SJ6mYq.js",
+    "name": "index.esm",
+    "src": "node_modules/firebase/app/dist/esm/index.esm.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-index.esm-0zm88QH2.js"
+    ]
+  },
+  "node_modules/firebase/messaging/dist/esm/index.esm.js": {
+    "file": "game-index.esm-DFEn2pWJ.js",
+    "name": "index.esm",
+    "src": "node_modules/firebase/messaging/dist/esm/index.esm.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-index.esm-0zm88QH2.js"
+    ]
+  },
+  "src/assets/BGRallyHD.png": {
+    "file": "assets/BGRallyHD.png",
+    "src": "src/assets/BGRallyHD.png"
+  },
+  "src/assets/background.jpg": {
+    "file": "assets/background.jpg",
+    "src": "src/assets/background.jpg"
+  },
+  "src/assets/error.jpg": {
+    "file": "assets/error.jpg",
+    "src": "src/assets/error.jpg"
+  },
+  "src/city.ts": {
+    "file": "game-city-Ba7hm45L.js",
+    "name": "city",
+    "src": "src/city.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_game-effects-mIwpQDlh.js"
+    ]
+  },
+  "src/race.ts": {
+    "file": "game-race-D2jYRElu.js",
+    "name": "race",
+    "src": "src/race.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "index.html",
+      "_game-effects-mIwpQDlh.js"
+    ]
+  }
+}
