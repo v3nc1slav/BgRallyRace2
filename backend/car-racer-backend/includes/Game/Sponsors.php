@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -83,7 +85,7 @@ final class Sponsors
         }
 
         $slots = [];
-        foreach (Labels::SPONSOR_SLOTS as $slot => $label) {
+        foreach (Labels::all('SPONSOR_SLOTS') as $slot => $label) {
             $contract = $bySlot[$slot] ?? null;
             $slots[] = [
                 'slot' => $slot,
@@ -92,9 +94,9 @@ final class Sponsors
                 'unlocked' => $level >= self::slotLevel($slot),
                 'contract' => $contract ? [
                     'sponsor' => $contract['name'],
-                    'city' => $cities[$contract['city_id']] ?? '',
+                    'city' => Texts::of($cities[$contract['city_id']] ?? ''),
                     'status' => $contract['status'],
-                    'status_label' => Labels::CONTRACT_STATUSES[$contract['status']] ?? $contract['status'],
+                    'status_label' => Labels::text('CONTRACT_STATUSES', $contract['status']),
                     'progress' => (int) $contract['progress'],
                     'payment' => (int) $contract['payment'],
                     'goal_place' => (int) $contract['goal_place'],
@@ -113,8 +115,8 @@ final class Sponsors
             return [
                 'id' => (int) $sponsor['id'],
                 'name' => $sponsor['name'],
-                'city' => $cities[$sponsor['city_id']] ?? '',
-                'slot_label' => Labels::SPONSOR_SLOTS[$sponsor['slot']] ?? $sponsor['slot'],
+                'city' => Texts::of($cities[$sponsor['city_id']] ?? ''),
+                'slot_label' => Labels::text('SPONSOR_SLOTS', $sponsor['slot']),
                 'min_level' => (int) $sponsor['min_level'],
                 'locked' => (int) $sponsor['min_level'] > $level,
                 'available' => $slotOpen && (int) $sponsor['min_level'] <= $level,
@@ -138,23 +140,23 @@ final class Sponsors
         $sponsor = Registry::get('sponsors')->find($sponsorId);
 
         if (!$sponsor || !$sponsor['active']) {
-            return new WP_Error('bgr_not_found', 'Няма такъв спонсор.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.sponsors.notFound'), ['status' => 404]);
         }
         if ((int) $sponsor['min_level'] > (int) $manager['level']) {
-            return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $sponsor['min_level']), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.common.level', ['level' => $sponsor['min_level']]), ['status' => 400]);
         }
         if ((int) $manager['level'] < self::slotLevel($sponsor['slot'])) {
-            return new WP_Error('bgr_slot', sprintf('Мястото се отключва на ниво %d.', self::slotLevel($sponsor['slot'])), ['status' => 400]);
+            return new WP_Error('bgr_slot', I18n::t('server.sponsors.slotLevel', ['level' => self::slotLevel($sponsor['slot'])]), ['status' => 400]);
         }
         foreach (self::open($managerId) as $contract) {
             if ($contract['slot'] === $sponsor['slot']) {
-                return new WP_Error('bgr_slot', 'Това място вече е заето или се водят преговори за него.', ['status' => 400]);
+                return new WP_Error('bgr_slot', I18n::t('server.sponsors.slotTaken'), ['status' => 400]);
             }
         }
 
         $energy = Settings::int('energy_negotiation');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
 
         $terms = self::terms($sponsor, $manager);
@@ -172,7 +174,7 @@ final class Sponsors
             'created_at' => current_time('mysql'),
         ]);
 
-        return sprintf('Започнахте преговори със „%s“. Напредък ще има след всяко рали, в което участвате.', $sponsor['name']);
+        return I18n::t('server.sponsors.started', ['name' => $sponsor['name']]);
     }
 
     public static function afterRally(array $manager, array $entry, string $rallyName): void
@@ -189,7 +191,7 @@ final class Sponsors
 
                 if (mt_rand(1, 10000) <= self::stepRisk($manager, $local) * 100) {
                     $wpdb->update(self::table(), ['status' => 'failed'], ['id' => $id]);
-                    Inbox::add($managerId, sprintf('Преговорите със „%s“ се провалиха при %d%%.', $contract['name'], $contract['progress']));
+                    Inbox::add($managerId, I18n::t('server.sponsors.failed', ['name' => $contract['name'], 'pct' => $contract['progress']]));
                     continue;
                 }
 
@@ -201,10 +203,10 @@ final class Sponsors
                         'starts_at' => current_time('mysql'),
                         'ends_at' => date('Y-m-d H:i:s', Rallies::now() + (int) $contract['weeks'] * WEEK_IN_SECONDS),
                     ], ['id' => $id]);
-                    Inbox::add($managerId, sprintf('Подписахте договор със „%s“ за %d седмици.', $contract['name'], $contract['weeks']));
+                    Inbox::add($managerId, I18n::t('server.sponsors.signed', ['name' => $contract['name'], 'weeks' => $contract['weeks']]));
                 } else {
                     $wpdb->update(self::table(), ['progress' => $progress], ['id' => $id]);
-                    Inbox::add($managerId, sprintf('Преговорите със „%s“ напреднаха до %d%%.', $contract['name'], $progress));
+                    Inbox::add($managerId, I18n::t('server.sponsors.progress', ['name' => $contract['name'], 'pct' => $progress]));
                 }
                 continue;
             }
@@ -216,14 +218,14 @@ final class Sponsors
             $misses = $success ? 0 : (int) $contract['misses'] + 1;
             if ($misses >= Settings::int('sponsor_misses')) {
                 $wpdb->update(self::table(), ['status' => 'terminated', 'misses' => $misses], ['id' => $id]);
-                Inbox::add($managerId, sprintf('„%s“ плати %d € и прекрати договора след %d неизпълнени цели поред.', $contract['name'], $amount, $misses));
+                Inbox::add($managerId, I18n::t('server.sponsors.terminated', ['name' => $contract['name'], 'money' => I18n::money($amount), 'misses' => $misses]));
                 continue;
             }
 
             $wpdb->update(self::table(), ['misses' => $misses], ['id' => $id]);
             Inbox::add($managerId, $success
-                ? sprintf('„%s“ плати %d € – целта е изпълнена.', $contract['name'], $amount)
-                : sprintf('„%s“ плати само %d €, защото целта (топ %d) не е изпълнена.', $contract['name'], $amount, $contract['goal_place']));
+                ? I18n::t('server.sponsors.paid', ['name' => $contract['name'], 'money' => I18n::money($amount)])
+                : I18n::t('server.sponsors.paidHalf', ['name' => $contract['name'], 'money' => I18n::money($amount), 'place' => $contract['goal_place']]));
         }
     }
 
@@ -239,7 +241,7 @@ final class Sponsors
 
         foreach ($rows as $row) {
             $wpdb->update(self::table(), ['status' => 'ended'], ['id' => $row['id']]);
-            Inbox::add((int) $row['manager_id'], sprintf('Договорът със „%s“ изтече.', $row['name']));
+            Inbox::add((int) $row['manager_id'], I18n::t('server.sponsors.expired', ['name' => $row['name']], I18n::of((int) $row['manager_id'])));
         }
     }
 
@@ -254,10 +256,10 @@ final class Sponsors
             }
             if ($contract['status'] === 'negotiating') {
                 $wpdb->update(self::table(), ['status' => 'failed'], ['id' => $contract['id']]);
-                $notes[] = sprintf('преговорите със „%s“ са прекратени', $contract['name']);
+                $notes[] = I18n::t('server.sponsors.noteStopped', ['name' => $contract['name']]);
             } elseif (mt_rand(1, 100) <= Settings::int('move_sponsor_risk')) {
                 $wpdb->update(self::table(), ['status' => 'terminated'], ['id' => $contract['id']]);
-                $notes[] = sprintf('„%s“ прекрати договора', $contract['name']);
+                $notes[] = I18n::t('server.sponsors.noteEnded', ['name' => $contract['name']]);
             }
         }
         return $notes;

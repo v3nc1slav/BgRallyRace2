@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -35,18 +36,18 @@ final class Chat
         global $wpdb;
 
         if (self::mutedUntil($manager)) {
-            return new WP_Error('bgr_muted', sprintf('Заглушен си до %s.', mysql2date('d.m.Y H:i', $manager['muted_until'])), ['status' => 403]);
+            return new WP_Error('bgr_muted', I18n::t('server.common.mutedUntil', ['time' => I18n::date(strtotime($manager['muted_until']), true)]), ['status' => 403]);
         }
         $text = trim(preg_replace("/\n{3,}/u", "\n\n", str_replace("\r", '', wp_strip_all_tags($text, false))));
         if ($text === '') {
-            return new WP_Error('bgr_empty', 'Напиши съобщение.', ['status' => 400]);
+            return new WP_Error('bgr_empty', I18n::t('server.chat.empty'), ['status' => 400]);
         }
         if (mb_strlen($text) > $max) {
-            return new WP_Error('bgr_long', sprintf('Съобщението е до %d знака.', $max), ['status' => 400]);
+            return new WP_Error('bgr_long', I18n::t('server.chat.long', ['max' => $max]), ['status' => 400]);
         }
         $last = $wpdb->get_var($wpdb->prepare('SELECT created_at FROM ' . self::table() . ' WHERE manager_id = %d ORDER BY id DESC LIMIT 1', $manager['id']));
         if ($last && Rallies::now() - strtotime($last) < Settings::int('chat_cooldown')) {
-            return new WP_Error('bgr_slow', 'Изчакай няколко секунди преди следващото съобщение.', ['status' => 429]);
+            return new WP_Error('bgr_slow', I18n::t('server.chat.slow'), ['status' => 429]);
         }
 
         return self::filter($text);
@@ -90,7 +91,7 @@ final class Chat
     {
         return array_map(fn($row) => [
             'id' => (int) $row['id'],
-            'author' => $row['author'] ?: Account::DELETED,
+            'author' => $row['author'] ?: I18n::t('server.common.deleted'),
             'own' => (int) $row['manager_id'] === $viewerId,
             'text' => $row['text'],
             'at' => str_replace(' ', 'T', $row['created_at']),
@@ -144,6 +145,6 @@ final class Chat
             $messageId,
             $manager['id']
         ));
-        return $updated ? 'Съобщението е докладвано на админа.' : new WP_Error('bgr_not_found', 'Няма такова съобщение.', ['status' => 404]);
+        return $updated ? I18n::t('server.chat.reported') : new WP_Error('bgr_not_found', I18n::t('server.chat.notFound'), ['status' => 404]);
     }
 }

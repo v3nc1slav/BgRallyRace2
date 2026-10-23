@@ -19,6 +19,7 @@ final class Registry
         return $entities ??= [
             new Entity('cities', 'Градове', [
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('lat', 'Географска ширина', 'float'),
                 new Field('lng', 'Географска дължина', 'float'),
                 new Field('privilege_1', 'Привилегия 1', 'select', options: Labels::PRIVILEGES),
@@ -32,6 +33,7 @@ final class Registry
             new Entity('stages', 'Етапи', [
                 new Field('city_id', 'Град', 'ref', required: true, ref: 'cities'),
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('position', 'Ред', 'int'),
                 new Field('length_km', 'Дължина (км)', 'float', default: 10),
                 new Field('surface', 'Настилка', 'select', options: Labels::SURFACES),
@@ -58,6 +60,7 @@ final class Registry
 
             new Entity('parts', 'Части', [
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('type', 'Вид', 'select', options: Labels::PART_TYPES),
                 new Field('class', 'Клас', 'select', options: ['' => 'Всички класове'] + Labels::CLASSES),
                 new Field('power_bonus', 'Бонус мощност (к.с.)', 'int'),
@@ -74,6 +77,7 @@ final class Registry
 
             new Entity('tyres', 'Гуми', [
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('type', 'Тип', 'select', options: Labels::TYRE_TYPES),
                 new Field('compound', 'Смес', 'select', options: Labels::COMPOUNDS),
                 new Field('grip_asphalt_dry', 'Сцепление: сух асфалт', 'float', default: 1, inList: false),
@@ -113,6 +117,7 @@ final class Registry
 
             new Entity('clothes', 'Дрехи', [
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('slot', 'Място', 'select', options: Labels::CLOTHING_SLOTS),
                 new Field('bonus', 'Бонус в преговорите (%)', 'int', default: 1),
                 new Field('price', 'Цена (€)', 'int'),
@@ -122,6 +127,7 @@ final class Registry
 
             new Entity('jobs', 'Работи', [
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('building', 'Сграда', 'select', options: Labels::BUILDINGS),
                 new Field('pay', 'Заплата (€ на ден)', 'int', default: 60),
                 new Field('energy', 'Енергия на ден', 'int', default: 25),
@@ -139,11 +145,13 @@ final class Registry
                 new Field('weather', 'Само при време', 'select', options: ['' => 'Всяко'] + Labels::WEATHER),
                 new Field('part_type', 'Част (за повреда)', 'select', options: ['' => 'Най-износената'] + Labels::PART_TYPES, inList: false),
                 new Field('text', 'Текст за хрониката: {пилот}, {завой}, {секунди}, {част}', required: true, inList: false),
+                ...Texts::fields('text', 'Текст за хрониката: {driver}, {turn}, {seconds}, {part}'),
                 new Field('active', 'Активно', 'bool', default: 1),
             ], orderBy: "FIELD(type, 'mistake', 'puncture', 'breakdown', 'crash', 'chassis', 'weather'), chance DESC"),
 
             new Entity('rallies', 'Ралита', [
                 new Field('name', 'Име', required: true),
+                ...Texts::fields('name', 'Име'),
                 new Field('city_id', 'Град', 'ref', required: true, ref: 'cities'),
                 new Field('start_at', 'Старт', 'datetime', required: true),
                 new Field('season', 'Сезон', 'int', default: 1),

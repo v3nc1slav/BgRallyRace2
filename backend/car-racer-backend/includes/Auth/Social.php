@@ -2,6 +2,7 @@
 
 namespace BgRally\Auth;
 
+use BgRally\I18n;
 use WP_Error;
 
 final class Social
@@ -34,12 +35,12 @@ final class Social
     public static function login(string $provider, string $token): int|WP_Error
     {
         if ($token === '') {
-            return new WP_Error('bgr_social', 'Липсва отговор от доставчика на вход.', ['status' => 400]);
+            return new WP_Error('bgr_social', I18n::t('server.social.noResponse'), ['status' => 400]);
         }
         $profile = match ($provider) {
             'google' => self::google($token),
             'facebook' => self::facebook($token),
-            default => new WP_Error('bgr_social', 'Няма такъв вход.', ['status' => 400]),
+            default => new WP_Error('bgr_social', I18n::t('server.social.unknown'), ['status' => 400]),
         };
         return is_wp_error($profile) ? $profile : self::findOrCreate($provider, $profile);
     }
@@ -58,7 +59,7 @@ final class Social
     {
         $clients = self::config()['google_client_ids'];
         if (!$clients) {
-            return new WP_Error('bgr_social', 'Входът с Google не е настроен.', ['status' => 400]);
+            return new WP_Error('bgr_social', I18n::t('server.social.googleOff'), ['status' => 400]);
         }
         $data = self::fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' . rawurlencode($token));
         $valid = $data
@@ -67,7 +68,7 @@ final class Social
             && (int) ($data['exp'] ?? 0) > time()
             && !empty($data['sub']);
         if (!$valid) {
-            return new WP_Error('bgr_social', 'Google не потвърди входа. Опитай отново.', ['status' => 401]);
+            return new WP_Error('bgr_social', I18n::t('server.social.googleFailed'), ['status' => 401]);
         }
 
         return [
@@ -82,7 +83,7 @@ final class Social
     {
         $config = self::config();
         if ($config['facebook_app_id'] === '' || $config['facebook_secret'] === '') {
-            return new WP_Error('bgr_social', 'Входът с Facebook не е настроен.', ['status' => 400]);
+            return new WP_Error('bgr_social', I18n::t('server.social.facebookOff'), ['status' => 400]);
         }
         $debug = self::fetch(self::GRAPH . 'debug_token?' . http_build_query([
             'input_token' => $token,
@@ -90,11 +91,11 @@ final class Social
         ]));
         $info = $debug['data'] ?? [];
         if (empty($info['is_valid']) || (string) ($info['app_id'] ?? '') !== $config['facebook_app_id']) {
-            return new WP_Error('bgr_social', 'Facebook не потвърди входа. Опитай отново.', ['status' => 401]);
+            return new WP_Error('bgr_social', I18n::t('server.social.facebookFailed'), ['status' => 401]);
         }
         $me = self::fetch(self::GRAPH . 'me?' . http_build_query(['fields' => 'id,name,email', 'access_token' => $token]));
         if (!$me || empty($me['id']) || (string) $me['id'] !== (string) ($info['user_id'] ?? '')) {
-            return new WP_Error('bgr_social', 'Facebook не върна профила. Опитай отново.', ['status' => 401]);
+            return new WP_Error('bgr_social', I18n::t('server.social.facebookProfile'), ['status' => 401]);
         }
 
         return ['subject' => (string) $me['id'], 'email' => (string) ($me['email'] ?? ''), 'verified' => false, 'name' => (string) ($me['name'] ?? '')];
@@ -122,7 +123,7 @@ final class Social
         $existing = $email !== '' ? get_user_by('email', $email) : false;
         if ($existing) {
             if (!$profile['verified']) {
-                return new WP_Error('bgr_social', 'Този имейл вече има профил. Влез с потребителско име и парола.', ['status' => 409]);
+                return new WP_Error('bgr_social', I18n::t('server.social.emailUsed'), ['status' => 409]);
             }
             update_user_meta($existing->ID, self::metaKey($provider), $profile['subject']);
             return (int) $existing->ID;
@@ -137,7 +138,7 @@ final class Social
             'show_admin_bar_front' => 'false',
         ]);
         if (is_wp_error($userId)) {
-            return new WP_Error('bgr_social', 'Профилът не можа да бъде създаден.', ['status' => 400]);
+            return new WP_Error('bgr_social', I18n::t('server.social.createFailed'), ['status' => 400]);
         }
         update_user_meta($userId, self::metaKey($provider), $profile['subject']);
         return (int) $userId;

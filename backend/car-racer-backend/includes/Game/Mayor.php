@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -17,10 +19,10 @@ final class Mayor
     private static function moveBlocked(array $manager): string
     {
         if ((int) $manager['city_season'] >= Rallies::currentSeason()) {
-            return 'Градът може да се сменя веднъж на сезон. Следващата смяна – през новия сезон.';
+            return I18n::t('server.mayor.moveSeason');
         }
         if (Rallies::hasUpcomingEntry((int) $manager['id'])) {
-            return 'Не можеш да се преместиш, докато си записан за предстоящо рали.';
+            return I18n::t('server.mayor.moveRally');
         }
         return '';
     }
@@ -33,10 +35,10 @@ final class Mayor
         $city = Registry::get('cities')->find($cityId);
 
         if (!$city || !(int) $city['active']) {
-            return new WP_Error('bgr_city', 'Няма такъв град.', ['status' => 404]);
+            return new WP_Error('bgr_city', I18n::t('server.mayor.noCity'), ['status' => 404]);
         }
         if ($cityId === $oldCityId) {
-            return new WP_Error('bgr_city', 'Вече живееш в този град.', ['status' => 400]);
+            return new WP_Error('bgr_city', I18n::t('server.mayor.sameCity'), ['status' => 400]);
         }
         $blocked = self::moveBlocked($manager);
         if ($blocked) {
@@ -44,23 +46,23 @@ final class Mayor
         }
         $cost = self::moveCost($manager);
         if ((int) $manager['money'] < $cost) {
-            return new WP_Error('bgr_money', sprintf('Преместването струва %d €.', $cost), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.mayor.moveCost', ['money' => I18n::money($cost)]), ['status' => 400]);
         }
         $energy = Settings::int('move_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -$cost, 'move', 'Преместване в ' . $city['name'])) {
+        if (!Ledger::add($managerId, -$cost, 'move', I18n::t('server.ledger.move', ['city' => Texts::of($city['name'])]))) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', sprintf('Преместването струва %d €.', $cost), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.mayor.moveCost', ['money' => I18n::money($cost)]), ['status' => 400]);
         }
 
         $notes = [];
         if (Work::job($manager)) {
-            $notes[] = 'работата ти приключи, но можеш веднага да започнеш нова';
+            $notes[] = I18n::t('server.mayor.noteJob');
         }
         if ($manager['track_status'] !== '') {
-            $notes[] = 'губиш собствената си тренировъчна писта';
+            $notes[] = I18n::t('server.mayor.noteTrack');
         }
 
         $wpdb->update(Tables::name('managers'), [
@@ -75,14 +77,14 @@ final class Mayor
         $notes = array_merge($notes, Sponsors::leaveCity($managerId, $oldCityId));
         $refund = BlackTrack::cancelOpen($managerId);
         if ($refund) {
-            $notes[] = sprintf('предизвикателствата на черната писта са отменени и %d € са върнати', $refund);
+            $notes[] = I18n::t('server.mayor.noteBlack', ['money' => I18n::money($refund)]);
         }
         if (Police::expireAll($managerId)) {
-            $notes[] = 'подкупите в стария град вече не важат';
+            $notes[] = I18n::t('server.mayor.noteBribes');
         }
 
         $details = implode('; ', $notes);
-        $message = sprintf('Премести се в %s за %d €.', $city['name'], $cost) . ($details !== '' ? ' ' . mb_strtoupper(mb_substr($details, 0, 1)) . mb_substr($details, 1) . '.' : '');
+        $message = I18n::t('server.mayor.moved', ['city' => Texts::of($city['name']), 'money' => I18n::money($cost)]) . ($details !== '' ? ' ' . mb_strtoupper(mb_substr($details, 0, 1)) . mb_substr($details, 1) . '.' : '');
         Inbox::add($managerId, $message);
         return $message;
     }
@@ -99,7 +101,7 @@ final class Mayor
             'blocked' => self::moveBlocked($manager),
             'cities' => array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
+                'name' => Texts::of($row['name']),
                 'privileges' => Privileges::describe((int) $row['id']),
                 'price_pct' => Shop::cityPct((int) $row['id']),
             ], $rows),
@@ -186,7 +188,7 @@ final class Mayor
         global $wpdb;
         if ($manager['track_status'] === 'building' && $manager['track_ready_at'] && strtotime($manager['track_ready_at']) <= Rallies::now()) {
             $wpdb->update(Tables::name('managers'), ['track_status' => 'open'], ['id' => $manager['id']]);
-            Inbox::add((int) $manager['id'], 'Собствената тренировъчна писта е готова. Екипажът може да тренира без полиция всеки ден.');
+            Inbox::add((int) $manager['id'], I18n::t('server.mayor.trackReady', [], I18n::of($manager)));
             $manager['track_status'] = 'open';
         }
         return $manager;
@@ -212,68 +214,68 @@ final class Mayor
 
         if ($kind === 'garage') {
             if (self::hasPermit($managerId)) {
-                return new WP_Error('bgr_permit', 'Вече имаш разрешение за следващото ниво на гаража.', ['status' => 400]);
+                return new WP_Error('bgr_permit', I18n::t('server.mayor.hasPermit'), ['status' => 400]);
             }
             if (!GarageLevels::get((int) $manager['garage_level'] + 1)) {
-                return new WP_Error('bgr_max', 'Гаражът е на максимално ниво.', ['status' => 400]);
+                return new WP_Error('bgr_max', I18n::t('server.garage.max'), ['status' => 400]);
             }
             $chance = self::permitChance($manager);
         } elseif ($kind === 'track') {
             if ((int) $manager['level'] < Settings::int('track_level')) {
-                return new WP_Error('bgr_level', sprintf('Собствена писта – от ниво %d.', Settings::int('track_level')), ['status' => 400]);
+                return new WP_Error('bgr_level', I18n::t('server.mayor.trackLevel', ['level' => Settings::int('track_level')]), ['status' => 400]);
             }
             if ((int) $manager['track_ban_season'] >= Rallies::currentSeason()) {
-                return new WP_Error('bgr_track_ban', 'След разкрития саботаж кметът няма да преговаря за пистата до следващия сезон.', ['status' => 400]);
+                return new WP_Error('bgr_track_ban', I18n::t('server.mayor.trackBan'), ['status' => 400]);
             }
             if (in_array($manager['track_status'], ['building', 'open'], true)) {
-                return new WP_Error('bgr_track', 'Пистата вече е твоя.', ['status' => 400]);
+                return new WP_Error('bgr_track', I18n::t('server.mayor.trackOwned'), ['status' => 400]);
             }
             if ($manager['track_status'] === '' && (int) $manager['money'] < Settings::int('track_cost')) {
-                return new WP_Error('bgr_money', sprintf('Строежът струва %d €.', Settings::int('track_cost')), ['status' => 400]);
+                return new WP_Error('bgr_money', I18n::t('server.mayor.trackCost', ['money' => I18n::money(Settings::int('track_cost'))]), ['status' => 400]);
             }
             $chance = self::trackChance($manager);
         } else {
-            return new WP_Error('bgr_kind', 'Няма такива преговори.', ['status' => 400]);
+            return new WP_Error('bgr_kind', I18n::t('server.mayor.noKind'), ['status' => 400]);
         }
 
         $retry = self::refusedToday($managerId, $kind);
         if ($retry && !(int) $manager['ad_retry']) {
-            return new WP_Error('bgr_refused', 'Кметът вече ти отказа днес. Опитай утре или вземи втори опит срещу реклама.', ['status' => 400]);
+            return new WP_Error('bgr_refused', I18n::t('server.mayor.refusedAd'), ['status' => 400]);
         }
         $energy = Settings::int('mayor_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
         if ($retry && !Ads::useRetry($managerId)) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_refused', 'Кметът вече ти отказа днес. Опитай утре.', ['status' => 400]);
+            return new WP_Error('bgr_refused', I18n::t('server.mayor.refused'), ['status' => 400]);
         }
 
         if (mt_rand(1, 100) > $chance) {
             self::record($managerId, $kind, 'refused');
-            return 'Кметът отказа. Можеш да опиташ отново утре.';
+            return I18n::t('server.mayor.refusedNow');
         }
 
         if ($kind === 'garage') {
             self::record($managerId, 'garage', 'approved');
-            return 'Кметът подписа разрешение за следващото ниво на гаража.';
+            return I18n::t('server.mayor.permitGranted');
         }
 
         if ($manager['track_status'] === 'closed') {
             $wpdb->update(Tables::name('managers'), ['track_status' => 'open'], ['id' => $managerId]);
             self::record($managerId, 'track', 'used');
-            return 'Кметът отвори отново собствената ти тренировъчна писта.';
+            return I18n::t('server.mayor.reopened');
         }
 
-        if (!Ledger::add($managerId, -Settings::int('track_cost'), 'track', 'Строеж на тренировъчна писта')) {
+        if (!Ledger::add($managerId, -Settings::int('track_cost'), 'track', I18n::t('server.ledger.track'))) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', sprintf('Строежът струва %d €.', Settings::int('track_cost')), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.mayor.trackCost', ['money' => I18n::money(Settings::int('track_cost'))]), ['status' => 400]);
         }
         $ready = date('Y-m-d H:i:s', Rallies::now() + Settings::int('track_weeks') * WEEK_IN_SECONDS);
         $wpdb->update(Tables::name('managers'), ['track_status' => 'building', 'track_ready_at' => $ready], ['id' => $managerId]);
         self::record($managerId, 'track', 'used');
 
-        return sprintf('Кметът одобри пистата. Строежът започва и ще е готов на %s.', mysql2date('d.m.Y', $ready));
+        return I18n::t('server.mayor.approved', ['date' => I18n::date(strtotime($ready))]);
     }
 
     public static function view(array $manager): array
@@ -295,7 +297,7 @@ final class Mayor
             ],
             'track' => [
                 'status' => $manager['track_status'],
-                'status_label' => Labels::TRACK_STATUSES[$manager['track_status']] ?? '',
+                'status_label' => Labels::text('TRACK_STATUSES', $manager['track_status']),
                 'ready_at' => $manager['track_ready_at'] ? str_replace(' ', 'T', $manager['track_ready_at']) : null,
                 'level' => Settings::int('track_level'),
                 'cost' => Settings::int('track_cost'),

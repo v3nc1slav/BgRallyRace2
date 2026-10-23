@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 
 final class Progress
@@ -81,12 +82,12 @@ final class Progress
         $used = $row ? self::usedToday($row) : 0;
         $grant = max(0, min($amount, Settings::int('xp_daily_cap') - $used));
         if (!$grant) {
-            return ' Дневният лимит на опит е достигнат.';
+            return ' ' . I18n::t('server.progress.cap');
         }
 
         $wpdb->update($table, ['xp_date' => $today, 'xp_today' => $used + $grant], ['id' => $managerId]);
         self::addXp($managerId, $grant);
-        return sprintf(' +%d опит.', $grant);
+        return ' ' . I18n::t('server.progress.xp', ['xp' => $grant]);
     }
 
     public static function recalculate(): int

@@ -4,7 +4,9 @@ namespace BgRally\Game;
 
 use BgRally\Auth\Tokens;
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Session_Tokens;
 
@@ -26,11 +28,12 @@ final class Managers
             'energy' => self::energyMax(1),
             'energy_date' => wp_date('Y-m-d'),
             'payroll_week' => Rallies::week(),
+            'lang' => I18n::lang(),
             'created_at' => current_time('mysql', true),
         ]);
         $id = (int) $wpdb->insert_id;
 
-        Ledger::add($id, Settings::int('starting_money'), 'start', 'Стартови пари');
+        Ledger::add($id, Settings::int('starting_money'), 'start', I18n::t('server.ledger.start'));
         Garage::ensureStarterPack($id);
 
         return $id;
@@ -54,13 +57,16 @@ final class Managers
 
         $manager = $wpdb->get_row($query, ARRAY_A);
         if ($manager) {
-            $manager = Inactivity::touch($manager);
+            $manager = Inactivity::touch(I18n::remember($manager));
         }
         if ($manager && $manager['payroll_week'] !== Rallies::week()) {
             Payroll::process($manager);
             $manager = $wpdb->get_row($query, ARRAY_A);
         }
 
+        if ($manager) {
+            $manager['city'] = Texts::of($manager['city'] ?? '');
+        }
         return $manager ? self::refreshDay($manager) : null;
     }
 
@@ -143,10 +149,11 @@ final class Managers
             ],
             'xp_today' => Progress::usedToday($manager),
             'xp_cap' => Settings::int('xp_daily_cap'),
-            'job' => ($job = Work::job($manager)) ? ['name' => $job['name'], 'pay' => (int) $job['pay'], 'energy' => (int) $job['energy']] : null,
+            'job' => ($job = Work::job($manager)) ? ['name' => Texts::of($job['name']), 'pay' => (int) $job['pay'], 'energy' => (int) $job['energy']] : null,
             'loan' => Bank::summary((int) $manager['id']),
             'perks' => ['discount' => (int) ($manager['shop_discount'] ?? 0), 'retry' => (bool) ($manager['ad_retry'] ?? false)],
             'comeback' => Inactivity::info($manager),
+            'lang' => I18n::of($manager),
         ];
     }
 
@@ -217,7 +224,7 @@ final class Managers
     {
         $manager = self::find($id);
         $user = $manager ? get_userdata((int) $manager['user_id']) : null;
-        return $user ? $user->display_name : 'Отбор';
+        return $user ? $user->display_name : I18n::t('server.common.team');
     }
 
     public static function mute(int $id, int $hours): void

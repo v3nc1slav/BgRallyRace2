@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -46,7 +47,7 @@ final class Inactivity
             $notes = [];
             $refund = BlackTrack::cancelOpen($managerId);
             if ($refund) {
-                $notes[] = sprintf('Отворените ти предизвикателства на черната писта бяха отменени и %d € са върнати.', $refund);
+                $notes[] = I18n::as($managerId, fn() => I18n::t('server.inactivity.blackRefund', ['money' => I18n::money($refund)]));
             }
             $wpdb->update(self::table(), ['inactive_since' => current_time('mysql'), 'inactive_notes' => wp_json_encode($notes)], ['id' => $managerId]);
         }
@@ -62,13 +63,13 @@ final class Inactivity
 
         $notes = json_decode((string) $manager['inactive_notes'], true) ?: [];
         if (Staff::rows($managerId)) {
-            $notes[] = 'Заплатите на служителите не бяха начислявани и никой не напусна.';
+            $notes[] = I18n::t('server.inactivity.salaries');
         }
         if (Bank::active($managerId)) {
-            $notes[] = 'Вноските по заема бяха спрени, без наказателна лихва. Плащанията продължават от следващия понеделник.';
+            $notes[] = I18n::t('server.inactivity.loan');
         }
         if (Work::job($manager)) {
-            $notes[] = 'Заплатата от работата беше спряна. Продължава от утре.';
+            $notes[] = I18n::t('server.inactivity.job');
         }
         $extended = (int) $wpdb->query($wpdb->prepare(
             'UPDATE ' . Tables::name('contracts') . " SET ends_at = DATE_ADD(ends_at, INTERVAL %d SECOND) WHERE manager_id = %d AND status = 'active' AND ends_at IS NOT NULL",
@@ -76,7 +77,7 @@ final class Inactivity
             $managerId
         ));
         if ($extended) {
-            $notes[] = sprintf('Договорите със спонсорите са удължени с %d дни.', $frozenDays);
+            $notes[] = I18n::t('server.inactivity.contracts', ['days' => $frozenDays]);
         }
 
         $comeback = ['days' => $away, 'notes' => $notes, 'fresh' => self::freshAmount($manager, $away), 'cooldown' => Settings::int('fresh_cooldown'), 'loan_weeks' => Settings::int('fresh_loan_weeks')];
@@ -88,7 +89,7 @@ final class Inactivity
             'job_date' => wp_date('Y-m-d'),
         ];
         $wpdb->update(self::table(), $changes, ['id' => $managerId]);
-        Inbox::add($managerId, trim(sprintf('Добре дошъл отново след %d дни! %s', $away, implode(' ', $notes))));
+        Inbox::add($managerId, trim(I18n::t('server.inactivity.welcome', ['count' => $away]) . ' ' . implode(' ', $notes)));
 
         return array_merge($manager, $changes);
     }
@@ -120,12 +121,12 @@ final class Inactivity
         $managerId = (int) $manager['id'];
         $info = self::info($manager);
         if (!$info) {
-            return new WP_Error('bgr_comeback', 'Няма какво да се потвърди.', ['status' => 400]);
+            return new WP_Error('bgr_comeback', I18n::t('server.inactivity.noComeback'), ['status' => 400]);
         }
         $wpdb->update(self::table(), ['comeback' => ''], ['id' => $managerId]);
 
         if ($choice !== 'fresh' || empty($info['fresh'])) {
-            return 'Продължаваш оттам, докъдето беше стигнал.';
+            return I18n::t('server.inactivity.continue');
         }
 
         $target = (int) $info['fresh'];
@@ -136,12 +137,12 @@ final class Inactivity
         ));
         $money = (int) $wpdb->get_var($wpdb->prepare('SELECT money FROM ' . self::table() . ' WHERE id = %d', $managerId));
         if ($money < $target) {
-            Ledger::add($managerId, $target - $money, 'fresh_start', 'Ново начало');
+            Ledger::add($managerId, $target - $money, 'fresh_start', I18n::t('server.ledger.fresh'));
         }
         $wpdb->update(self::table(), ['fresh_at' => current_time('mysql')], ['id' => $managerId]);
 
         $until = Rallies::now() + Settings::int('fresh_loan_weeks') * WEEK_IN_SECONDS;
-        $message = sprintf('Започваш на чисто: дълговете са изчистени и имаш %d €. Нов заем може да се тегли след %s.', max($money, $target), date('d.m.Y', $until));
+        $message = I18n::t('server.inactivity.fresh', ['money' => I18n::money(max($money, $target)), 'date' => I18n::date($until)]);
         Inbox::add($managerId, $message);
         return $message;
     }

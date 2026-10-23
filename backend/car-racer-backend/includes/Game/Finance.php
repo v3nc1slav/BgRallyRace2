@@ -3,46 +3,13 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 
 final class Finance
 {
     private const HISTORY = 5;
-
-    private const LABELS = [
-        'prize' => 'Награди от ралита',
-        'season_prize' => 'Награди за сезона',
-        'sponsor' => 'Спонсори',
-        'job' => 'Работа',
-        'market_sale' => 'Продажби на пазара',
-        'dealer' => 'Изкупвач',
-        'car_sale' => 'Продадени коли',
-        'black_win' => 'Черна писта – печалби',
-        'black_refund' => 'Черна писта – върнати залози',
-        'ad' => 'Реклами',
-        'loan' => 'Заеми от банката',
-        'seizure' => 'Запор – продадено имущество',
-        'start' => 'Стартови пари',
-        'rally_entry' => 'Ралита – такса, път и гориво',
-        'recon' => 'Тренировка преди рали',
-        'training' => 'Тренировки',
-        'shop' => 'Магазин',
-        'car_purchase' => 'Нови коли',
-        'repair' => 'Ремонти',
-        'garage' => 'Гараж',
-        'salary' => 'Заплати',
-        'market' => 'Покупки от пазара',
-        'loan_payment' => 'Вноски по заеми',
-        'fine' => 'Глоби',
-        'bribe' => 'Подкупи',
-        'black_bet' => 'Черна писта – залози',
-        'clothes' => 'Дрехи',
-        'fitness' => 'Фитнес',
-        'track' => 'Собствена писта',
-        'sabotage' => 'Саботаж',
-        'move' => 'Преместване в друг град',
-        'fresh_start' => 'Ново начало',
-    ];
 
     private static function boundary(string $startAt): string
     {
@@ -64,7 +31,7 @@ final class Finance
         arsort($sums);
         $rows = [];
         foreach ($sums as $reason => $amount) {
-            $rows[] = ['key' => $reason, 'label' => self::LABELS[$reason] ?? 'Други', 'amount' => $amount];
+            $rows[] = ['key' => $reason, 'label' => I18n::t(I18n::has('server.finance.' . $reason, I18n::DEFAULT) ? 'server.finance.' . $reason : 'server.finance.other'), 'amount' => $amount];
         }
         return $rows;
     }
@@ -105,7 +72,7 @@ final class Finance
 
         foreach ($schedule as $index => $rally) {
             $end = $index === count($schedule) - 1 ? $to : self::boundary($rally['start_at']);
-            $point = ['id' => (int) $rally['id'], 'name' => $rally['name'], 'income' => 0, 'expense' => 0, 'current' => $end >= $now];
+            $point = ['id' => (int) $rally['id'], 'name' => Texts::of($rally['name']), 'income' => 0, 'expense' => 0, 'current' => $end >= $now];
             while ($cursor < count($entries) && $entries[$cursor]['created_at'] <= $end) {
                 $amount = (int) $entries[$cursor]['amount'];
                 $point[$amount >= 0 ? 'income' : 'expense'] += abs($amount);

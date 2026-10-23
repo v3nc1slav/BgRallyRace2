@@ -7,6 +7,7 @@ use BgRally\Auth\Tokens;
 use BgRally\Catalog\Cities;
 use BgRally\Game\Account;
 use BgRally\Game\Managers;
+use BgRally\I18n;
 use WP_Error;
 use WP_REST_Request;
 
@@ -15,7 +16,7 @@ final class AuthController
     public static function register(WP_REST_Request $request)
     {
         if (is_user_logged_in()) {
-            return new WP_Error('bgr_logged_in', 'Вече сте влезли в профила си.', ['status' => 400]);
+            return new WP_Error('bgr_logged_in', I18n::t('server.auth.loggedIn'), ['status' => 400]);
         }
 
         $rawUsername = trim((string) $request->get_param('username'));
@@ -26,23 +27,23 @@ final class AuthController
 
         $fields = [];
         if ($username === '' || $username !== $rawUsername || !validate_username($username)) {
-            $fields['username'] = 'Използвайте само латински букви, цифри и знаците _ . - @';
+            $fields['username'] = I18n::t('server.auth.username');
         } elseif (username_exists($username)) {
-            $fields['username'] = 'Това потребителско име е заето.';
+            $fields['username'] = I18n::t('server.auth.usernameTaken');
         }
         if (!is_email($email)) {
-            $fields['email'] = 'Невалиден имейл.';
+            $fields['email'] = I18n::t('server.auth.email');
         } elseif (email_exists($email)) {
-            $fields['email'] = 'Този имейл вече е регистриран.';
+            $fields['email'] = I18n::t('server.auth.emailTaken');
         }
         if (mb_strlen($password) < 8) {
-            $fields['password'] = 'Паролата трябва да е поне 8 символа.';
+            $fields['password'] = I18n::t('server.auth.password');
         }
         if (!Cities::isActive($cityId)) {
-            $fields['city_id'] = 'Изберете град.';
+            $fields['city_id'] = I18n::t('server.auth.city');
         }
         if ($fields) {
-            return new WP_Error('bgr_invalid', 'Проверете въведените данни.', ['status' => 400, 'fields' => $fields]);
+            return new WP_Error('bgr_invalid', I18n::t('server.auth.invalid'), ['status' => 400, 'fields' => $fields]);
         }
 
         $userId = wp_insert_user([
@@ -76,7 +77,7 @@ final class AuthController
         if (is_wp_error($user)) {
             $message = $user->get_error_code() === 'bgr_banned'
                 ? $user->get_error_message()
-                : 'Грешно потребителско име или парола.';
+                : I18n::t('server.auth.wrong');
             return new WP_Error('bgr_login_failed', $message, ['status' => 401]);
         }
 
@@ -91,7 +92,7 @@ final class AuthController
             return $userId;
         }
         if (Managers::isBannedUser($userId)) {
-            return new WP_Error('bgr_login_failed', 'Профилът е блокиран.', ['status' => 401]);
+            return new WP_Error('bgr_login_failed', I18n::t('server.auth.banned'), ['status' => 401]);
         }
         return self::signIn($request, $userId);
     }
@@ -118,7 +119,7 @@ final class AuthController
         wp_clear_auth_cookie();
         wp_set_current_user(0);
         unset($_COOKIE[LOGGED_IN_COOKIE]);
-        return PlayerController::state() + ['message' => 'Профилът е изтрит.'];
+        return PlayerController::state() + ['message' => I18n::t('server.auth.deleted')];
     }
 
     private static function tokenMode(WP_REST_Request $request): bool

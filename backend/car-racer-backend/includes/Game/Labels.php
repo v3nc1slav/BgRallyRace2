@@ -2,6 +2,8 @@
 
 namespace BgRally\Game;
 
+use BgRally\I18n;
+
 final class Labels
 {
     public const CLASSES = [3 => 'Клас 3', 2 => 'Клас 2', 1 => 'Клас 1'];
@@ -106,8 +108,28 @@ final class Labels
 
     public const RALLY_STATUSES = ['scheduled' => 'Предстои', 'computing' => 'Изчислява се', 'finished' => 'Изчислено'];
 
+    public static function text(string $group, int|string|null $key): string
+    {
+        $key = (string) $key;
+        $list = constant(self::class . '::' . $group);
+        if (!array_key_exists($key, $list)) {
+            return $key;
+        }
+        $path = 'server.labels.' . strtolower($group) . '.' . ($key === '' ? 'none' : $key);
+        return I18n::has($path) ? I18n::t($path) : (string) $list[$key];
+    }
+
+    public static function all(string $group): array
+    {
+        $list = constant(self::class . '::' . $group);
+        foreach ($list as $key => $label) {
+            $list[$key] = self::text($group, $key);
+        }
+        return $list;
+    }
+
     public static function classLabel(int|string $class): string
     {
-        return self::CLASSES[(int) $class] ?? 'Всички класове';
+        return isset(self::CLASSES[(int) $class]) ? self::text('CLASSES', (int) $class) : I18n::t('server.labels.allClasses');
     }
 }

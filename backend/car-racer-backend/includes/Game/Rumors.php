@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 
 final class Rumors
 {
@@ -13,13 +14,13 @@ final class Rumors
         return Tables::name('rumors');
     }
 
-    public static function add(int $cityId, string $named, string $anon): void
+    public static function add(int $cityId, string $key, array $params = []): void
     {
         global $wpdb;
         $wpdb->insert(self::table(), [
             'city_id' => $cityId,
-            'named' => mb_strimwidth($named, 0, 255, '…'),
-            'anon' => mb_strimwidth($anon, 0, 255, '…'),
+            'named' => I18n::encode(I18n::msg('server.rumors.' . $key, $params)),
+            'anon' => I18n::encode(I18n::msg('server.rumors.' . $key . 'Anon', $params)),
             'created_at' => current_time('mysql'),
         ]);
 
@@ -29,11 +30,11 @@ final class Rumors
         }
     }
 
-    public static function about(int $managerId, string $named, string $anon): void
+    public static function about(int $managerId, string $key, array $params = []): void
     {
         $manager = Managers::find($managerId);
         if ($manager) {
-            self::add((int) $manager['city_id'], sprintf($named, Managers::name($managerId)), $anon);
+            self::add((int) $manager['city_id'], $key, $params + ['team' => Managers::name($managerId)]);
         }
     }
 
@@ -43,7 +44,7 @@ final class Rumors
         $rows = $wpdb->get_results($wpdb->prepare('SELECT named, anon, created_at FROM ' . self::table() . ' WHERE city_id = %d ORDER BY id DESC LIMIT %d', $cityId, $limit), ARRAY_A);
 
         return array_map(fn($row) => [
-            'text' => $named ? $row['named'] : $row['anon'],
+            'text' => I18n::render($named ? $row['named'] : $row['anon']),
             'at' => str_replace(' ', 'T', $row['created_at']),
         ], $rows);
     }

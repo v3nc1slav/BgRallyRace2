@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -189,9 +191,9 @@ final class Rallies
 
         return [
             'id' => (int) $rally['id'],
-            'name' => $rally['name'],
+            'name' => Texts::of($rally['name']),
             'season' => (int) $rally['season'],
-            'city' => $cities[$rally['city_id']] ?? '',
+            'city' => Texts::of($cities[$rally['city_id']] ?? ''),
             'home' => (int) $manager['city_id'] === (int) $rally['city_id'],
             'start_at' => str_replace(' ', 'T', $rally['start_at']),
             'deadline' => date('Y-m-d\TH:i:s', self::deadline($rally)),
@@ -199,11 +201,11 @@ final class Rallies
             'status' => self::state($rally),
             'stages' => array_map(fn($stage) => [
                 'id' => (int) $stage['id'],
-                'name' => $stage['name'],
+                'name' => Texts::of($stage['name']),
                 'length_km' => (float) $stage['length_km'],
                 'surface' => $stage['surface'],
-                'surface_label' => Labels::SURFACES[$stage['surface']] ?? '',
-                'profile_label' => Labels::PROFILES[$stage['profile']] ?? '',
+                'surface_label' => Labels::text('SURFACES', $stage['surface']),
+                'profile_label' => Labels::text('PROFILES', $stage['profile']),
                 'difficulty' => (int) $stage['difficulty'],
                 'turns' => (int) $stage['turns'],
             ], $stages),
@@ -235,7 +237,7 @@ final class Rallies
 
         $rally = Registry::get('rallies')->find($id);
         if (!$rally) {
-            return new WP_Error('bgr_not_found', 'Няма такова рали.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.rallies.noRally'), ['status' => 404]);
         }
 
         $managerId = (int) $manager['id'];
@@ -257,7 +259,7 @@ final class Rallies
             'can_register' => !$entry && $state === 'open',
             'can_recon' => $entry && !$entry['recon'] && $scheduled && date('Y-m-d', self::now()) === self::reconDate($rally),
             'can_change_styles' => $entry && $scheduled && self::now() < strtotime($rally['start_at']),
-            'style_options' => Labels::STYLES,
+            'style_options' => Labels::all('STYLES'),
             'start_list' => self::startList($id, $scheduled, $managerId),
             'intel' => Intel::view($manager, $rally, $entry),
             'broadcast' => Broadcast::view($rally, $managerId),
@@ -281,7 +283,7 @@ final class Rallies
 
         return array_map(fn($row) => [
             'start_number' => (int) $row['start_number'],
-            'team' => $row['team_name'],
+            'team' => Account::team($row['team_name']),
             'class_label' => Labels::classLabel($row['class']),
             'is_me' => (int) $row['manager_id'] === $managerId,
         ], $rows);
@@ -299,10 +301,10 @@ final class Rallies
 
     private static function forecastText(array $rally): string
     {
-        $text = Labels::WEATHER[$rally['weather']] ?? '';
+        $text = Labels::text('WEATHER', $rally['weather']);
         $change = (string) ($rally['weather_change'] ?? '');
         if ($change !== '' && $change !== $rally['weather'] && (int) $rally['change_chance'] > 0) {
-            $text .= sprintf(', %d%% шанс за промяна: %s', $rally['change_chance'], mb_strtolower(Labels::WEATHER[$change] ?? $change));
+            $text = I18n::t('server.rallies.forecastChange', ['weather' => $text, 'pct' => $rally['change_chance'], 'change' => mb_strtolower(Labels::text('WEATHER', $change))]);
         }
         return $text;
     }
@@ -390,14 +392,14 @@ final class Rallies
             'selected' => $selected,
             'tyres' => array_values(array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
-                'type_label' => Labels::TYRE_TYPES[$row['type']] ?? $row['type'],
+                'name' => Texts::of($row['name']),
+                'type_label' => Labels::text('TYRE_TYPES', $row['type']),
                 'health' => round((float) $row['health'], 1),
             ], $candidates['tyres'])),
             'parts' => array_values(array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
-                'type_label' => Labels::PART_TYPES[$row['type']] ?? $row['type'],
+                'name' => Texts::of($row['name']),
+                'type_label' => Labels::text('PART_TYPES', $row['type']),
                 'health' => round((float) $row['health'], 1),
             ], $candidates['parts'])),
         ];
@@ -421,24 +423,24 @@ final class Rallies
         $rally = Registry::get('rallies')->find($id);
 
         if (!$rally) {
-            return new WP_Error('bgr_not_found', 'Няма такова рали.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.rallies.noRally'), ['status' => 404]);
         }
         if (self::state($rally) !== 'open') {
-            return new WP_Error('bgr_closed', 'Записването за това рали е затворено.', ['status' => 400]);
+            return new WP_Error('bgr_closed', I18n::t('server.rallies.closed'), ['status' => 400]);
         }
         if (self::entry($id, $managerId)) {
-            return new WP_Error('bgr_registered', 'Вече сте записани за това рали.', ['status' => 400]);
+            return new WP_Error('bgr_registered', I18n::t('server.rallies.registered'), ['status' => 400]);
         }
 
         Garage::ensureStarterPack($managerId);
         $car = Garage::car($managerId);
         $snapshot = $car ? Garage::snapshot((int) $car['player_car_id']) : null;
         if (!$snapshot) {
-            return new WP_Error('bgr_no_car', 'Нямате кола.', ['status' => 400]);
+            return new WP_Error('bgr_no_car', I18n::t('server.garage.noOwnCar'), ['status' => 400]);
         }
         $problems = array_merge($snapshot['problems'], Staff::problems($managerId));
         if ($problems) {
-            return new WP_Error('bgr_not_ready', 'Отборът не е готов: ' . implode(', ', $problems) . '.', ['status' => 400]);
+            return new WP_Error('bgr_not_ready', I18n::t('server.rallies.notReady', ['list' => implode(', ', $problems)]), ['status' => 400]);
         }
 
         $costs = self::summary($rally, $manager, $car, false)['costs'];
@@ -457,15 +459,15 @@ final class Rallies
             'created_at' => current_time('mysql', true),
         ]);
         if (!$inserted) {
-            return new WP_Error('bgr_registered', 'Вече сте записани за това рали.', ['status' => 400]);
+            return new WP_Error('bgr_registered', I18n::t('server.rallies.registered'), ['status' => 400]);
         }
 
-        if (!Ledger::add($managerId, -$costs['total'], 'rally_entry', $rally['name'])) {
+        if (!Ledger::add($managerId, -$costs['total'], 'rally_entry', Texts::of($rally['name']))) {
             $wpdb->delete($entries, ['id' => $wpdb->insert_id]);
-            return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са %d €).', $costs['total']), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.moneyNeed', ['money' => I18n::money($costs['total'])]), ['status' => 400]);
         }
 
-        return sprintf('Записахте се за „%s“ със стартов номер %d.', $rally['name'], $startNumber);
+        return I18n::t('server.rallies.joined', ['rally' => Texts::of($rally['name']), 'number' => $startNumber]);
     }
 
     public static function setStyles(array $manager, int $id, array $styles, array $spares = []): string|WP_Error
@@ -475,17 +477,17 @@ final class Rallies
         $entry = $rally ? self::entry($id, (int) $manager['id']) : null;
 
         if (!$entry) {
-            return new WP_Error('bgr_not_registered', 'Не сте записани за това рали.', ['status' => 400]);
+            return new WP_Error('bgr_not_registered', I18n::t('server.rallies.notRegistered'), ['status' => 400]);
         }
         if ($rally['status'] !== 'scheduled' || self::now() >= strtotime($rally['start_at'])) {
-            return new WP_Error('bgr_started', 'Ралито вече е започнало.', ['status' => 400]);
+            return new WP_Error('bgr_started', I18n::t('server.rallies.started'), ['status' => 400]);
         }
 
         $wpdb->update(Tables::name('entries'), [
             'styles' => wp_json_encode((object) self::sanitizeStyles($rally, $styles)),
             'spares' => wp_json_encode(self::sanitizeSpares($manager, $spares)),
         ], ['id' => $entry['id']]);
-        return 'Стилът на каране и резервните са запазени.';
+        return I18n::t('server.rallies.saved');
     }
 
     public static function recon(array $manager, int $id): string|WP_Error
@@ -496,21 +498,21 @@ final class Rallies
         $entry = $rally ? self::entry($id, $managerId) : null;
 
         if (!$entry) {
-            return new WP_Error('bgr_not_registered', 'Първо се запишете за ралито.', ['status' => 400]);
+            return new WP_Error('bgr_not_registered', I18n::t('server.rallies.registerFirst'), ['status' => 400]);
         }
         if ($entry['recon']) {
-            return new WP_Error('bgr_recon_done', 'Вече сте направили тренировката.', ['status' => 400]);
+            return new WP_Error('bgr_recon_done', I18n::t('server.rallies.reconDone'), ['status' => 400]);
         }
         if ($rally['status'] !== 'scheduled') {
-            return new WP_Error('bgr_started', 'Ралито вече е започнало.', ['status' => 400]);
+            return new WP_Error('bgr_started', I18n::t('server.rallies.started'), ['status' => 400]);
         }
         if (date('Y-m-d', self::now()) !== self::reconDate($rally)) {
-            return new WP_Error('bgr_recon_day', sprintf('Тренировката е само на %s.', date('d.m.Y', strtotime(self::reconDate($rally)))), ['status' => 400]);
+            return new WP_Error('bgr_recon_day', I18n::t('server.rallies.reconDay', ['date' => I18n::date(strtotime(self::reconDate($rally)))]), ['status' => 400]);
         }
 
         $snapshot = Garage::snapshot((int) $entry['player_car_id']);
         if (!$snapshot || $snapshot['problems']) {
-            return new WP_Error('bgr_not_ready', 'Колата не е готова за тренировка.', ['status' => 400]);
+            return new WP_Error('bgr_not_ready', I18n::t('server.rallies.carNotReady'), ['status' => 400]);
         }
 
         $stages = self::stages($rally);
@@ -519,20 +521,20 @@ final class Rallies
         $energy = Settings::int('energy_recon');
 
         if ((int) $manager['money'] < $fuel) {
-            return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари за гориво (нужни са %d €).', $fuel), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.rallies.fuelNeed', ['money' => I18n::money($fuel)]), ['status' => 400]);
         }
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -$fuel, 'recon', $rally['name'])) {
+        if (!Ledger::add($managerId, -$fuel, 'recon', Texts::of($rally['name']))) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари за гориво.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.rallies.fuel'), ['status' => 400]);
         }
 
         Garage::applyWear(Simulator::reconWear($snapshot, $stages));
         $wpdb->update(Tables::name('entries'), ['recon' => 1], ['id' => $entry['id']]);
 
-        return sprintf('Тренировката е направена. Прогноза за ралито: %s.', mb_strtolower(self::forecastText($rally)));
+        return I18n::t('server.rallies.reconOk', ['forecast' => mb_strtolower(self::forecastText($rally))]);
     }
 
     public static function standings(int $managerId, int $season = 0): array
@@ -561,7 +563,7 @@ final class Rallies
             $classes[$class] ??= ['class' => $class, 'label' => Labels::classLabel($class), 'rows' => []];
             $classes[$class]['rows'][] = [
                 'position' => count($classes[$class]['rows']) + 1,
-                'team' => $row['team'],
+                'team' => Account::team($row['team']),
                 'points' => (int) $row['points'],
                 'rallies' => (int) $row['rallies'],
                 'wins' => (int) $row['wins'],

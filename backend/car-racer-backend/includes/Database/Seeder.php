@@ -60,6 +60,80 @@ final class Seeder
             global $wpdb;
             $wpdb->query($wpdb->prepare('UPDATE ' . Tables::name('managers') . ' SET seen_date = %s WHERE seen_date IS NULL', wp_date('Y-m-d')));
         }
+        if ($fresh || (int) $from < 19) {
+            self::addEnglish();
+        }
+        if ((int) $from < 20) {
+            Pages::ensure();
+        }
+    }
+
+    private const ENGLISH = [
+        'cities' => [
+            'София' => 'Sofia', 'Пловдив' => 'Plovdiv', 'Смолян' => 'Smolyan', 'Велико Търново' => 'Veliko Tarnovo', 'Благоевград' => 'Blagoevgrad', 'Габрово' => 'Gabrovo',
+        ],
+        'stages' => [
+            'Витоша – Бояна' => 'Vitosha – Boyana', 'Плана' => 'Plana', 'Железница' => 'Zheleznitsa', 'Бачково' => 'Bachkovo', 'Белащица' => 'Belashtitsa',
+            'Кричим' => 'Krichim', 'Пампорово' => 'Pamporovo', 'Перелик' => 'Perelik', 'Момчиловци' => 'Momchilovtsi', 'Арбанаси' => 'Arbanasi',
+            'Килифарево' => 'Kilifarevo', 'Беляковец' => 'Belyakovets', 'Покровник' => 'Pokrovnik', 'Бачиново' => 'Bachinovo', 'Предела' => 'Predela',
+            'Узана' => 'Uzana', 'Шипка' => 'Shipka', 'Боженци' => 'Bozhentsi', 'Шушня' => 'Shushnya',
+        ],
+        'parts' => [
+            'Стандартен двигател' => 'Standard engine', 'Спортен двигател' => 'Sport engine', 'Състезателен двигател' => 'Racing engine',
+            'Стандартно турбо' => 'Standard turbo', 'Спортно турбо' => 'Sport turbo', 'Състезателно турбо' => 'Racing turbo',
+            'Стандартна скоростна кутия' => 'Standard gearbox', 'Спортна скоростна кутия' => 'Sport gearbox', 'Състезателна скоростна кутия' => 'Racing gearbox',
+            'Стандартно окачване' => 'Standard suspension', 'Спортно окачване' => 'Sport suspension', 'Състезателно окачване' => 'Racing suspension',
+            'Стандартни спирачки' => 'Standard brakes', 'Спортни спирачки' => 'Sport brakes', 'Състезателни спирачки' => 'Racing brakes',
+            'Стандартно шаси' => 'Standard chassis', 'Спортно шаси' => 'Sport chassis', 'Състезателно шаси' => 'Racing chassis',
+        ],
+        'tyres' => [
+            'Асфалт сухо – мека' => 'Dry asphalt – soft', 'Асфалт сухо – твърда' => 'Dry asphalt – hard', 'Асфалт мокро – мека' => 'Wet asphalt – soft',
+            'Асфалт мокро – твърда' => 'Wet asphalt – hard', 'Чакъл – мека' => 'Gravel – soft', 'Чакъл – твърда' => 'Gravel – hard',
+            'Сняг – мека' => 'Snow – soft', 'Сняг – твърда' => 'Snow – hard',
+        ],
+        'clothes' => [
+            'Спортно яке' => 'Sports jacket', 'Елегантен костюм' => 'Elegant suit', 'Костюм по поръчка' => 'Tailored suit', 'Маратонки' => 'Trainers',
+            'Кожени обувки' => 'Leather shoes', 'Италиански обувки' => 'Italian shoes', 'Дигитален часовник' => 'Digital watch', 'Хронограф' => 'Chronograph',
+            'Швейцарски часовник' => 'Swiss watch', 'Слънчеви очила' => 'Sunglasses', 'Кожена чанта' => 'Leather bag', 'Златни ръкавели' => 'Gold cufflinks',
+        ],
+        'jobs' => [
+            'Сервитьор в бара' => 'Waiter at the bar', 'Продавач в МОЛ-а' => 'Shop assistant at the mall', 'Хамалин на пазара' => 'Porter at the market',
+            'Консултант в магазина за части' => 'Adviser at the car parts shop', 'Инструктор по безопасно шофиране' => 'Safe driving instructor',
+            'Охрана в банката' => 'Bank security guard', 'Управител на автосалон' => 'Car dealership manager',
+        ],
+        'incidents' => [
+            '{пилот} сгреши на {завой} завой и загуби {секунди} сек.' => '{driver} made a mistake at the {turn} corner and lost {seconds} s.',
+            '{пилот} се завъртя на {завой} завой и загуби {секунди} сек.' => '{driver} spun at the {turn} corner and lost {seconds} s.',
+            '{пилот} излезе от пътя след {завой} завой и загуби {секунди} сек.' => '{driver} went off the road after the {turn} corner and lost {seconds} s.',
+            'Навигаторът на {пилот} пропусна бележка преди {завой} завой – {секунди} сек. загуба.' => "{driver}'s co-driver missed a note before the {turn} corner – {seconds} s lost.",
+            '{пилот} спука гума на {завой} завой.' => '{driver} got a puncture at the {turn} corner.',
+            '{пилот} спука гума след {завой} завой.' => '{driver} got a puncture after the {turn} corner.',
+            '{пилот} има повреда – {част}.' => '{driver} has a failure – {part}.',
+            '{пилот} катастрофира на {завой} завой!' => '{driver} crashed at the {turn} corner!',
+            '{пилот} удари скала на {завой} завой и изкриви шасито.' => '{driver} hit a rock at the {turn} corner and bent the chassis.',
+            'Започна да вали. Пътят става хлъзгав.' => 'It started to rain. The road is getting slippery.',
+            'Заваля сняг!' => 'It started to snow!',
+            'Дъждът спря и пътят изсъхва.' => 'The rain stopped and the road is drying.',
+        ],
+    ];
+
+    private static function addEnglish(): void
+    {
+        global $wpdb;
+        foreach (self::ENGLISH as $slug => $names) {
+            $table = Registry::get($slug)->table();
+            $field = $slug === 'incidents' ? 'text' : 'name';
+            foreach ($names as $bg => $en) {
+                $wpdb->query($wpdb->prepare("UPDATE $table SET {$field}_en = %s WHERE $field = %s AND {$field}_en = ''", $en, $bg));
+            }
+        }
+
+        $rallies = Registry::get('rallies')->table();
+        foreach ($wpdb->get_results("SELECT id, name FROM $rallies WHERE name_en = ''", ARRAY_A) as $rally) {
+            if (preg_match('/^Рали (.+?)( \d+)?$/u', $rally['name'], $match) && isset(self::ENGLISH['cities'][$match[1]])) {
+                $wpdb->update($rallies, ['name_en' => 'Rally ' . self::ENGLISH['cities'][$match[1]] . ($match[2] ?? '')], ['id' => $rally['id']]);
+            }
+        }
     }
 
     private static function addCityShops(): void

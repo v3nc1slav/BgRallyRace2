@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '17';
+    private const VERSION = '20';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -91,6 +91,7 @@ final class Schema
   inactive_notes text NULL,
   comeback text NULL,
   fresh_at datetime DEFAULT NULL,
+  lang varchar(5) NOT NULL DEFAULT 'bg',
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY user_id (user_id),
@@ -200,7 +201,7 @@ final class Schema
   seq int(11) NOT NULL DEFAULT 0,
   type varchar(20) NOT NULL,
   penalty_s int(11) NOT NULL DEFAULT 0,
-  text varchar(255) NOT NULL,
+  text text NOT NULL,
   PRIMARY KEY  (id),
   KEY rally_offset (rally_id,offset_s)",
 
@@ -359,8 +360,8 @@ final class Schema
 
             'rumors' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   city_id bigint(20) unsigned NOT NULL,
-  named varchar(255) NOT NULL,
-  anon varchar(255) NOT NULL,
+  named text NOT NULL,
+  anon text NOT NULL,
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   KEY city_id (city_id,id)",

@@ -19,6 +19,7 @@ final class Plugin
         Game\Push::register();
         Cron::register();
         Frontend::register();
+        I18n::register();
 
         if (is_admin()) {
             Menu::register();

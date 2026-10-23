@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -77,7 +78,7 @@ final class Police
     public static function fine(int $managerId, int $amount, string $note): void
     {
         Ledger::add($managerId, -$amount, 'fine', $note, true);
-        Rumors::about($managerId, 'Полицията глоби %s с ' . $amount . ' €.', sprintf('Полицията глоби отбор от града с %d €.', $amount));
+        Rumors::about($managerId, 'fined', ['money' => ['money', $amount]]);
     }
 
     public static function chance(array $manager, string $institution): int
@@ -105,42 +106,42 @@ final class Police
         $managerId = (int) $manager['id'];
 
         if (!isset(self::INSTITUTIONS[$institution])) {
-            return new WP_Error('bgr_bribe', 'Няма такава институция.', ['status' => 400]);
+            return new WP_Error('bgr_bribe', I18n::t('server.police.noInstitution'), ['status' => 400]);
         }
         if ($institution === 'mayor' && (int) $manager['level'] < Settings::int('bribe_mayor_level')) {
-            return new WP_Error('bgr_level', sprintf('Кметът приема подкупи от ниво %d.', Settings::int('bribe_mayor_level')), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.police.mayorLevel', ['level' => Settings::int('bribe_mayor_level')]), ['status' => 400]);
         }
         if (self::active($managerId, $institution)) {
-            return new WP_Error('bgr_bribe', 'Подкупът още действа.', ['status' => 400]);
+            return new WP_Error('bgr_bribe', I18n::t('server.police.active'), ['status' => 400]);
         }
         $retry = self::refusedThisWeek($managerId, $institution);
         if ($retry && !(int) $manager['ad_retry']) {
-            return new WP_Error('bgr_bribe', sprintf('%s вече отказа подкуп тази седмица. Можеш да вземеш втори опит срещу реклама.', self::INSTITUTIONS[$institution]), ['status' => 400]);
+            return new WP_Error('bgr_bribe', I18n::t('server.police.refusedAd', ['who' => I18n::t('server.police.institution.' . $institution)]), ['status' => 400]);
         }
 
         $price = Settings::int($institution === 'mayor' ? 'bribe_mayor_price' : 'bribe_police_price');
         if ((int) $manager['money'] < $price) {
-            return new WP_Error('bgr_money', sprintf('Нужни са %d €.', $price), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.need', ['money' => I18n::money($price)]), ['status' => 400]);
         }
         $energy = Settings::int('bribe_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
         if ($retry && !Ads::useRetry($managerId)) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_bribe', sprintf('%s вече отказа подкуп тази седмица.', self::INSTITUTIONS[$institution]), ['status' => 400]);
+            return new WP_Error('bgr_bribe', I18n::t('server.police.refused', ['who' => I18n::t('server.police.institution.' . $institution)]), ['status' => 400]);
         }
 
         $row =['manager_id' => $managerId, 'institution' => $institution, 'week' => Rallies::week(), 'created_at' => current_time('mysql')];
 
         if (mt_rand(1, 100) > self::chance($manager, $institution)) {
             $wpdb->insert(self::table(), $row + ['status' => 'refused']);
-            return sprintf('%s отказа подкупа. Губиш енергията, но не и парите. Следващ опит – чак следващата седмица.', self::INSTITUTIONS[$institution]);
+            return I18n::t('server.police.refusedNow', ['who' => I18n::t('server.police.institution.' . $institution)]);
         }
 
-        if (!Ledger::add($managerId, -$price, 'bribe', self::INSTITUTIONS[$institution])) {
+        if (!Ledger::add($managerId, -$price, 'bribe', I18n::t('server.police.institution.' . $institution))) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
         }
 
         $expires = $institution === 'mayor'
@@ -149,8 +150,8 @@ final class Police
         $wpdb->insert(self::table(), $row + ['status' => 'active', 'expires_at' => $expires]);
 
         return $institution === 'mayor'
-            ? sprintf('Кметът прие подкупа. Пази те до %s.', mysql2date('d.m.Y H:i', $expires))
-            : 'Полицията прие подкупа. Пази те до края на деня.';
+            ? I18n::t('server.police.mayorAccepted', ['time' => I18n::date(strtotime($expires), true)])
+            : I18n::t('server.police.policeAccepted');
     }
 
     public static function view(array $manager): array

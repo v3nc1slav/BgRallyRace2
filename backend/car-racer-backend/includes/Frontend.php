@@ -17,13 +17,13 @@ final class Frontend
 
     public static function shortcode(): string
     {
-        $dir = BGR_DIR . '/game/';
         $url = plugin_dir_url(BGR_FILE) . 'game/';
+        $bundle = self::bundle();
 
-        $ver = fn($file) => file_exists($dir . $file) ? filemtime($dir . $file) : false;
-
-        wp_enqueue_script('car-racer', $url . 'game.js', [], $ver('game.js'), true);
-        wp_enqueue_style('car-racer', $url . 'game.css', [], $ver('game.css'));
+        wp_enqueue_script('car-racer', $url . $bundle['js'], [], null, true);
+        foreach ($bundle['css'] as $index => $css) {
+            wp_enqueue_style('car-racer' . ($index ? '-' . $index : ''), $url . $css, [], null);
+        }
         add_filter('body_class', [self::class, 'bodyClass']);
         self::$game = true;
         self::rememberUrl();
@@ -80,8 +80,8 @@ final class Frontend
         return [
             'name' => 'BG Rally Race',
             'short_name' => 'BG Rally',
-            'description' => 'Онлайн рали мениджър',
-            'lang' => 'bg',
+            'description' => I18n::t('server.manifest.description', [], I18n::browser()),
+            'lang' => I18n::browser(),
             'start_url' => self::gameUrl(),
             'scope' => home_url(self::scope()),
             'display' => 'standalone',
@@ -98,7 +98,7 @@ final class Frontend
         }
         if (isset($_GET['bgr_offline'])) {
             header('Content-Type: text/html; charset=utf-8');
-            echo Dropins::html('няма връзка', 'Няма връзка с интернет.', 'Провери връзката си и опитай отново.');
+            echo Dropins::html('offline', I18n::browser());
             exit;
         }
     }
@@ -176,6 +176,18 @@ self.addEventListener('fetch', (event) => {
 });
 JS;
         exit;
+    }
+
+    private static function bundle(): array
+    {
+        $file = BGR_DIR . '/game/.vite/manifest.json';
+        $manifest = is_file($file) ? json_decode((string) file_get_contents($file), true) : null;
+        foreach ((array) $manifest as $chunk) {
+            if (!empty($chunk['isEntry'])) {
+                return ['js' => $chunk['file'], 'css' => $chunk['css'] ?? []];
+            }
+        }
+        return ['js' => 'game.js', 'css' => ['game.css']];
     }
 
     public static function bodyClass(array $classes): array

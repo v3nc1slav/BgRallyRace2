@@ -3,12 +3,11 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Settings;
 
 final class Shop
 {
-    public const NOT_SOLD = 'Това не се продава в магазина на твоя град. Потърси го на пазара.';
-
     public static function sold(array $row, int $cityId): bool
     {
         $cities = array_filter(array_map('intval', explode(',', (string) ($row['city_ids'] ?? ''))));
@@ -63,9 +62,9 @@ final class Shop
             'trade_in' => $tradeIn ? ['name' => $tradeIn['name'], 'value' => (int) round((int) $tradeIn['price'] * 0.5)] : null,
             'parts' => array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
-                'type_label' => Labels::PART_TYPES[$row['type']] ?? $row['type'],
-                'class_label' => $row['class'] === '' ? 'Всички класове' : Labels::classLabel($row['class']),
+                'name' => Texts::of($row['name']),
+                'type_label' => Labels::text('PART_TYPES', $row['type']),
+                'class_label' => Labels::classLabel($row['class']),
                 'bonuses' => [
                     'power' => (int) $row['power_bonus'],
                     'handling' => (int) $row['handling_bonus'],
@@ -81,9 +80,9 @@ final class Shop
             ], $partRows),
             'tyres' => array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
-                'type_label' => Labels::TYRE_TYPES[$row['type']] ?? $row['type'],
-                'compound_label' => Labels::COMPOUNDS[$row['compound']] ?? $row['compound'],
+                'name' => Texts::of($row['name']),
+                'type_label' => Labels::text('TYRE_TYPES', $row['type']),
+                'compound_label' => Labels::text('COMPOUNDS', $row['compound']),
                 'grip' => [
                     'asphalt_dry' => (float) $row['grip_asphalt_dry'],
                     'asphalt_wet' => (float) $row['grip_asphalt_wet'],

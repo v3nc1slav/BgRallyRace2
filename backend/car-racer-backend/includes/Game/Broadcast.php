@@ -2,7 +2,9 @@
 
 namespace BgRally\Game;
 
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 
 final class Broadcast
 {
@@ -50,7 +52,7 @@ final class Broadcast
             $revealed
         ), ARRAY_A);
 
-        return array_map(fn($row) => ['offset' => (int) $row['offset_s'], 'type' => $row['type'], 'text' => $row['text']], $rows);
+        return array_map(fn($row) => ['offset' => (int) $row['offset_s'], 'type' => $row['type'], 'text' => I18n::render($row['text'])], $rows);
     }
 
     private static function timeline(array $rally, int $revealed, float $scale, int $duration, bool $finished, int $managerId): array
@@ -133,7 +135,7 @@ final class Broadcast
             'stages' => array_map(fn($stage, $index) => [
                 'seq' => $index + 1,
                 'id' => (int) $stage['id'],
-                'name' => $stage['name'],
+                'name' => Texts::of($stage['name']),
                 'length_km' => (float) $stage['length_km'],
                 'turns' => (int) $stage['turns'],
                 'surface' => $stage['surface'],
@@ -178,7 +180,7 @@ final class Broadcast
         usort($rows, fn($a, $b) => [(int) $b['stages'], (int) $a['total_ms']] <=> [(int) $a['stages'], (int) $b['total_ms']]);
 
         return self::groupByClass($rows, fn($row) => [
-            'team' => $row['team_name'],
+            'team' => Account::team($row['team_name']),
             'pilot' => $row['pilot_name'],
             'stages' => (int) $row['stages'],
             'total_ms' => (int) $row['total_ms'],
@@ -196,7 +198,7 @@ final class Broadcast
 
         return self::groupByClass($rows, fn($row) => [
             'place' => (int) $row['place'],
-            'team' => $row['team_name'],
+            'team' => Account::team($row['team_name']),
             'pilot' => $row['pilot_name'],
             'total_ms' => (int) $row['total_ms'],
             'status' => $row['status'],

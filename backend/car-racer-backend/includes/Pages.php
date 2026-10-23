@@ -42,7 +42,11 @@ final class Pages
     public static function links(): array
     {
         $pages = (array) get_option(self::OPTION, []);
-        $link = fn(string $key) => !empty($pages[$key]) ? (get_permalink((int) $pages[$key]) ?: null) : null;
+        $suffix = I18n::lang() === I18n::DEFAULT ? '' : '_' . I18n::lang();
+        $link = function (string $key) use ($pages, $suffix) {
+            $id = (int) ($pages[$key . $suffix] ?? $pages[$key] ?? 0);
+            return $id ? (get_permalink($id) ?: null) : null;
+        };
         return ['privacy' => $link('privacy'), 'deletion' => $link('deletion')];
     }
 
@@ -51,7 +55,57 @@ final class Pages
         return [
             'privacy' => ['Политика за поверителност', 'poveritelnost', self::privacy()],
             'deletion' => ['Изтриване на профила', 'iztrivane-na-profila', self::deletion()],
+            'privacy_en' => ['Privacy Policy', 'privacy', self::privacyEn()],
+            'deletion_en' => ['Account deletion', 'account-deletion', self::deletionEn()],
         ];
+    }
+
+    private static function privacyEn(): string
+    {
+        return <<<'HTML'
+<p><strong>Last updated:</strong> [DATE]</p>
+<h2>Who processes the data</h2>
+<p>The BG Rally Race game is run by [NAME OR COMPANY], [ADDRESS]. For questions about personal data, write to [CONTACT EMAIL].</p>
+<h2>What data we collect</h2>
+<ul>
+<li>Username, email and password (the password is only stored encrypted).</li>
+<li>When you log in with Google or Facebook: the name, email and profile ID that the provider gives us.</li>
+<li>Game data: team, cars, staff, standings, chat and forum messages.</li>
+<li>Technical data: IP address, device and browser type, date and time of actions.</li>
+<li>Cookies and local storage needed for logging in and for the game settings.</li>
+</ul>
+<h2>What we use it for</h2>
+<ul>
+<li>To run the profile and the game, including the standings and communication between players.</li>
+<li>To protect against abuse and fraud.</li>
+<li>For rewarded ads that the player starts on their own. Google's ad networks (Ad Manager and AdMob) may use advertising IDs and cookies according to the choice made in the consent window.</li>
+</ul>
+<h2>How long we keep it</h2>
+<p>For as long as the profile exists. When the profile is deleted, the data is erased, except chat and forum messages and rally results, which stay anonymous as “Deleted player”.</p>
+<h2>Your rights</h2>
+<p>You have the right to access, correct and delete your data and to restrict its processing, as well as the right to object and to data portability. You can file a complaint with the Bulgarian Commission for Personal Data Protection (www.cpdp.bg).</p>
+<h2>Children</h2>
+<p>The game is not intended for children under 14.</p>
+<h2>Deleting the profile</h2>
+<p>The profile is deleted from the game: Profile → Delete profile. More information is on the “Account deletion” page.</p>
+HTML;
+    }
+
+    private static function deletionEn(): string
+    {
+        return <<<'HTML'
+<h2>How to delete your profile</h2>
+<ol>
+<li>Log in to the game (in the browser or in the app).</li>
+<li>Open “Profile” from the top menu.</li>
+<li>Press “Delete profile” and confirm by typing DELETE.</li>
+</ol>
+<p>If you cannot log in, write to us at [CONTACT EMAIL] from the profile's email address and we will delete it within 30 days.</p>
+<h2>What is deleted</h2>
+<p>The profile and the login (including the link to Google or Facebook), the team, cars, parts, staff, money, contracts, loans, listings and news.</p>
+<h2>What stays</h2>
+<p>Chat and forum messages and past rally results stay, but “Deleted player” is shown instead of your name.</p>
+HTML;
     }
 
     private static function privacy(): string

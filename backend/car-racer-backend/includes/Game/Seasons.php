@@ -4,6 +4,7 @@ namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 
 final class Seasons
@@ -33,14 +34,15 @@ final class Seasons
             $prize = self::prize($position);
             $xp = $position <= 3 ? Settings::int('season_xp_' . $position) : 0;
             if ($prize) {
-                Ledger::add($managerId, $prize, 'season_prize', sprintf('Сезон %d – %d място', $season, $position));
+                Ledger::add($managerId, $prize, 'season_prize', I18n::t('server.ledger.season', ['season' => $season, 'place' => $position], I18n::of($managerId)));
             }
             if ($position <= 3 && $xp) {
                 Progress::addXp($managerId, $xp);
             }
-            Inbox::add($managerId, $prize
-                ? sprintf('Сезон %d приключи: %d място в %s. Награда %d €%s.', $season, $position, Labels::classLabel($class), $prize, $position <= 3 && $xp ? sprintf(' и %d опит', $xp) : '')
-                : sprintf('Сезон %d приключи: %d място в %s.', $season, $position, Labels::classLabel($class)));
+            I18n::as($managerId, fn() => Inbox::add($managerId, I18n::t(
+                $prize ? ($position <= 3 && $xp ? 'server.seasons.prizeXp' : 'server.seasons.prize') : 'server.seasons.place',
+                ['season' => $season, 'place' => $position, 'class' => Labels::classLabel($class), 'money' => I18n::money($prize), 'xp' => $xp]
+            )));
         }
 
         $tracks = $wpdb->get_results("SELECT id FROM " . Tables::name('managers') . " WHERE track_status IN ('open', 'building')", ARRAY_A);
@@ -48,7 +50,7 @@ final class Seasons
             $managerId = (int) $row['id'];
             if (!isset($positions[$managerId]) || $positions[$managerId][1] > 5) {
                 $wpdb->update(Tables::name('managers'), ['track_status' => 'closed'], ['id' => $managerId]);
-                Inbox::add($managerId, 'Отборът не завърши сезона в топ 5 и кметът затвори собствената ти тренировъчна писта. Нови преговори могат да я отворят отново.');
+                Inbox::add($managerId, I18n::t('server.seasons.trackClosed', [], I18n::of($managerId)));
             }
         }
     }

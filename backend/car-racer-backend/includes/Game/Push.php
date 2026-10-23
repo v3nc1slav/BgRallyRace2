@@ -3,8 +3,10 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
 use BgRally\Frontend;
+use BgRally\I18n;
 use WP_Error;
 
 final class Push
@@ -232,7 +234,7 @@ final class Push
         global $wpdb;
         $token = trim($token);
         if (!preg_match('/^[A-Za-z0-9_:\-]{20,255}$/', $token)) {
-            return new WP_Error('bgr_push', 'Невалиден адрес за известия.', ['status' => 400]);
+            return new WP_Error('bgr_push', I18n::t('server.push.invalid'), ['status' => 400]);
         }
         $wpdb->delete(self::devices(), ['token' => $token]);
         $wpdb->insert(self::devices(), [
@@ -265,9 +267,8 @@ final class Push
             'web' => self::webConfig(),
             'devices' => self::deviceCount((int) $manager['user_id']),
             'types' => array_map(
-                fn($key, $label) => ['key' => $key, 'label' => $label, 'on' => !in_array($key, $off, true)],
-                array_keys(self::TYPES),
-                self::TYPES
+                fn($key) => ['key' => $key, 'label' => I18n::t('server.push.types.' . $key), 'on' => !in_array($key, $off, true)],
+                array_keys(self::TYPES)
             ),
         ];
     }
@@ -304,7 +305,7 @@ final class Push
             set_transient($key, 1, 2 * DAY_IN_SECONDS);
             $managers = $wpdb->get_col($wpdb->prepare('SELECT manager_id FROM ' . Tables::name('entries') . ' WHERE rally_id = %d AND manager_id > 0', $rally['id']));
             foreach ($managers as $managerId) {
-                self::notify((int) $managerId, 'rally_start', $rally['name'], 'Ралито започва до 30 минути. Провери колата и стила за етапите.', 'rallies/' . $rally['id']);
+                self::notify((int) $managerId, 'rally_start', Texts::of($rally['name'], I18n::of((int) $managerId)), I18n::t('server.push.startSoon', [], I18n::of((int) $managerId)), 'rallies/' . $rally['id']);
             }
         }
     }

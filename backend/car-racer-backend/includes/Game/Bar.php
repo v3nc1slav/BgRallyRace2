@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -53,7 +54,7 @@ final class Bar
         $candidates = self::candidates((int) $manager['city_id']);
 
         $roles = [];
-        foreach (Labels::ROLES as $role => $label) {
+        foreach (Labels::all('ROLES') as $role => $label) {
             $member = $current[$role] ?? null;
             $roles[] = [
                 'role' => $role,
@@ -94,26 +95,25 @@ final class Bar
         ), ARRAY_A);
 
         if (!$candidate) {
-            return new WP_Error('bgr_candidate', 'Кандидатът вече не е в бара.', ['status' => 404]);
+            return new WP_Error('bgr_candidate', I18n::t('server.bar.gone'), ['status' => 404]);
         }
 
         $role = $candidate['role'];
         if (!in_array($role, GarageLevels::rolesUnlocked((int) $manager['garage_level']), true)) {
-            return new WP_Error('bgr_locked', sprintf('%s се отключва с гараж ниво %d.', Labels::ROLES[$role], GarageLevels::levelForRole($role)), ['status' => 400]);
+            return new WP_Error('bgr_locked', I18n::t('server.bar.locked', ['role' => Labels::text('ROLES', $role), 'level' => GarageLevels::levelForRole($role)]), ['status' => 400]);
         }
 
         if ($wpdb->query($wpdb->prepare('DELETE FROM ' . self::table() . ' WHERE id = %d', $candidateId)) !== 1) {
-            return new WP_Error('bgr_candidate', 'Кандидатът вече не е в бара.', ['status' => 404]);
+            return new WP_Error('bgr_candidate', I18n::t('server.bar.gone'), ['status' => 404]);
         }
 
         $replaced = Staff::hire((int) $manager['id'], $role, $candidate['name'], (int) $candidate['skill']);
-        $message = sprintf(
-            'Нае %s за %s. Заплатата е %d € на седмица.',
-            $candidate['name'],
-            mb_strtolower(Labels::ROLES[$role]),
-            Staff::salary($role, (int) $candidate['skill'])
-        );
+        $message = I18n::t('server.bar.hired', [
+            'name' => $candidate['name'],
+            'role' => mb_strtolower(Labels::text('ROLES', $role)),
+            'pay' => I18n::money(Staff::salary($role, (int) $candidate['skill'])),
+        ]);
 
-        return $replaced ? $message . sprintf(' %s напусна.', $replaced) : $message;
+        return $replaced ? $message . ' ' . I18n::t('server.bar.left', ['name' => $replaced]) : $message;
     }
 }

@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\I18n;
 
 final class GarageLevels
 {
@@ -76,19 +77,19 @@ final class GarageLevels
     {
         $parts = [];
         foreach (array_filter(explode(',', (string) $row['staff_roles'])) as $role) {
-            $parts[] = mb_strtolower(Labels::UNLOCKABLE_ROLES[$role] ?? $role);
+            $parts[] = mb_strtolower(Labels::text('UNLOCKABLE_ROLES', $role));
         }
         if ((int) $row['spare_tyres']) {
-            $parts[] = $row['spare_tyres'] . ' резервни гуми';
+            $parts[] = I18n::t('server.garageLevels.tyres', ['count' => $row['spare_tyres']]);
         }
         if ((int) $row['spare_parts']) {
-            $parts[] = $row['spare_parts'] . ' резервни части';
+            $parts[] = I18n::t('server.garageLevels.parts', ['count' => $row['spare_parts']]);
         }
         if ((int) $row['cars'] > 1) {
-            $parts[] = $row['cars'] . ' места за коли';
+            $parts[] = I18n::t('server.garageLevels.cars', ['count' => $row['cars']]);
         }
         if ($row['security']) {
-            $parts[] = 'охрана';
+            $parts[] = I18n::t('server.garageLevels.security');
         }
         return implode(', ', $parts);
     }

@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 
 final class Badges
 {
@@ -23,11 +24,11 @@ final class Badges
 
         $loan = Bank::summary($managerId);
         if ($loan && $loan['overdue'] > 0) {
-            $badges[] = ['key' => 'bank', 'text' => sprintf('Просрочена вноска: %d €', $loan['overdue'])];
+            $badges[] = ['key' => 'bank', 'text' => I18n::t('server.badges.bank', ['money' => I18n::money($loan['overdue'])])];
         }
 
         if (($manager['bar_week'] ?? '') !== Rallies::week()) {
-            $badges[] = ['key' => 'bar', 'text' => 'Нови кандидати за служители тази седмица'];
+            $badges[] = ['key' => 'bar', 'text' => I18n::t('server.badges.bar')];
         }
 
         $open = (int) $wpdb->get_var($wpdb->prepare(
@@ -37,7 +38,7 @@ final class Badges
             BlackTrack::limits($manager)['max']
         ));
         if ($open) {
-            $badges[] = ['key' => 'black', 'text' => $open === 1 ? 'Чака те предизвикателство' : sprintf('Чакат те %d предизвикателства', $open)];
+            $badges[] = ['key' => 'black', 'text' => I18n::t('server.badges.black', ['count' => $open])];
         }
 
         return $badges;

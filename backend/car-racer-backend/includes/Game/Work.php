@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use WP_Error;
 
 final class Work
@@ -31,11 +33,9 @@ final class Work
 
         $days = min(self::MAX_BACKPAY_DAYS, $days);
         $total = (int) $job['pay'] * $days;
-        Ledger::add((int) $manager['id'], $total, 'job', $job['name']);
+        Ledger::add((int) $manager['id'], $total, 'job', Texts::of($job['name'], I18n::of($manager)));
         $wpdb->update(Tables::name('managers'), ['job_date' => $today], ['id' => $manager['id']]);
-        Inbox::add((int) $manager['id'], $days === 1
-            ? sprintf('Работа – %s: +%d €.', $job['name'], $total)
-            : sprintf('Работа – %s: %d дни, +%d €.', $job['name'], $days, $total));
+        I18n::as($manager, fn() => Inbox::add((int) $manager['id'], I18n::t($days === 1 ? 'server.work.paid' : 'server.work.paidDays', ['job' => Texts::of($job['name']), 'days' => $days, 'money' => I18n::money($total)])));
 
         return (int) $job['energy'];
     }
@@ -52,17 +52,17 @@ final class Work
             'season' => $season,
             'current' => $job ? [
                 'id' => (int) $job['id'],
-                'name' => $job['name'],
-                'building' => Labels::BUILDINGS[$job['building']] ?? $job['building'],
+                'name' => Texts::of($job['name']),
+                'building' => Labels::text('BUILDINGS', $job['building']),
                 'pay' => (int) $job['pay'],
                 'energy' => (int) $job['energy'],
             ] : null,
             'can_take' => $free,
-            'locked_reason' => $free ? '' : ($job ? 'Работата е избрана за целия сезон.' : 'Напусна работа този сезон. Нова може да започнеш през следващия.'),
+            'locked_reason' => $free ? '' : I18n::t($job ? 'server.work.season' : 'server.work.quitSeason'),
             'jobs' => array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
-                'building' => Labels::BUILDINGS[$row['building']] ?? $row['building'],
+                'name' => Texts::of($row['name']),
+                'building' => Labels::text('BUILDINGS', $row['building']),
                 'pay' => (int) $row['pay'],
                 'energy' => (int) $row['energy'],
                 'min_level' => (int) $row['min_level'],
@@ -78,17 +78,17 @@ final class Work
         $job = Registry::get('jobs')->find($jobId);
 
         if (!$job || !$job['active']) {
-            return new WP_Error('bgr_not_found', 'Няма такава работа.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.work.notFound'), ['status' => 404]);
         }
         if ((int) $job['min_level'] > (int) $manager['level']) {
-            return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $job['min_level']), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.common.level', ['level' => $job['min_level']]), ['status' => 400]);
         }
         if ((int) $manager['job_season'] >= $season) {
-            return new WP_Error('bgr_job', 'Този сезон вече си избирал работа. Смяна – през следващия сезон.', ['status' => 400]);
+            return new WP_Error('bgr_job', I18n::t('server.work.taken'), ['status' => 400]);
         }
 
         $wpdb->update(Tables::name('managers'), ['job_id' => $jobId, 'job_season' => $season, 'job_date' => wp_date('Y-m-d')], ['id' => $manager['id']]);
-        return sprintf('Започваш работа като %s: %d € и %d енергия на ден, от утре.', mb_strtolower($job['name']), $job['pay'], $job['energy']);
+        return I18n::t('server.work.started', ['job' => mb_strtolower(Texts::of($job['name'])), 'money' => I18n::money($job['pay']), 'energy' => $job['energy']]);
     }
 
     public static function quit(array $manager): string|WP_Error
@@ -96,11 +96,11 @@ final class Work
         global $wpdb;
         $job = self::job($manager);
         if (!$job) {
-            return new WP_Error('bgr_job', 'Нямаш работа.', ['status' => 400]);
+            return new WP_Error('bgr_job', I18n::t('server.work.none'), ['status' => 400]);
         }
 
         $wpdb->update(Tables::name('managers'), ['job_id' => 0], ['id' => $manager['id']]);
-        return sprintf('Напусна работата (%s). Нова може да започнеш през следващия сезон.', mb_strtolower($job['name']));
+        return I18n::t('server.work.quit', ['job' => mb_strtolower(Texts::of($job['name']))]);
     }
 
     public static function runDaily(): void

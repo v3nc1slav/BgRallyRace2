@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use WP_Error;
 
 final class Clothes
@@ -41,9 +43,9 @@ final class Clothes
             'bonus' => self::bonus($managerId),
             'items' => array_map(fn($row) => [
                 'id' => (int) $row['id'],
-                'name' => $row['name'],
+                'name' => Texts::of($row['name']),
                 'slot' => $row['slot'],
-                'slot_label' => Labels::CLOTHING_SLOTS[$row['slot']] ?? $row['slot'],
+                'slot_label' => Labels::text('CLOTHING_SLOTS', $row['slot']),
                 'bonus' => (int) $row['bonus'],
                 'price' => (int) $row['price'],
                 'min_level' => (int) $row['min_level'],
@@ -61,16 +63,16 @@ final class Clothes
         $item = Registry::get('clothes')->find($clothingId);
 
         if (!$item || !$item['active']) {
-            return new WP_Error('bgr_not_found', 'Няма такава дреха.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.clothes.notFound'), ['status' => 404]);
         }
         if ((int) $item['min_level'] > (int) $manager['level']) {
-            return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $item['min_level']), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.common.level', ['level' => $item['min_level']]), ['status' => 400]);
         }
         if (isset(self::owned($managerId)[$clothingId])) {
-            return new WP_Error('bgr_owned', 'Вече я имаш.', ['status' => 400]);
+            return new WP_Error('bgr_owned', I18n::t('server.clothes.owned'), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -(int) $item['price'], 'clothes', $item['name'])) {
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+        if (!Ledger::add($managerId, -(int) $item['price'], 'clothes', Texts::of($item['name']))) {
+            return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
         }
 
         $wpdb->insert(Tables::name('items'), [
@@ -81,7 +83,7 @@ final class Clothes
         ]);
         self::wear($manager, (int) $wpdb->insert_id);
 
-        return sprintf('Купено и облечено: %s.', mb_strtolower($item['name']));
+        return I18n::t('server.clothes.bought', ['item' => mb_strtolower(Texts::of($item['name']))]);
     }
 
     public static function wear(array $manager, int $itemId): string|WP_Error
@@ -97,7 +99,7 @@ final class Clothes
             $managerId
         ), ARRAY_A);
         if (!$item) {
-            return new WP_Error('bgr_not_found', 'Нямаш такава дреха.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.clothes.notOwned'), ['status' => 404]);
         }
 
         $wpdb->query($wpdb->prepare(
@@ -107,6 +109,6 @@ final class Clothes
         ));
         $wpdb->update($items, ['equipped' => 1], ['id' => $itemId]);
 
-        return sprintf('Облече %s.', mb_strtolower($item['name']));
+        return I18n::t('server.clothes.worn', ['item' => mb_strtolower(Texts::of($item['name']))]);
     }
 }

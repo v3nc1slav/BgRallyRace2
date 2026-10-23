@@ -4,20 +4,26 @@ namespace BgRally\Game;
 
 use BgRally\Auth\Tokens;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use WP_Error;
 
 final class Account
 {
     public const DELETED = 'Изтрит играч';
-    public const CONFIRM = 'ИЗТРИЙ';
+    private const CONFIRM_WORDS = ['ИЗТРИЙ', 'DELETE'];
+
+    public static function team(?string $stored): string
+    {
+        return $stored === self::DELETED ? I18n::t('server.common.deleted') : (string) $stored;
+    }
 
     public static function delete(int $userId, string $confirm): true|WP_Error
     {
-        if (mb_strtoupper(trim($confirm)) !== self::CONFIRM) {
-            return new WP_Error('bgr_confirm', sprintf('За потвърждение напиши %s.', self::CONFIRM), ['status' => 400]);
+        if (!in_array(mb_strtoupper(trim($confirm)), self::CONFIRM_WORDS, true)) {
+            return new WP_Error('bgr_confirm', I18n::t('server.account.confirm', ['word' => I18n::t('profile.confirmWord')]), ['status' => 400]);
         }
         if (user_can($userId, 'manage_options')) {
-            return new WP_Error('bgr_admin', 'Администраторски профил не може да бъде изтрит от играта.', ['status' => 400]);
+            return new WP_Error('bgr_admin', I18n::t('server.account.admin'), ['status' => 400]);
         }
 
         global $wpdb;

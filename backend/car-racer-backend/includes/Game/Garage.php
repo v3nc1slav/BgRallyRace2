@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -184,19 +186,19 @@ final class Garage
 
         $problems = [];
         $health = 0;
-        foreach (Labels::PART_TYPES as $type => $label) {
+        foreach (Labels::all('PART_TYPES') as $type => $label) {
             if (!isset($parts[$type])) {
-                $problems[] = 'липсва ' . mb_strtolower($label);
+                $problems[] = I18n::t('server.garage.missing', ['part' => mb_strtolower($label)]);
             } elseif ((float) $parts[$type]['health'] <= 0) {
-                $problems[] = 'счупена част: ' . mb_strtolower($label);
+                $problems[] = I18n::t('server.garage.broken', ['part' => mb_strtolower($label)]);
             } else {
                 $health += (float) $parts[$type]['health'];
             }
         }
         if (!$tyre) {
-            $problems[] = 'няма гуми';
+            $problems[] = I18n::t('server.garage.noTyres');
         } elseif ((float) $tyre['health'] <= 0) {
-            $problems[] = 'гумите са износени';
+            $problems[] = I18n::t('server.garage.worn');
         }
 
         return [
@@ -217,7 +219,7 @@ final class Garage
         $snapshot = $car ? self::snapshot((int) $car['player_car_id']) : null;
 
         $slots = [];
-        foreach (Labels::PART_TYPES as $type => $label) {
+        foreach (Labels::all('PART_TYPES') as $type => $label) {
             $part = $snapshot['parts'][$type] ?? null;
             $slots[] = ['type' => $type, 'label' => $label, 'item' => $part ? self::partView($part, (int) $manager['city_id']) : null];
         }
@@ -254,7 +256,7 @@ final class Garage
             'tyre' => $snapshot && $snapshot['tyre'] ? self::tyreView($snapshot['tyre']) : null,
             'storage' => self::storage($managerId, $car ? (string) $car['class'] : ''),
             'crew' => Staff::list($managerId),
-            'worker' => $mechanic ? sprintf('Майсторът %s (%d енергия)', $mechanic['name'], $mechanic['energy']) : 'Ти (майстор още няма)',
+            'worker' => $mechanic ? I18n::t('server.garage.worker', ['name' => $mechanic['name'], 'energy' => $mechanic['energy']]) : I18n::t('server.garage.workerSelf'),
             'energy_costs' => [
                 'mount' => Settings::int('energy_mount'),
                 'tyres' => Settings::int('energy_tyres'),
@@ -268,9 +270,9 @@ final class Garage
         $newMax = self::repairedMax((float) $part['max_health']);
         return [
             'id' => (int) $part['id'],
-            'name' => $part['name'],
+            'name' => Texts::of($part['name']),
             'type' => $part['type'],
-            'type_label' => Labels::PART_TYPES[$part['type']] ?? $part['type'],
+            'type_label' => Labels::text('PART_TYPES', $part['type']),
             'health' => round((float) $part['health'], 1),
             'max_health' => round((float) $part['max_health'], 1),
             'defect' => (bool) $part['defect'],
@@ -290,9 +292,9 @@ final class Garage
     {
         return [
             'id' => (int) $tyre['id'],
-            'name' => $tyre['name'],
-            'type_label' => Labels::TYRE_TYPES[$tyre['type']] ?? $tyre['type'],
-            'compound_label' => Labels::COMPOUNDS[$tyre['compound']] ?? $tyre['compound'],
+            'name' => Texts::of($tyre['name']),
+            'type_label' => Labels::text('TYRE_TYPES', $tyre['type']),
+            'compound_label' => Labels::text('COMPOUNDS', $tyre['compound']),
             'health' => round((float) $tyre['health'], 1),
             'grip' => [
                 'asphalt_dry' => (float) $tyre['grip_asphalt_dry'],
@@ -325,10 +327,10 @@ final class Garage
         return array_map(fn(array $row) => [
             'id' => (int) $row['id'],
             'kind' => $row['kind'],
-            'name' => $row['name'],
+            'name' => Texts::of($row['name']),
             'type_label' => $row['kind'] === 'part'
-                ? (Labels::PART_TYPES[$row['part_type']] ?? '')
-                : ($row['kind'] === 'spare_tyre' ? 'Резервна гума · ' : '') . (Labels::TYRE_TYPES[$row['tyre_type']] ?? '') . ', ' . mb_strtolower(Labels::COMPOUNDS[$row['compound']] ?? ''),
+                ? (Labels::text('PART_TYPES', $row['part_type']))
+                : ($row['kind'] === 'spare_tyre' ? I18n::t('server.garage.spareTyre') : '') . (Labels::text('TYRE_TYPES', $row['tyre_type'])) . ', ' . mb_strtolower(Labels::text('COMPOUNDS', $row['compound'])),
             'health' => round((float) $row['health'], 1),
             'max_health' => round((float) $row['max_health'], 1),
             'compatible' => $row['kind'] === 'tyre' || ($row['kind'] === 'part' && ($row['part_class'] === '' || $row['part_class'] === $carClass)),
@@ -356,7 +358,7 @@ final class Garage
         if (Energy::spend($managerId, $energy)) {
             return ['mechanic' => null];
         }
-        return new WP_Error('bgr_energy', sprintf('Няма достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+        return new WP_Error('bgr_energy', I18n::t('server.common.noEnergy', ['energy' => $energy]), ['status' => 400]);
     }
 
     private static function refundWork(int $managerId, array $worker, int $energy): void
@@ -375,21 +377,21 @@ final class Garage
         $item = $entity->find($catalogId);
 
         if (!$item || !$item['active']) {
-            return new WP_Error('bgr_not_found', 'Няма такъв артикул.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.garage.noItem'), ['status' => 404]);
         }
         if ((int) $item['min_level'] > (int) $manager['level']) {
-            return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $item['min_level']), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.common.level', ['level' => $item['min_level']]), ['status' => 400]);
         }
         if (!Shop::sold($item, (int) $manager['city_id'])) {
-            return new WP_Error('bgr_city', Shop::NOT_SOLD, ['status' => 400]);
+            return new WP_Error('bgr_city', I18n::t('server.shop.notSold'), ['status' => 400]);
         }
         if (Bank::blocked((int) $manager['id'])) {
-            return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
+            return new WP_Error('bgr_bank', I18n::t('server.bank.blocked'), ['status' => 400]);
         }
         $price = Ads::discount($manager, Shop::price($kind, $item, $manager));
-        $label = $kind === 'spare_tyre' ? 'Резервна гума ' . $item['name'] : $item['name'];
+        $label = $kind === 'spare_tyre' ? I18n::t('server.ledger.spareTyre', ['name' => Texts::of($item['name'])]) : Texts::of($item['name']);
         if (!Ledger::add((int) $manager['id'], -$price, 'shop', $label)) {
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
         }
         Ads::useDiscount($manager);
 
@@ -431,19 +433,19 @@ final class Garage
         $car = Registry::get('cars')->find($carId);
 
         if (!$car || !$car['active']) {
-            return new WP_Error('bgr_not_found', 'Няма такава кола.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.garage.noCar'), ['status' => 404]);
         }
         if ((int) $car['min_level'] > (int) $manager['level']) {
-            return new WP_Error('bgr_level', sprintf('Нужно е ниво %d.', $car['min_level']), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.common.level', ['level' => $car['min_level']]), ['status' => 400]);
         }
         if (!Shop::sold($car, (int) $manager['city_id'])) {
-            return new WP_Error('bgr_city', Shop::NOT_SOLD, ['status' => 400]);
+            return new WP_Error('bgr_city', I18n::t('server.shop.notSold'), ['status' => 400]);
         }
         if (Rallies::hasUpcomingEntry($managerId)) {
-            return new WP_Error('bgr_registered', 'Не можеш да сменяш коли, докато си записан за предстоящо рали.', ['status' => 400]);
+            return new WP_Error('bgr_registered', I18n::t('server.garage.registeredSwap'), ['status' => 400]);
         }
         if (Bank::blocked($managerId)) {
-            return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
+            return new WP_Error('bgr_bank', I18n::t('server.bank.blocked'), ['status' => 400]);
         }
 
         $owned = self::cars($managerId);
@@ -452,7 +454,7 @@ final class Garage
         $price = Ads::discount($manager, Shop::price('car', $car, $manager));
 
         if ((int) $manager['money'] + $tradeInValue < $price) {
-            return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са още %d €).', $price - $tradeInValue - (int) $manager['money']), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.moneyMore', ['money' => I18n::money($price - $tradeInValue - (int) $manager['money'])]), ['status' => 400]);
         }
 
         if ($tradeIn) {
@@ -462,15 +464,15 @@ final class Garage
         }
 
         if (!Ledger::add($managerId, -$price, 'car_purchase', $car['name'])) {
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
         }
         Ads::useDiscount($manager);
 
         self::addCar($managerId, $carId, (string) $car['class']);
-        Rumors::about($managerId, '%s купи ' . $car['name'] . '.', sprintf('Отбор от града купи %s.', $car['name']));
+        Rumors::about($managerId, 'carBought', ['car' => $car['name']]);
 
-        $message =sprintf('Купи %s. Колата е със стандартни части – монтирай ѝ гуми от склада.', $car['name']);
-        return $tradeIn ? $message . sprintf(' %s е продадена за %d €, а частите и гумите от нея са в склада.', $tradeIn['name'], $tradeInValue) : $message;
+        $message = I18n::t('server.garage.bought', ['car' => $car['name']]);
+        return $tradeIn ? $message . ' ' . I18n::t('server.garage.tradeIn', ['car' => $tradeIn['name'], 'money' => I18n::money($tradeInValue)]) : $message;
     }
 
     public static function setActiveCar(array $manager, int $playerCarId): string|WP_Error
@@ -480,14 +482,14 @@ final class Garage
         $car = self::carById($playerCarId);
 
         if (!$car || (int) $car['manager_id'] !== $managerId) {
-            return new WP_Error('bgr_not_found', 'Нямате такава кола.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.garage.notYours'), ['status' => 404]);
         }
         if (Rallies::hasUpcomingEntry($managerId)) {
-            return new WP_Error('bgr_registered', 'Не можеш да сменяш колата, докато си записан за предстоящо рали.', ['status' => 400]);
+            return new WP_Error('bgr_registered', I18n::t('server.garage.registered'), ['status' => 400]);
         }
 
         $wpdb->update(Tables::name('managers'), ['active_car_id' => $playerCarId], ['id' => $managerId]);
-        return sprintf('%s е избрана за състезания.', $car['name']);
+        return I18n::t('server.garage.selected', ['car' => $car['name']]);
     }
 
     public static function upgrade(array $manager): string|WP_Error
@@ -497,21 +499,21 @@ final class Garage
         $next = GarageLevels::get((int) $manager['garage_level'] + 1);
 
         if (!$next) {
-            return new WP_Error('bgr_max', 'Гаражът е на максимално ниво.', ['status' => 400]);
+            return new WP_Error('bgr_max', I18n::t('server.garage.max'), ['status' => 400]);
         }
         if ((int) $manager['level'] < (int) $next['min_level']) {
-            return new WP_Error('bgr_level', sprintf('Нужно е ниво на мениджъра %d.', $next['min_level']), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.garage.managerLevel', ['level' => $next['min_level']]), ['status' => 400]);
         }
         if (!Mayor::hasPermit($managerId)) {
-            return new WP_Error('bgr_permit', 'Нужно е разрешение от кмета. Поискай го в Кметството.', ['status' => 400]);
+            return new WP_Error('bgr_permit', I18n::t('server.garage.permit'), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -(int) $next['price'], 'garage', 'Гараж ниво ' . $next['level'])) {
-            return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са %d €).', $next['price']), ['status' => 400]);
+        if (!Ledger::add($managerId, -(int) $next['price'], 'garage', I18n::t('server.ledger.garage', ['level' => $next['level']]))) {
+            return new WP_Error('bgr_money', I18n::t('server.common.moneyNeed', ['money' => I18n::money($next['price'])]), ['status' => 400]);
         }
 
         $wpdb->update(Tables::name('managers'), ['garage_level' => (int) $next['level']], ['id' => $managerId]);
         Mayor::usePermit($managerId);
-        return sprintf('Гаражът е подобрен до ниво %d. Отключено: %s.', $next['level'], GarageLevels::describe($next) ?: 'нищо ново');
+        return I18n::t('server.garage.upgraded', ['level' => $next['level'], 'list' => GarageLevels::describe($next) ?: I18n::t('server.garage.nothing')]);
     }
 
     public static function mount(array $manager, int $itemId): string|WP_Error
@@ -522,25 +524,25 @@ final class Garage
 
         $item = $wpdb->get_row($wpdb->prepare("SELECT * FROM $items WHERE id = %d AND manager_id = %d", $itemId, $managerId), ARRAY_A);
         if (!$item || (int) $item['player_car_id'] !== 0) {
-            return new WP_Error('bgr_item', 'Артикулът не е в склада.', ['status' => 400]);
+            return new WP_Error('bgr_item', I18n::t('server.garage.notStored'), ['status' => 400]);
         }
         if ($item['kind'] === 'spare_tyre') {
-            return new WP_Error('bgr_item', 'Резервните гуми се вземат на ралито и не се монтират като комплект.', ['status' => 400]);
+            return new WP_Error('bgr_item', I18n::t('server.garage.spareMount'), ['status' => 400]);
         }
 
         $car = self::car($managerId);
         if (!$car) {
-            return new WP_Error('bgr_no_car', 'Нямате кола.', ['status' => 400]);
+            return new WP_Error('bgr_no_car', I18n::t('server.garage.noOwnCar'), ['status' => 400]);
         }
         $playerCarId = (int) $car['player_car_id'];
 
         if ($item['kind'] === 'part') {
             $part = Registry::get('parts')->find((int) $item['catalog_id']);
             if (!$part) {
-                return new WP_Error('bgr_item', 'Частта не съществува.', ['status' => 400]);
+                return new WP_Error('bgr_item', I18n::t('server.garage.noPart'), ['status' => 400]);
             }
             if ($part['class'] !== '' && $part['class'] !== (string) $car['class']) {
-                return new WP_Error('bgr_class', 'Частта не е за класа на колата.', ['status' => 400]);
+                return new WP_Error('bgr_class', I18n::t('server.garage.wrongClass'), ['status' => 400]);
             }
             $current = self::mountedParts($playerCarId)[$part['type']]['id'] ?? 0;
             $cost = Settings::int('energy_mount');
@@ -559,7 +561,7 @@ final class Garage
         }
         $wpdb->update($items, ['player_car_id' => $playerCarId], ['id' => $itemId]);
 
-        return $worker['mechanic'] ? sprintf('Майсторът %s монтира артикула.', $worker['mechanic']['name']) : 'Монтирано.' . Progress::addDaily($managerId, 'xp_mount');
+        return $worker['mechanic'] ? I18n::t('server.garage.mountedBy', ['name' => $worker['mechanic']['name']]) : I18n::t('server.garage.mounted') . Progress::addDaily($managerId, 'xp_mount');
     }
 
     public static function repair(array $manager, int $itemId): string|WP_Error
@@ -575,13 +577,13 @@ final class Garage
             $managerId
         ), ARRAY_A);
         if (!$item) {
-            return new WP_Error('bgr_item', 'Няма такава част.', ['status' => 400]);
+            return new WP_Error('bgr_item', I18n::t('server.garage.noSuchPart'), ['status' => 400]);
         }
 
         $health = (float) $item['health'];
         $newMax = self::repairedMax((float) $item['max_health']);
         if ($newMax <= $health) {
-            return new WP_Error('bgr_repair', 'Частта не може да се ремонтира повече. Сменете я с нова.', ['status' => 400]);
+            return new WP_Error('bgr_repair', I18n::t('server.garage.noRepair'), ['status' => 400]);
         }
 
         $energy = Settings::int('energy_repair');
@@ -591,9 +593,9 @@ final class Garage
         }
 
         $cost = self::repairCost((int) $item['price'], $health, (float) $item['max_health'], (int) $manager['city_id']);
-        if (!Ledger::add($managerId, -$cost, 'repair', $item['name'])) {
+        if (!Ledger::add($managerId, -$cost, 'repair', Texts::of($item['name']))) {
             self::refundWork($managerId, $worker, $energy);
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
         }
 
         $risk = $worker['mechanic'] ? Staff::mechanicRepairRisk((int) $worker['mechanic']['skill']) : Settings::get('poor_repair_chance');
@@ -602,11 +604,9 @@ final class Garage
 
         $wpdb->update($items, ['health' => $newHealth, 'max_health' => $newMax, 'defect' => $poor ? 1 : 0], ['id' => $itemId]);
 
-        $who = $worker['mechanic'] ? 'Майсторът ' . $worker['mechanic']['name'] : 'Ти';
+        $by = $worker['mechanic'] ? 'By' : 'Self';
         $xp = $worker['mechanic'] ? '' : Progress::addDaily($managerId, 'xp_repair');
-        return ($poor
-            ? sprintf('%s направи некачествен ремонт: частта е възстановена само до %d%%.', $who, round($newHealth))
-            : sprintf('%s ремонтира частта до %d%%.', $who, round($newHealth))) . $xp;
+        return I18n::t('server.garage.' . ($poor ? 'poor' : 'repaired') . $by, ['name' => $worker['mechanic']['name'] ?? '', 'pct' => round($newHealth)]) . $xp;
     }
 
     public static function applyWear(array $wear): void

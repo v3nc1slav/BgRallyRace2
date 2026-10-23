@@ -2,7 +2,9 @@
 
 namespace BgRally\Game;
 
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -22,13 +24,13 @@ final class BlackTrack
     {
         $manager = Managers::find($managerId);
         $user = $manager ? get_userdata((int) $manager['user_id']) : null;
-        return $user ? $user->display_name : 'Отбор';
+        return $user ? $user->display_name : I18n::t('server.common.team');
     }
 
     private static function stageName(int $stageId): string
     {
         $stages = \BgRally\Catalog\Registry::get('stages')->find($stageId);
-        return $stages['name'] ?? 'етап';
+        return isset($stages['name']) ? Texts::of($stages['name']) : I18n::t('server.black.stage');
     }
 
     public static function view(array $manager): array
@@ -91,17 +93,17 @@ final class BlackTrack
             }
         }
         if (!$stage) {
-            return new WP_Error('bgr_stage', 'Надпреварите са на етапите в твоя град.', ['status' => 400]);
+            return new WP_Error('bgr_stage', I18n::t('server.black.inCity'), ['status' => 400]);
         }
 
         $limits = self::limits($manager);
         if ($bet < $limits['min'] || $bet > $limits['max']) {
-            return new WP_Error('bgr_bet', sprintf('Залогът е от %d до %d €.', $limits['min'], $limits['max']), ['status' => 400]);
+            return new WP_Error('bgr_bet', I18n::t('server.black.betRange', ['min' => I18n::money($limits['min']), 'max' => I18n::money($limits['max'])]), ['status' => 400]);
         }
 
         $crew = Simulator::streetCrew((int) $manager['id']);
         if (!$crew) {
-            return new WP_Error('bgr_not_ready', 'Отборът не е готов: провери колата, гумите и екипажа.', ['status' => 400]);
+            return new WP_Error('bgr_not_ready', I18n::t('server.black.notReady'), ['status' => 400]);
         }
 
         return ['stage' => $stage, 'crew' => $crew];
@@ -113,14 +115,14 @@ final class BlackTrack
         $energy = Settings::int('black_energy');
 
         if ((int) $manager['money'] < $bet) {
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари за залога.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.black.noMoney'), ['status' => 400]);
         }
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -$bet, 'black_bet', 'Залог на черната писта')) {
+        if (!Ledger::add($managerId, -$bet, 'black_bet', I18n::t('server.ledger.blackBet'))) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари за залога.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.black.noMoney'), ['status' => 400]);
         }
         return true;
     }
@@ -155,7 +157,7 @@ final class BlackTrack
             'created_at' => current_time('mysql'),
         ]);
 
-        return sprintf('Предизвикателството е обявено: %d € на „%s“. Чакаш съперник от града.', $bet, $prepared['stage']['name']);
+        return I18n::t('server.black.posted', ['money' => I18n::money($bet), 'stage' => Texts::of($prepared['stage']['name'])]);
     }
 
     public static function cancel(array $manager, int $id): string|WP_Error
@@ -163,11 +165,11 @@ final class BlackTrack
         global $wpdb;
         $row = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . " WHERE id = %d AND challenger_id = %d AND status = 'open'", $id, $manager['id']), ARRAY_A);
         if (!$row || $wpdb->query($wpdb->prepare('UPDATE ' . self::table() . " SET status = 'cancelled' WHERE id = %d AND status = 'open'", $id)) !== 1) {
-            return new WP_Error('bgr_challenge', 'Няма такова отворено предизвикателство.', ['status' => 404]);
+            return new WP_Error('bgr_challenge', I18n::t('server.black.noOpen'), ['status' => 404]);
         }
 
-        Ledger::add((int) $manager['id'], (int) $row['bet'], 'black_refund', 'Отменено предизвикателство');
-        return 'Предизвикателството е отменено и залогът е върнат.';
+        Ledger::add((int) $manager['id'], (int) $row['bet'], 'black_refund', I18n::t('server.ledger.blackCancel'));
+        return I18n::t('server.black.cancelled');
     }
 
     public static function cancelOpen(int $managerId): int
@@ -178,7 +180,7 @@ final class BlackTrack
 
         foreach ($rows as $row) {
             if ($wpdb->query($wpdb->prepare('UPDATE ' . self::table() . " SET status = 'cancelled' WHERE id = %d AND status = 'open'", $row['id'])) === 1) {
-                Ledger::add($managerId, (int) $row['bet'], 'black_refund', 'Отменено предизвикателство');
+                Ledger::add($managerId, (int) $row['bet'], 'black_refund', I18n::t('server.ledger.blackCancel', [], I18n::of($managerId)));
                 $refund += (int) $row['bet'];
             }
         }
@@ -192,10 +194,10 @@ final class BlackTrack
         $row = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . " WHERE id = %d AND status = 'open'", $id), ARRAY_A);
 
         if (!$row || (int) $row['city_id'] !== (int) $manager['city_id']) {
-            return new WP_Error('bgr_challenge', 'Предизвикателството вече не е отворено.', ['status' => 404]);
+            return new WP_Error('bgr_challenge', I18n::t('server.black.closed'), ['status' => 404]);
         }
         if ((int) $row['challenger_id'] === $managerId) {
-            return new WP_Error('bgr_challenge', 'Не можеш да приемеш собственото си предизвикателство.', ['status' => 400]);
+            return new WP_Error('bgr_challenge', I18n::t('server.black.own'), ['status' => 400]);
         }
 
         $bet = (int) $row['bet'];
@@ -204,16 +206,17 @@ final class BlackTrack
             return $prepared;
         }
         if ($bet > self::limits($manager)['max']) {
-            return new WP_Error('bgr_bet', 'Залогът е над твоя лимит за нивото.', ['status' => 400]);
+            return new WP_Error('bgr_bet', I18n::t('server.black.overLimit'), ['status' => 400]);
         }
 
         $challengerId = (int) $row['challenger_id'];
         $rival = Simulator::streetCrew($challengerId);
         if (!$rival) {
             $wpdb->update(self::table(), ['status' => 'cancelled'], ['id' => $id]);
-            Ledger::add($challengerId, $bet, 'black_refund', 'Отменено предизвикателство');
-            Inbox::add($challengerId, 'Предизвикателството ти на черната писта е отменено, защото отборът ти не беше готов. Залогът е върнат.');
-            return new WP_Error('bgr_challenge', 'Съперникът не е готов – предизвикателството е отменено.', ['status' => 400]);
+            $rivalLang = I18n::of($challengerId);
+            Ledger::add($challengerId, $bet, 'black_refund', I18n::t('server.ledger.blackCancel', [], $rivalLang));
+            Inbox::add($challengerId, I18n::t('server.black.rivalNotReadyInbox', [], $rivalLang));
+            return new WP_Error('bgr_challenge', I18n::t('server.black.rivalNotReady'), ['status' => 400]);
         }
 
         $paid = self::pay($manager, $bet);
@@ -221,8 +224,8 @@ final class BlackTrack
             return $paid;
         }
         if ($wpdb->query($wpdb->prepare('UPDATE ' . self::table() . " SET status = 'done' WHERE id = %d AND status = 'open'", $id)) !== 1) {
-            Ledger::add($managerId, $bet, 'black_refund', 'Предизвикателството беше прието от друг');
-            return new WP_Error('bgr_challenge', 'Някой друг прие предизвикателството преди теб.', ['status' => 409]);
+            Ledger::add($managerId, $bet, 'black_refund', I18n::t('server.ledger.blackTaken'));
+            return new WP_Error('bgr_challenge', I18n::t('server.black.taken'), ['status' => 409]);
         }
 
         $stage = $prepared['stage'];
@@ -241,10 +244,10 @@ final class BlackTrack
         foreach ([$challengerId => $rival, $managerId => $prepared['crew']] as $id2 => $crew) {
             Garage::applyWear(Simulator::streetWear($crew, $stage, Settings::get('black_wear')));
             if ($payout[$id2]) {
-                Ledger::add($id2, $payout[$id2], 'black_win', 'Черна писта');
+                Ledger::add($id2, $payout[$id2], 'black_win', I18n::t('server.ledger.black', [], I18n::of($id2)));
             }
             if ($caught[$id2]) {
-                Police::fine($id2, Settings::int('fine_black'), 'Черна писта');
+                Police::fine($id2, Settings::int('fine_black'), I18n::t('server.ledger.black', [], I18n::of($id2)));
             }
         }
 
@@ -258,22 +261,22 @@ final class BlackTrack
             'resolved_at' => current_time('mysql'),
         ], ['id' => $id]);
 
-        $describe = fn(int $who, string $rivalName) => sprintf(
-            'Черна писта, „%s“ срещу %s: %s срещу %s – %s.%s',
-            $stage['name'],
-            $rivalName,
-            Simulator::formatTime($times[$who]),
-            Simulator::formatTime($times[$who === $managerId ? $challengerId : $managerId]),
-            $who === $winner ? 'победа' : 'загуба',
-            $caught[$who] ? sprintf(' Полицията ви хвана: глоба %d € и конфискуван залог.', Settings::int('fine_black')) : ($payout[$who] ? sprintf(' Получавате %d €.', $payout[$who]) : '')
-        );
+        $describe = fn(int $who, string $rivalName) => I18n::t('server.black.result', [
+            'stage' => Texts::of($stage['name']),
+            'rival' => $rivalName,
+            'mine' => Simulator::formatTime($times[$who]),
+            'theirs' => Simulator::formatTime($times[$who === $managerId ? $challengerId : $managerId]),
+            'outcome' => I18n::t($who === $winner ? 'server.black.win' : 'server.black.loss'),
+        ]) . ($caught[$who]
+            ? ' ' . I18n::t('server.black.caught', ['money' => I18n::money(Settings::int('fine_black'))])
+            : ($payout[$who] ? ' ' . I18n::t('server.black.payout', ['money' => I18n::money($payout[$who])]) : ''));
 
         $xp = [];
         foreach ([$challengerId, $managerId] as $who) {
-            $xp[$who] = Progress::addDaily($who, $who === $winner ? 'xp_black_win' : 'xp_black_loss');
+            $xp[$who] = I18n::as($who, fn() => Progress::addDaily($who, $who === $winner ? 'xp_black_win' : 'xp_black_loss'));
         }
 
-        Inbox::add($challengerId, $describe($challengerId, self::teamName($managerId)) . $xp[$challengerId]);
+        I18n::as($challengerId, fn() => Inbox::add($challengerId, $describe($challengerId, self::teamName($managerId)) . $xp[$challengerId]));
         return $describe($managerId, self::teamName($challengerId)) . $xp[$managerId];
     }
 
@@ -299,10 +302,10 @@ final class BlackTrack
 
         Garage::applyWear(Simulator::streetWear($prepared['crew'], $stage, Settings::get('black_wear')));
         if ($won && !$caught) {
-            Ledger::add($managerId, 2 * $bet, 'black_win', 'Черна писта');
+            Ledger::add($managerId, 2 * $bet, 'black_win', I18n::t('server.ledger.black'));
         }
         if ($caught) {
-            Police::fine($managerId, Settings::int('fine_black'), 'Черна писта');
+            Police::fine($managerId, Settings::int('fine_black'), I18n::t('server.ledger.black'));
         }
 
         $wpdb->insert(self::table(), [
@@ -321,10 +324,16 @@ final class BlackTrack
         ]);
 
         $xp = Progress::addDaily($managerId, $won ? 'xp_black_win' : 'xp_black_loss');
-        $message = sprintf('„%s“ срещу %s: %s срещу %s – %s.', $stage['name'], $bot['pilot'], Simulator::formatTime($mine), Simulator::formatTime($theirs), $won ? 'победа' : 'загуба');
+        $message = I18n::t('server.black.botResult', [
+            'stage' => Texts::of($stage['name']),
+            'rival' => $bot['pilot'],
+            'mine' => Simulator::formatTime($mine),
+            'theirs' => Simulator::formatTime($theirs),
+            'outcome' => I18n::t($won ? 'server.black.win' : 'server.black.loss'),
+        ]);
         if ($caught) {
-            return $message . sprintf(' Полицията ви хвана: глоба %d € и конфискуван залог.', Settings::int('fine_black')) . $xp;
+            return $message . ' ' . I18n::t('server.black.caught', ['money' => I18n::money(Settings::int('fine_black'))]) . $xp;
         }
-        return $message . ($won ? sprintf(' Печелиш %d €.', 2 * $bet) : ' Губиш залога.') . $xp;
+        return $message . ' ' . ($won ? I18n::t('server.black.won', ['money' => I18n::money(2 * $bet)]) : I18n::t('server.black.lost')) . $xp;
     }
 }

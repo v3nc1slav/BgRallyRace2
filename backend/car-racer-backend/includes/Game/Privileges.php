@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\I18n;
 
 final class Privileges
 {
@@ -39,32 +40,24 @@ final class Privileges
     {
         $list = [];
         foreach (self::of($cityId) as $type => $value) {
-            $list[] = sprintf('%s: %d%%', Labels::PRIVILEGES[$type] ?? $type, $value);
+            $list[] = I18n::t('server.privileges.item', ['label' => Labels::text('PRIVILEGES', $type), 'pct' => $value]);
         }
         return $list;
     }
 
-    private const PHRASES = [
-        'travel' => 'транспортните разходи са с %d%% по-евтини',
-        'parts' => 'частите в магазина са с %d%% по-евтини',
-        'tyres' => 'гумите в магазина са с %d%% по-евтини',
-        'repair' => 'ремонтите са с %d%% по-евтини',
-        'home_fee' => 'таксата за местното рали е с %d%% по-ниска',
-        'sponsor_local' => 'преговорите с местните спонсори вървят с %d%% по-бързо',
-    ];
+    private const PHRASES = ['travel', 'parts', 'tyres', 'repair', 'home_fee', 'sponsor_local'];
 
     public static function sentence(int $cityId): string
     {
         $parts = [];
         foreach (self::of($cityId) as $type => $value) {
-            if (isset(self::PHRASES[$type]) && $value) {
-                $parts[] = sprintf(self::PHRASES[$type], $value);
+            if (in_array($type, self::PHRASES, true) && $value) {
+                $parts[] = I18n::t('server.privileges.' . $type, ['pct' => $value]);
             }
         }
         if (!$parts) {
-            return 'Градът няма привилегии за отборите си.';
+            return I18n::t('server.privileges.none');
         }
-        $last = array_pop($parts);
-        return 'Тук ' . ($parts ? implode(', ', $parts) . ' и ' : '') . $last . '.';
+        return I18n::t('server.privileges.here', ['list' => I18n::join($parts)]);
     }
 }

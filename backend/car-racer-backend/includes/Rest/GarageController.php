@@ -5,6 +5,7 @@ namespace BgRally\Rest;
 use BgRally\Game\Garage;
 use BgRally\Game\Shop;
 use BgRally\Game\Staff;
+use BgRally\I18n;
 use WP_REST_Request;
 
 final class GarageController
@@ -53,7 +54,7 @@ final class GarageController
         if (is_wp_error($result)) {
             return $result;
         }
-        return Auth::respond([], 'Купено. Ще го намериш в склада на гаража.');
+        return Auth::respond([], I18n::t('server.shop.bought'));
     }
 
     public static function buyCar(WP_REST_Request $request)

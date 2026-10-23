@@ -2,6 +2,7 @@
 
 namespace BgRally\Game;
 
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
 use BgRally\Settings;
 
@@ -46,10 +47,10 @@ final class Intel
             return [
                 'team' => Managers::name($rivalId),
                 'car' => $snapshot['car']['name'] ?? '',
-                'tyre' => !empty($snapshot['tyre']) ? ['name' => $snapshot['tyre']['name'], 'health' => $round($snapshot['tyre']['health'])] : null,
+                'tyre' => !empty($snapshot['tyre']) ? ['name' => Texts::of($snapshot['tyre']['name']), 'health' => $round($snapshot['tyre']['health'])] : null,
                 'parts' => $parts ? array_values(array_map(fn($part) => [
-                    'label' => Labels::PART_TYPES[$part['type']] ?? $part['type'],
-                    'name' => $part['name'],
+                    'label' => Labels::text('PART_TYPES', $part['type']),
+                    'name' => Texts::of($part['name']),
                     'health' => $round($part['health']),
                 ], $snapshot['parts'] ?? [])) : null,
                 'crew' => $exact ? ['pilot' => $crew['pilot']['skill'], 'navigator' => $crew['navigator']['skill']] : null,

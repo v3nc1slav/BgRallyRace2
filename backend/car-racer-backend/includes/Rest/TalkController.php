@@ -4,6 +4,7 @@ namespace BgRally\Rest;
 
 use BgRally\Game\Chat;
 use BgRally\Game\Forum;
+use BgRally\I18n;
 use WP_REST_Request;
 
 final class TalkController
@@ -41,7 +42,7 @@ final class TalkController
     {
         $manager = Auth::manager();
         $id = Forum::create($manager, (string) $request->get_param('section'), (string) $request->get_param('title'), (string) $request->get_param('text'));
-        return is_wp_error($id) ? $id : ['topic' => Forum::topic($manager, $id, 1), 'message' => 'Темата е публикувана.'];
+        return is_wp_error($id) ? $id : ['topic' => Forum::topic($manager, $id, 1), 'message' => I18n::t('server.forum.posted')];
     }
 
     public static function reply(WP_REST_Request $request)

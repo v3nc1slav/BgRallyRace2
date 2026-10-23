@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 
 final class Simulator
@@ -99,30 +101,35 @@ final class Simulator
         $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM $entries WHERE rally_id = %d AND manager_id > 0", $rallyId), ARRAY_A);
 
         foreach ($rows as $entry) {
-            $managerId = (int) $entry['manager_id'];
-            $place = (int) $entry['place'];
-
-            if ((int) $entry['prize'] > 0) {
-                Ledger::add($managerId, (int) $entry['prize'], 'prize', sprintf('%s – %d място', $name, $place));
-            }
-            Progress::addXp($managerId, (int) $entry['xp']);
-            Garage::applyWear(json_decode((string) $entry['wear'], true) ?: []);
-            Garage::applyEffects($managerId, (int) $entry['player_car_id'], json_decode((string) $entry['effects'], true) ?: []);
-            Staff::afterRally($managerId, $place, $sizes[$entry['class']] ?? 1, $entry['status']);
-
-            $result = $entry['status'] === 'finished'
-                ? sprintf('%s: %d място в %s, %d € награда и %d опит.', $name, $place, Labels::classLabel($entry['class']), $entry['prize'], $entry['xp'])
-                : sprintf('%s: отпаднахте. Получавате %d опит.', $name, $entry['xp']);
-            Inbox::add($managerId, $result);
-            Push::notify($managerId, 'results', 'Резултати от ралито', $result, 'rallies/' . $rallyId);
-
-            $manager = Managers::find($managerId);
-            if ($manager) {
-                Sponsors::afterRally($manager, $entry, $name);
-            }
+            I18n::as((int) $entry['manager_id'], fn() => self::reward($entry, Texts::of($name), $rallyId, $sizes[$entry['class']] ?? 1));
         }
 
         Seasons::maybeClose((int) ($rally['season'] ?? 0));
+    }
+
+    private static function reward(array $entry, string $name, int $rallyId, int $size): void
+    {
+        $managerId = (int) $entry['manager_id'];
+        $place = (int) $entry['place'];
+
+        if ((int) $entry['prize'] > 0) {
+            Ledger::add($managerId, (int) $entry['prize'], 'prize', I18n::t('server.ledger.prize', ['rally' => $name, 'place' => $place]));
+        }
+        Progress::addXp($managerId, (int) $entry['xp']);
+        Garage::applyWear(json_decode((string) $entry['wear'], true) ?: []);
+        Garage::applyEffects($managerId, (int) $entry['player_car_id'], json_decode((string) $entry['effects'], true) ?: []);
+        Staff::afterRally($managerId, $place, $size, $entry['status']);
+
+        $result = $entry['status'] === 'finished'
+            ? I18n::t('server.results.finished', ['rally' => $name, 'place' => $place, 'class' => Labels::classLabel($entry['class']), 'money' => I18n::money($entry['prize']), 'xp' => $entry['xp']])
+            : I18n::t('server.results.dnf', ['rally' => $name, 'xp' => $entry['xp']]);
+        Inbox::add($managerId, $result);
+        Push::notify($managerId, 'results', I18n::t('server.results.push'), $result, 'rallies/' . $rallyId);
+
+        $manager = Managers::find($managerId);
+        if ($manager) {
+            Sponsors::afterRally($manager, $entry, $name);
+        }
     }
 
     public static function wearAmount(float $ratePer100km, float $km, string $surface, string $style): float
@@ -395,12 +402,12 @@ final class Simulator
 
     private function race(): void
     {
-        $this->event(0, 0, 0, 'start', sprintf('Ралито „%s“ започва. На старта са %d екипажа. Времето: %s.', $this->rally['name'], count($this->crews), mb_strtolower(Labels::WEATHER[$this->weather] ?? '')));
+        $this->event(0, 0, 0, 'start', [I18n::msg('server.chronicle.start', ['rally' => ['name', $this->rally['name']], 'count' => count($this->crews), 'weather' => ['label', 'WEATHER', $this->weather, true]])]);
 
         foreach ($this->crews as &$crew) {
             if (!$crew['ready']) {
                 $crew['status'] = 'dnf';
-                $this->event(0, $crew['entry_id'], 0, 'dns', sprintf('%s не успя да стартира – отборът не е готов.', $crew['pilot']));
+                $this->event(0, $crew['entry_id'], 0, 'dns', [I18n::msg('server.chronicle.dns', ['pilot' => $crew['pilot']])]);
             }
         }
         unset($crew);
@@ -413,7 +420,7 @@ final class Simulator
             $changeAt = null;
             if ($this->changeStage === $index) {
                 $changeAt = $clock + mt_rand(0, max(0, count($runners) - 1)) * self::START_INTERVAL;
-                $this->event($changeAt, 0, $seq, 'weather', $this->weatherText($this->newWeather));
+                $this->event($changeAt, 0, $seq, 'weather', [$this->weatherText($this->newWeather)]);
             }
 
             $stageEnd = $clock;
@@ -428,7 +435,7 @@ final class Simulator
                     ? $this->newWeather
                     : $this->weather;
 
-                $this->event((int) round($start), $crew['entry_id'], $seq, 'go', '');
+                $this->event((int) round($start), $crew['entry_id'], $seq, 'go', []);
                 $style = $this->style($crew, (int) $stage['id']);
                 $time = $this->stageTime($crew, $stage, $style, $weather);
                 $event = $this->rollEvent($crew, $stage, $style, $weather, $index);
@@ -440,7 +447,7 @@ final class Simulator
                     $at = (int) ($start + $time * $turn / max(1, (int) $stage['turns']));
                     $seconds = mt_rand((int) $event['penalty_min'], max((int) $event['penalty_min'], (int) $event['penalty_max']));
                     [$outcome, $loss, $text] = $this->applyEvent($crew, $event, $seconds, $seq);
-                    $this->event($at, $crew['entry_id'], $seq, $event['type'], $this->fill($event['text'] . $text, $crew, $turn, $seconds, $event), $outcome === 'finish' ? $loss : 0);
+                    $this->event($at, $crew['entry_id'], $seq, $event['type'], [$this->fill($crew, $turn, $seconds, $event), ...$text], $outcome === 'finish' ? $loss : 0);
                 }
 
                 if ($outcome === 'dnf') {
@@ -465,7 +472,7 @@ final class Simulator
                 if ($service === null) {
                     $crew['status'] = 'dnf';
                     $crew['dnf_stage'] = $seq;
-                    $this->event((int) ceil($finish), $crew['entry_id'], $seq, 'dnf', sprintf('%s няма резервна част и отпада от ралито.', $crew['pilot']));
+                    $this->event((int) ceil($finish), $crew['entry_id'], $seq, 'dnf', [I18n::msg('server.chronicle.noSpare', ['pilot' => $crew['pilot']])]);
                     unset($crew);
                     continue;
                 }
@@ -479,9 +486,9 @@ final class Simulator
                     'time_ms' => (int) round(($total + $service) * 1000),
                     'penalty_ms' => (int) round($service * 1000),
                 ];
-                $this->event((int) ceil($finish), $crew['entry_id'], $seq, 'finish', sprintf('%s завърши етап %d за %s.', $crew['pilot'], $seq, self::formatTime($total)));
+                $this->event((int) ceil($finish), $crew['entry_id'], $seq, 'finish', [I18n::msg('server.chronicle.finish', ['pilot' => $crew['pilot'], 'seq' => $seq, 'time' => self::formatTime($total)])]);
                 foreach ($notes as $note) {
-                    $this->event((int) ceil($finish), $crew['entry_id'], $seq, 'service', $note);
+                    $this->event((int) ceil($finish), $crew['entry_id'], $seq, 'service', [$note]);
                 }
                 $finished[$crew['class']][] = [$crew['pilot'], $total];
                 $stageEnd = max($stageEnd, $finish);
@@ -498,12 +505,12 @@ final class Simulator
                 if ($service === null) {
                     $crew['status'] = 'dnf';
                     $crew['dnf_stage'] = $seq;
-                    $this->event((int) ceil($stageEnd), $crew['entry_id'], $seq, 'dnf', sprintf('%s няма резервна част след катастрофата и отпада от ралито.', $crew['pilot']));
+                    $this->event((int) ceil($stageEnd), $crew['entry_id'], $seq, 'dnf', [I18n::msg('server.chronicle.noSpareCrash', ['pilot' => $crew['pilot']])]);
                     unset($crew);
                     continue;
                 }
                 foreach ($notes as $note) {
-                    $this->event((int) ceil($stageEnd), $crew['entry_id'], $seq, 'service', $note);
+                    $this->event((int) ceil($stageEnd), $crew['entry_id'], $seq, 'service', [$note]);
                 }
 
                 $crew['total'] += $penalty + $service;
@@ -515,7 +522,7 @@ final class Simulator
                     'time_ms' => (int) round(($penalty + $service) * 1000),
                     'penalty_ms' => (int) round(($penalty + $service) * 1000),
                 ];
-                $this->event((int) ceil($stageEnd), $crew['entry_id'], $seq, 'penalty', sprintf('%s получава наказателно време за етап %d: %s.', $crew['pilot'], $seq, self::formatTime($penalty)));
+                $this->event((int) ceil($stageEnd), $crew['entry_id'], $seq, 'penalty', [I18n::msg('server.chronicle.penalty', ['pilot' => $crew['pilot'], 'seq' => $seq, 'time' => self::formatTime($penalty)])]);
                 unset($crew);
             }
 
@@ -523,7 +530,7 @@ final class Simulator
             foreach ($finished as $class => $results) {
                 usort($results, fn($a, $b) => $a[1] <=> $b[1]);
                 [$pilot, $time] = $results[0];
-                $this->event((int) ceil($stageEnd), 0, $seq, 'stage', sprintf('Етап %d „%s“: най-бърз в %s е %s – %s.', $seq, $stage['name'], Labels::classLabel($class), $pilot, self::formatTime($time)));
+                $this->event((int) ceil($stageEnd), 0, $seq, 'stage', [I18n::msg('server.chronicle.stage', ['seq' => $seq, 'stage' => ['name', $stage['name']], 'class' => ['class', $class], 'pilot' => $pilot, 'time' => self::formatTime($time)])]);
             }
 
             if ($this->changeStage !== null && $index >= $this->changeStage && $index < count($this->stages) - 1) {
@@ -540,38 +547,38 @@ final class Simulator
     {
         switch ($event['type']) {
             case 'mistake':
-                return ['finish', $seconds, ''];
+                return ['finish', $seconds, []];
 
             case 'puncture':
                 if ($crew['bot']) {
-                    return ['finish', $seconds, sprintf(' Смени гумата за %d сек.', $seconds)];
+                    return ['finish', $seconds, [I18n::msg('server.chronicle.tyreChange', ['seconds' => $seconds])]];
                 }
                 $spare = array_key_first($crew['spare_tyres']);
                 if ($spare === null) {
-                    return ['dnf', 0, ' Няма резервна гума и отпада от ралито.'];
+                    return ['dnf', 0, [I18n::msg('server.chronicle.noSpareTyre')]];
                 }
                 unset($crew['spare_tyres'][$spare]);
                 $crew['effects']['remove'][] = $spare;
-                return ['finish', $seconds, sprintf(' Смени гумата за %d сек.', $seconds)];
+                return ['finish', $seconds, [I18n::msg('server.chronicle.tyreChange', ['seconds' => $seconds])]];
 
             case 'breakdown':
                 $part = $this->breakdownPart($crew, $event);
                 if ($part !== null) {
                     $this->breakPart($crew, $part);
                 }
-                return ['finish', $seconds, ''];
+                return ['finish', $seconds, []];
 
             case 'crash':
                 foreach (['suspension' => 'crash_damage_suspension', 'chassis' => 'crash_damage_chassis'] as $type => $setting) {
                     $this->damage($crew, $type, Settings::get($setting));
                 }
-                return ['crash', 0, ''];
+                return ['crash', 0, []];
 
             case 'chassis':
                 $this->damage($crew, 'chassis', 100);
-                return ['dnf', 0, ' Отпада от ралито.'];
+                return ['dnf', 0, [I18n::msg('server.chronicle.retires')]];
         }
-        return ['finish', 0, ''];
+        return ['finish', 0, []];
     }
 
     private function breakdownPart(array $crew, array $event): ?int
@@ -642,12 +649,11 @@ final class Simulator
             $crew['effects']['unmount'][] = $id;
             $crew['effects']['mount'][] = $spare['id'];
             $penalty += Settings::int('service_penalty');
-            $notes[] = sprintf(
-                'В сервиза сменят %s на %s (+%d сек.).',
-                mb_strtolower(Labels::PART_TYPES[$part['type']] ?? $part['type']),
-                $crew['pilot'],
-                Settings::int('service_penalty')
-            );
+            $notes[] = I18n::msg('server.chronicle.service', [
+                'part' => ['label', 'PART_TYPES', $part['type'], true],
+                'pilot' => $crew['pilot'],
+                'seconds' => Settings::int('service_penalty'),
+            ]);
         }
         return $penalty;
     }
@@ -695,7 +701,7 @@ final class Simulator
             $first = reset($set);
             $crew['tyre'] = ['id' => null, 'health' => array_sum(array_column($set, 'health')) / 4] + $first;
             $crew['swapped'] = true;
-            $this->event($at, $crew['entry_id'], $seq, 'swap', sprintf('%s смени гумите с „%s“ заради времето.', $crew['pilot'], $first['name']));
+            $this->event($at, $crew['entry_id'], $seq, 'swap', [I18n::msg('server.chronicle.swap', ['pilot' => $crew['pilot'], 'tyre' => ['name', $first['name']]])]);
         }
         unset($crew);
     }
@@ -806,7 +812,7 @@ final class Simulator
         return $factor;
     }
 
-    private function fill(string $text, array $crew, int $turn, int $seconds, array $event): string
+    private function fill(array $crew, int $turn, int $seconds, array $event): array
     {
         $part = $event['part_type'] !== '' ? $event['part_type'] : '';
         if ($event['type'] === 'breakdown' && $part === '') {
@@ -816,24 +822,26 @@ final class Simulator
                 }
             }
         }
-        $partLabel = mb_strtolower(Labels::PART_TYPES[$part] ?? Labels::PART_TYPES[array_rand(array_diff_key(Labels::PART_TYPES, ['chassis' => 1]))]);
+        if (!isset(Labels::PART_TYPES[$part])) {
+            $part = array_rand(array_diff_key(Labels::PART_TYPES, ['chassis' => 1]));
+        }
 
-        return strtr($text, [
-            '{пилот}' => $crew['pilot'],
-            '{завой}' => self::ordinal($turn),
-            '{секунди}' => (string) $seconds,
-            '{част}' => $partLabel,
+        return I18n::text($event['text'], [
+            'pilot' => $crew['pilot'],
+            'turn' => ['ordinal', $turn],
+            'seconds' => $seconds,
+            'part' => ['label', 'PART_TYPES', $part, true],
         ]);
     }
 
-    private function weatherText(string $weather): string
+    private function weatherText(string $weather): array
     {
         foreach ($this->catalog['weather'] ?? [] as $event) {
             if ($event['weather'] === $weather) {
-                return $event['text'];
+                return I18n::text($event['text']);
             }
         }
-        return sprintf('Времето се промени: %s.', mb_strtolower(Labels::WEATHER[$weather] ?? $weather));
+        return I18n::msg('server.chronicle.weather', ['weather' => ['label', 'WEATHER', $weather, true]]);
     }
 
     private function wear(array &$crew, array $stage, string $style): void
@@ -904,7 +912,7 @@ final class Simulator
                 }
 
                 if ($place === 1 && $crew['status'] === 'finished') {
-                    $this->event($this->duration, 0, count($this->stages), 'winner', sprintf('Победител в %s е %s с общо време %s.', Labels::classLabel($class), $crew['pilot'], self::formatTime($crew['total'])));
+                    $this->event($this->duration, 0, count($this->stages), 'winner', [I18n::msg('server.chronicle.winner', ['class' => ['class', $class], 'pilot' => $crew['pilot'], 'time' => self::formatTime($crew['total'])])]);
                 }
                 unset($crew);
             }
@@ -951,9 +959,9 @@ final class Simulator
         ]);
     }
 
-    private function event(int $offset, int $entryId, int $seq, string $type, string $text, int $penalty = 0): void
+    private function event(int $offset, int $entryId, int $seq, string $type, array $segments, int $penalty = 0): void
     {
-        $this->events[] = ['offset_s' => $offset, 'entry_id' => $entryId, 'seq' => $seq, 'type' => $type, 'text' => mb_substr($text, 0, 255), 'penalty_s' => $penalty];
+        $this->events[] = ['offset_s' => $offset, 'entry_id' => $entryId, 'seq' => $seq, 'type' => $type, 'text' => $segments ? I18n::encode(...$segments) : '', 'penalty_s' => $penalty];
     }
 
     public static function formatTime(float $seconds): string
@@ -964,23 +972,5 @@ final class Simulator
             return sprintf('%d:%02d:%04.1f', intdiv($minutes, 60), $minutes % 60, $rest);
         }
         return sprintf('%d:%04.1f', $minutes, $rest);
-    }
-
-    private static function ordinal(int $number): string
-    {
-        $lastTwo = $number % 100;
-        $last = $number % 10;
-        if ($lastTwo < 11 || $lastTwo > 19) {
-            if ($last === 1) {
-                return $number . '-вия';
-            }
-            if ($last === 2) {
-                return $number . '-рия';
-            }
-            if ($last === 7 || $last === 8) {
-                return $number . '-мия';
-            }
-        }
-        return $number . '-ия';
     }
 }

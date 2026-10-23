@@ -12,7 +12,7 @@ final class Cities
 
         return array_map(fn(array $row) => [
             'id' => (int) $row['id'],
-            'name' => $row['name'],
+            'name' => Texts::of($row['name']),
             'lat' => (float) $row['lat'],
             'lng' => (float) $row['lng'],
         ], $rows);

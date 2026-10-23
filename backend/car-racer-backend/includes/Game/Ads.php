@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -34,10 +35,10 @@ final class Ads
     public static function label(string $reward): string
     {
         return match ($reward) {
-            'energy' => sprintf('+%d енергия', Settings::int('ad_energy')),
-            'money' => sprintf('%d €', Settings::int('ad_money')),
-            'discount' => sprintf('%d%% отстъпка за следващата покупка от магазина', Settings::int('ad_discount')),
-            default => 'Втори опит при кмета или при отказан подкуп',
+            'energy' => I18n::t('server.ads.energy', ['energy' => Settings::int('ad_energy')]),
+            'money' => I18n::money(Settings::int('ad_money')),
+            'discount' => I18n::t('server.ads.discount', ['pct' => Settings::int('ad_discount')]),
+            default => I18n::t('server.ads.retry'),
         };
     }
 
@@ -67,10 +68,10 @@ final class Ads
     private static function blocked(array $manager, string $reward): string
     {
         if ($reward === 'retry' && (int) $manager['ad_retry']) {
-            return 'Вече имаш неизползван втори опит.';
+            return I18n::t('server.ads.hasRetry');
         }
         if ($reward === 'discount' && (int) $manager['shop_discount']) {
-            return 'Вече имаш отстъпка за следващата покупка.';
+            return I18n::t('server.ads.hasDiscount');
         }
         return '';
     }
@@ -100,10 +101,10 @@ final class Ads
         $managerId = (int) $manager['id'];
 
         if (!in_array($reward, self::REWARDS, true)) {
-            return new WP_Error('bgr_reward', 'Няма такава награда.', ['status' => 400]);
+            return new WP_Error('bgr_reward', I18n::t('server.ads.noReward'), ['status' => 400]);
         }
         if (!self::left($manager, $reward)) {
-            return new WP_Error('bgr_limit', 'Тази награда е изчерпана за днес.', ['status' => 400]);
+            return new WP_Error('bgr_limit', I18n::t('server.ads.limit'), ['status' => 400]);
         }
         $blocked = self::blocked($manager, $reward);
         if ($blocked) {
@@ -111,7 +112,7 @@ final class Ads
         }
         $cooldown = self::cooldown($managerId);
         if ($cooldown) {
-            return new WP_Error('bgr_cooldown', sprintf('Следващата реклама – след %d сек.', $cooldown), ['status' => 400]);
+            return new WP_Error('bgr_cooldown', I18n::t('server.ads.cooldown', ['seconds' => $cooldown]), ['status' => 400]);
         }
 
         $config = self::config();
@@ -149,18 +150,18 @@ final class Ads
         $view = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . ' WHERE id = %d AND manager_id = %d', $viewId, $managerId), ARRAY_A);
 
         if (!$view || !in_array($view['status'], ['started', 'verified'], true) || !hash_equals($view['token'], $token)) {
-            return new WP_Error('bgr_ad', 'Рекламата не е намерена.', ['status' => 400]);
+            return new WP_Error('bgr_ad', I18n::t('server.ads.notFound'), ['status' => 400]);
         }
         if ($view['provider'] === 'admob' && self::config()['admob_ssv'] && $view['status'] !== 'verified') {
-            return new WP_Error('bgr_ad_pending', 'Изчакваме потвърждение от Google за рекламата.', ['status' => 409]);
+            return new WP_Error('bgr_ad_pending', I18n::t('server.ads.pending'), ['status' => 409]);
         }
         $minimum = $view['provider'] === 'test' ? Settings::int('ad_test_seconds') : Settings::int('ad_min_seconds');
         if ($view['status'] !== 'verified' && Rallies::now() - strtotime($view['created_at']) < $minimum - 1) {
-            return new WP_Error('bgr_ad', 'Рекламата не е изгледана докрай.', ['status' => 400]);
+            return new WP_Error('bgr_ad', I18n::t('server.ads.incomplete'), ['status' => 400]);
         }
         $reward = $view['reward'];
         if (!self::left($manager, $reward) || self::blocked($manager, $reward)) {
-            return new WP_Error('bgr_limit', 'Тази награда вече не е налична днес.', ['status' => 400]);
+            return new WP_Error('bgr_limit', I18n::t('server.ads.unavailable'), ['status' => 400]);
         }
         $claimed = $wpdb->query($wpdb->prepare(
             'UPDATE ' . self::table() . " SET status = 'claimed', claimed_at = %s WHERE id = %d AND status IN ('started', 'verified')",
@@ -168,7 +169,7 @@ final class Ads
             $viewId
         ));
         if ($claimed !== 1) {
-            return new WP_Error('bgr_ad', 'Наградата вече е получена.', ['status' => 400]);
+            return new WP_Error('bgr_ad', I18n::t('server.ads.claimed'), ['status' => 400]);
         }
 
         switch ($reward) {
@@ -176,7 +177,7 @@ final class Ads
                 $wpdb->query($wpdb->prepare("UPDATE $managers SET energy = energy + %d WHERE id = %d", Settings::int('ad_energy'), $managerId));
                 break;
             case 'money':
-                Ledger::add($managerId, Settings::int('ad_money'), 'ad', 'Награда за реклама');
+                Ledger::add($managerId, Settings::int('ad_money'), 'ad', I18n::t('server.ledger.ad', [], I18n::of($managerId)));
                 break;
             case 'discount':
                 $wpdb->update($managers, ['shop_discount' => Settings::int('ad_discount')], ['id' => $managerId]);
@@ -185,7 +186,7 @@ final class Ads
                 $wpdb->update($managers, ['ad_retry' => 1], ['id' => $managerId]);
         }
 
-        return 'Получи: ' . self::label($reward) . '.';
+        return I18n::t('server.ads.got', ['reward' => self::label($reward)]);
     }
 
     private static function admobKeys(): array

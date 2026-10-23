@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -88,7 +89,7 @@ final class Staff
         return array_values(array_map(fn(array $row) => [
             'id' => (int) $row['id'],
             'role' => $row['role'],
-            'role_label' => Labels::ROLES[$row['role']] ?? $row['role'],
+            'role_label' => Labels::text('ROLES', $row['role']),
             'name' => $row['name'],
             'skill' => (int) $row['skill'],
             'morale' => in_array($row['role'], ['pilot', 'navigator'], true) ? (int) $row['morale'] : null,
@@ -125,10 +126,10 @@ final class Staff
         $rows = self::rows($managerId);
         $problems = [];
         if (!isset($rows['pilot'])) {
-            $problems[] = 'няма пилот';
+            $problems[] = I18n::t('server.staff.noPilot');
         }
         if (!isset($rows['navigator'])) {
-            $problems[] = 'няма навигатор';
+            $problems[] = I18n::t('server.staff.noNavigator');
         }
         return $problems;
     }
@@ -181,11 +182,11 @@ final class Staff
         global $wpdb;
         $row = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . ' WHERE id = %d AND manager_id = %d', $staffId, $managerId), ARRAY_A);
         if (!$row) {
-            return new WP_Error('bgr_staff', 'Няма такъв служител.', ['status' => 404]);
+            return new WP_Error('bgr_staff', I18n::t('server.staff.notFound'), ['status' => 404]);
         }
 
         $wpdb->delete(self::table(), ['id' => $staffId]);
-        return sprintf('%s (%s) е освободен.', $row['name'], mb_strtolower(Labels::ROLES[$row['role']] ?? $row['role']));
+        return I18n::t('server.staff.fired', ['name' => $row['name'], 'role' => mb_strtolower(Labels::text('ROLES', $row['role']))]);
     }
 
     public static function improve(int $managerId, int $amount): void
@@ -216,28 +217,28 @@ final class Staff
         $row = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . self::table() . ' WHERE id = %d AND manager_id = %d', $staffId, $managerId), ARRAY_A);
 
         if (!$row || !in_array($row['role'], ['pilot', 'navigator'], true)) {
-            return new WP_Error('bgr_staff', 'Във фитнеса тренират само пилотът и навигаторът.', ['status' => 400]);
+            return new WP_Error('bgr_staff', I18n::t('server.staff.gymCrew'), ['status' => 400]);
         }
         if ($row['fitness_date'] === wp_date('Y-m-d')) {
-            return new WP_Error('bgr_fitness', sprintf('%s вече тренира днес.', $row['name']), ['status' => 400]);
+            return new WP_Error('bgr_fitness', I18n::t('server.staff.trained', ['name' => $row['name']]), ['status' => 400]);
         }
         if ((int) $row['physical'] >= 100) {
-            return new WP_Error('bgr_fitness', sprintf('%s е в отлична форма.', $row['name']), ['status' => 400]);
+            return new WP_Error('bgr_fitness', I18n::t('server.staff.fit', ['name' => $row['name']]), ['status' => 400]);
         }
 
         $energy = Settings::int('fitness_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
         if (!Ledger::add($managerId, -Settings::int('fitness_price'), 'fitness', $row['name'])) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', 'Нямате достатъчно пари.', ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
         }
 
         $physical = min(100, (int) $row['physical'] + Settings::int('fitness_gain'));
         $wpdb->update(self::table(), ['physical' => $physical, 'fitness_date' => wp_date('Y-m-d')], ['id' => $staffId]);
 
-        return sprintf('%s тренира във фитнеса. Физически умения: %d.', $row['name'], $physical) . Progress::addDaily($managerId, 'xp_fitness');
+        return I18n::t('server.staff.gym', ['name' => $row['name'], 'value' => $physical]) . Progress::addDaily($managerId, 'xp_fitness');
     }
 
     public static function afterRally(int $managerId, int $place, int $classSize, string $status): void

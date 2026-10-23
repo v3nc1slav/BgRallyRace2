@@ -3,6 +3,7 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -29,9 +30,9 @@ final class Forum
         return [
             'id' => (int) $row['id'],
             'section' => $row['section'],
-            'section_label' => Labels::FORUM_SECTIONS[$row['section']] ?? $row['section'],
+            'section_label' => Labels::text('FORUM_SECTIONS', $row['section']),
             'title' => $row['title'],
-            'author' => $row['author'] ?: Account::DELETED,
+            'author' => $row['author'] ?: I18n::t('server.common.deleted'),
             'posts' => (int) $row['posts'],
             'last_post_at' => str_replace(' ', 'T', $row['last_post_at']),
         ];
@@ -66,7 +67,7 @@ final class Forum
             'sections' => array_map(
                 fn($key, $label) => ['key' => $key, 'label' => $label, 'topics' => (int) ($counts[$key]->topics ?? 0)],
                 array_keys(Labels::FORUM_SECTIONS),
-                Labels::FORUM_SECTIONS
+                Labels::all('FORUM_SECTIONS')
             ),
             'topics' => array_map(fn($row) => self::topicView($row), $rows),
         ] + self::rules($manager);
@@ -76,7 +77,7 @@ final class Forum
     {
         $topic = self::find($id);
         if (!$topic) {
-            return new WP_Error('bgr_not_found', 'Няма такава тема.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.forum.noTopic'), ['status' => 404]);
         }
 
         $pages = max(1, (int) ceil((int) $topic['posts'] / self::PER_PAGE));
@@ -96,14 +97,14 @@ final class Forum
         global $wpdb;
 
         if (!isset(Labels::FORUM_SECTIONS[$section])) {
-            return new WP_Error('bgr_section', 'Няма такъв раздел.', ['status' => 400]);
+            return new WP_Error('bgr_section', I18n::t('server.forum.noSection'), ['status' => 400]);
         }
         if (!self::rules($manager)['can_create']) {
-            return new WP_Error('bgr_level', sprintf('Нова тема се отваря от ниво %d.', Settings::int('forum_topic_level')), ['status' => 400]);
+            return new WP_Error('bgr_level', I18n::t('server.forum.level', ['level' => Settings::int('forum_topic_level')]), ['status' => 400]);
         }
         $title = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags($title)));
         if ($title === '' || mb_strlen($title) > self::TITLE_LENGTH) {
-            return new WP_Error('bgr_title', sprintf('Заглавието е задължително и е до %d знака.', self::TITLE_LENGTH), ['status' => 400]);
+            return new WP_Error('bgr_title', I18n::t('server.forum.title', ['max' => self::TITLE_LENGTH]), ['status' => 400]);
         }
         $text = Chat::prepare($manager, $text, Settings::int('forum_length'));
         if (is_wp_error($text)) {
@@ -129,7 +130,7 @@ final class Forum
     {
         global $wpdb;
         if (!self::find($topicId)) {
-            return new WP_Error('bgr_not_found', 'Няма такава тема.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.forum.noTopic'), ['status' => 404]);
         }
         $text = Chat::prepare($manager, $text, Settings::int('forum_length'));
         if (is_wp_error($text)) {
@@ -139,7 +140,7 @@ final class Forum
         Chat::insert((int) $manager['id'], 'topic-' . $topicId, $text);
         $wpdb->query($wpdb->prepare('UPDATE ' . self::table() . ' SET posts = posts + 1, last_post_at = %s WHERE id = %d', current_time('mysql'), $topicId));
 
-        return 'Отговорът е публикуван.';
+        return I18n::t('server.forum.replied');
     }
 
     public static function lastPage(int $topicId): int

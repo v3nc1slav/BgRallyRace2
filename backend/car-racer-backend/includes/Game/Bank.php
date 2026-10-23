@@ -3,13 +3,13 @@
 namespace BgRally\Game;
 
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
 final class Bank
 {
     public const TERMS = [4, 8, 12];
-    public const BLOCKED = 'Имаш просрочена вноска към банката. Докато не я платиш, не можеш да купуваш от магазина и пазара.';
     private const MIN_AMOUNT = 100;
 
     private static function table(): string
@@ -95,21 +95,21 @@ final class Bank
         $max = self::maxAmount($manager);
 
         if (self::active($managerId)) {
-            return new WP_Error('bgr_loan', 'Вече имаш заем. Нов можеш да вземеш, след като го изплатиш.', ['status' => 400]);
+            return new WP_Error('bgr_loan', I18n::t('server.bank.hasLoan'), ['status' => 400]);
         }
         $blocked = Inactivity::loanBlockedUntil($manager);
         if ($blocked) {
-            return new WP_Error('bgr_fresh', sprintf('След ново начало заем може да се тегли от %s.', date('d.m.Y', $blocked)), ['status' => 400]);
+            return new WP_Error('bgr_fresh', I18n::t('server.bank.fresh', ['date' => I18n::date($blocked)]), ['status' => 400]);
         }
         if (!in_array($weeks, self::TERMS, true)) {
-            return new WP_Error('bgr_term', 'Няма такъв срок.', ['status' => 400]);
+            return new WP_Error('bgr_term', I18n::t('server.bank.term'), ['status' => 400]);
         }
         if ($amount < self::MIN_AMOUNT || $amount > $max) {
-            return new WP_Error('bgr_amount', sprintf('Заемът може да е от %d € до %d €.', self::MIN_AMOUNT, $max), ['status' => 400]);
+            return new WP_Error('bgr_amount', I18n::t('server.bank.amount', ['min' => I18n::money(self::MIN_AMOUNT), 'max' => I18n::money($max)]), ['status' => 400]);
         }
         $energy = Settings::int('loan_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
 
         $interest = (int) round($amount * self::rate($weeks) / 100);
@@ -126,9 +126,9 @@ final class Bank
             'status' => 'active',
             'created_at' => current_time('mysql'),
         ]);
-        Ledger::add($managerId, $amount, 'loan', sprintf('Заем за %d седмици', $weeks));
+        Ledger::add($managerId, $amount, 'loan', I18n::t('server.ledger.loan', ['weeks' => $weeks]));
 
-        return sprintf('Банката ти отпусна %d €. Връщаш %d € на %d вноски по %d € всеки понеделник.', $amount, $total, $weeks, $installment);
+        return I18n::t('server.bank.granted', ['amount' => I18n::money($amount), 'total' => I18n::money($total), 'weeks' => $weeks, 'installment' => I18n::money($installment)]);
     }
 
     private static function finish(int $loanId): void
@@ -142,16 +142,16 @@ final class Bank
         $managerId = (int) $manager['id'];
         $loan = self::active($managerId);
         if (!$loan) {
-            return new WP_Error('bgr_loan', 'Нямаш заем.', ['status' => 400]);
+            return new WP_Error('bgr_loan', I18n::t('server.bank.noLoan'), ['status' => 400]);
         }
 
         $amount = self::payoff($loan);
-        if (!Ledger::add($managerId, -$amount, 'loan_payment', 'Предсрочно изплащане на заем')) {
-            return new WP_Error('bgr_money', sprintf('Нужни са %d €.', $amount), ['status' => 400]);
+        if (!Ledger::add($managerId, -$amount, 'loan_payment', I18n::t('server.ledger.loanEarly'))) {
+            return new WP_Error('bgr_money', I18n::t('server.common.need', ['money' => I18n::money($amount)]), ['status' => 400]);
         }
         self::finish((int) $loan['id']);
 
-        return sprintf('Заемът е изплатен предсрочно с %d €.', $amount);
+        return I18n::t('server.bank.repaid', ['money' => I18n::money($amount)]);
     }
 
     public static function payOverdue(array $manager): string|WP_Error
@@ -160,25 +160,30 @@ final class Bank
         $managerId = (int) $manager['id'];
         $loan = self::active($managerId);
         if (!$loan || !(int) $loan['overdue']) {
-            return new WP_Error('bgr_loan', 'Нямаш просрочени вноски.', ['status' => 400]);
+            return new WP_Error('bgr_loan', I18n::t('server.bank.noOverdue'), ['status' => 400]);
         }
 
         $overdue = (int) $loan['overdue'];
-        if (!Ledger::add($managerId, -$overdue, 'loan_payment', 'Просрочена вноска')) {
-            return new WP_Error('bgr_money', sprintf('Нужни са %d €.', $overdue), ['status' => 400]);
+        if (!Ledger::add($managerId, -$overdue, 'loan_payment', I18n::t('server.ledger.overdue'))) {
+            return new WP_Error('bgr_money', I18n::t('server.common.need', ['money' => I18n::money($overdue)]), ['status' => 400]);
         }
 
         $remaining = (int) $loan['remaining'] - $overdue;
         if ($remaining <= 0) {
             self::finish((int) $loan['id']);
-            return 'Платихте просрочието. Заемът е изплатен.';
+            return I18n::t('server.bank.overduePaidAll');
         }
         $wpdb->update(self::table(), ['remaining' => $remaining, 'overdue' => 0, 'missed' => 0], ['id' => $loan['id']]);
 
-        return sprintf('Платихте просрочените %d €. Остават %d €.', $overdue, $remaining);
+        return I18n::t('server.bank.overduePaid', ['money' => I18n::money($overdue), 'left' => I18n::money($remaining)]);
     }
 
     public static function weekly(int $managerId): void
+    {
+        I18n::as($managerId, fn() => self::charge($managerId));
+    }
+
+    private static function charge(int $managerId): void
     {
         global $wpdb;
         $loan = self::active($managerId);
@@ -191,15 +196,15 @@ final class Bank
         $remaining = (int) $loan['remaining'];
         $passed = (int) $loan['weeks_passed'] + 1;
 
-        if (Ledger::add($managerId, -$due, 'loan_payment', 'Вноска по заем')) {
+        if (Ledger::add($managerId, -$due, 'loan_payment', I18n::t('server.ledger.installment'))) {
             $remaining -= $due;
             if ($remaining <= 0) {
                 self::finish($loanId);
-                Inbox::add($managerId, sprintf('Последна вноска по заема: %d €. Заемът е изплатен.', $due));
+                Inbox::add($managerId, I18n::t('server.bank.lastInstallment', ['money' => I18n::money($due)]));
                 return;
             }
             $wpdb->update(self::table(), ['remaining' => $remaining, 'overdue' => 0, 'missed' => 0, 'weeks_passed' => $passed], ['id' => $loanId]);
-            Inbox::add($managerId, sprintf('Вноска по заема: %d €. Остават %d €.', $due, $remaining));
+            Inbox::add($managerId, I18n::t('server.bank.installment', ['money' => I18n::money($due), 'left' => I18n::money($remaining)]));
             return;
         }
 
@@ -210,12 +215,12 @@ final class Bank
         $wpdb->update(self::table(), ['remaining' => $remaining, 'overdue' => $overdue, 'missed' => $missed, 'weeks_passed' => $passed], ['id' => $loanId]);
 
         if ($missed < Settings::int('loan_seize_after')) {
-            $text = sprintf('Нямаш пари за вноската по заема (%d €). Наказателна лихва %d €. Плати просрочието в банката, иначе следва запор.', $due, $penalty);
+            $text = I18n::t('server.bank.missed', ['money' => I18n::money($due), 'penalty' => I18n::money($penalty)]);
             Inbox::add($managerId, $text);
-            Push::notify($managerId, 'loan', 'Неплатена вноска', $text, 'city/bank');
+            Push::notify($managerId, 'loan', I18n::t('server.bank.pushMissed'), $text, 'city/bank');
             return;
         }
-        Push::notify($managerId, 'loan', 'Запор от банката', 'Пропусна вноските по заема и банката наложи запор.', 'city/bank');
+        Push::notify($managerId, 'loan', I18n::t('server.bank.pushSeized'), I18n::t('server.bank.seizedPush'), 'city/bank');
         self::seize($managerId, $loanId, $remaining, $overdue);
     }
 
@@ -245,9 +250,9 @@ final class Bank
 
         $names = mb_strimwidth(implode(', ', $taken), 0, 140, '…');
         if ($collected) {
-            Ledger::add($managerId, $collected, 'seizure', 'Запор: ' . $names);
+            Ledger::add($managerId, $collected, 'seizure', I18n::t('server.ledger.seizure', ['names' => $names]));
         }
-        Ledger::add($managerId, -$overdue, 'loan_payment', 'Просрочена вноска', true);
+        Ledger::add($managerId, -$overdue, 'loan_payment', I18n::t('server.ledger.overdue'), true);
 
         $remaining -= $overdue;
         if ($remaining <= 0) {
@@ -257,7 +262,7 @@ final class Bank
         }
 
         Inbox::add($managerId, $taken
-            ? sprintf('Запор: банката взе %s за %d € и удържа просрочените %d €.', $names, $collected, $overdue)
-            : sprintf('Запор: банката удържа просрочените %d €. Нямаш имущество за запор и балансът ти е на минус.', $overdue));
+            ? I18n::t('server.bank.seized', ['names' => $names, 'money' => I18n::money($collected), 'overdue' => I18n::money($overdue)])
+            : I18n::t('server.bank.seizedNothing', ['overdue' => I18n::money($overdue)]));
     }
 }

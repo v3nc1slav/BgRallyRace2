@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -43,13 +45,13 @@ final class Market
     {
         $base = self::itemPrice($row);
         $label = $row['kind'] === 'part'
-            ? (Labels::PART_TYPES[$row['part_type']] ?? '') . ' · ' . Labels::classLabel($row['part_class'])
-            : ($row['kind'] === 'spare_tyre' ? 'Резервна гума · ' : 'Комплект гуми · ') . (Labels::TYRE_TYPES[$row['tyre_type']] ?? '') . ', ' . mb_strtolower(Labels::COMPOUNDS[$row['compound']] ?? '');
+            ? (Labels::text('PART_TYPES', $row['part_type'])) . ' · ' . Labels::classLabel($row['part_class'])
+            : I18n::t($row['kind'] === 'spare_tyre' ? 'server.garage.spareTyre' : 'server.market.tyreSet') . (Labels::text('TYRE_TYPES', $row['tyre_type'])) . ', ' . mb_strtolower(Labels::text('COMPOUNDS', $row['compound']));
 
         return [
             'kind' => $row['kind'],
             'id' => (int) $row['id'],
-            'name' => (string) $row['name'],
+            'name' => Texts::of((string) $row['name']),
             'details' => [
                 'label' => $label,
                 'health' => round((float) $row['health'], 1),
@@ -81,7 +83,7 @@ final class Market
             'id' => $playerCarId,
             'name' => (string) $car['name'],
             'details' => [
-                'label' => Labels::classLabel($car['class']) . ' · с монтираните части и гуми',
+                'label' => Labels::classLabel($car['class']) . ' · ' . I18n::t('server.market.withParts'),
                 'health' => round($health, 1),
                 'max_health' => 100,
                 'defect' => (bool) array_filter(array_column($rows, 'defect')),
@@ -140,11 +142,11 @@ final class Market
         if ($kind === 'car') {
             $car = Garage::carById($id);
             if (!$car || (int) $car['manager_id'] !== $managerId) {
-                return new WP_Error('bgr_not_found', 'Нямаш такава кола.', ['status' => 404]);
+                return new WP_Error('bgr_not_found', I18n::t('server.market.noCar'), ['status' => 404]);
             }
             $active = Garage::car($managerId);
             if ($active && (int) $active['player_car_id'] === $id) {
-                return new WP_Error('bgr_active', 'Колата за състезания не може да се продаде. Избери друга в гаража.', ['status' => 400]);
+                return new WP_Error('bgr_active', I18n::t('server.market.activeCar'), ['status' => 400]);
             }
             return self::carOffer($car);
         }
@@ -154,13 +156,13 @@ final class Market
             $id,
             $managerId
         ), ARRAY_A);
-        return $row ? self::itemOffer($row) : new WP_Error('bgr_not_found', 'Нямаш такъв предмет в склада.', ['status' => 404]);
+        return $row ? self::itemOffer($row) : new WP_Error('bgr_not_found', I18n::t('server.market.noItem'), ['status' => 404]);
     }
 
     private static function canSell(array $manager): true|WP_Error
     {
         $level = Settings::int('market_sell_level');
-        return (int) $manager['level'] >= $level ? true : new WP_Error('bgr_level', sprintf('Продаването е от ниво %d.', $level), ['status' => 400]);
+        return (int) $manager['level'] >= $level ? true : new WP_Error('bgr_level', I18n::t('server.market.sellLevel', ['level' => $level]), ['status' => 400]);
     }
 
     private static function escrow(int $managerId, array $offer): bool
@@ -233,16 +235,16 @@ final class Market
         }
         $range = self::range($offer['base']);
         if ($price < $range['min'] || $price > $range['max']) {
-            return new WP_Error('bgr_price', sprintf('Цената трябва да е между %d € и %d €.', $range['min'], $range['max']), ['status' => 400]);
+            return new WP_Error('bgr_price', I18n::t('server.market.priceRange', ['min' => I18n::money($range['min']), 'max' => I18n::money($range['max'])]), ['status' => 400]);
         }
 
         $energy = Settings::int('market_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
         if (!self::escrow($managerId, $offer)) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_not_found', 'Предметът вече не е в гаража.', ['status' => 400]);
+            return new WP_Error('bgr_not_found', I18n::t('server.market.gone'), ['status' => 400]);
         }
 
         $days = Settings::int('market_days');
@@ -260,17 +262,17 @@ final class Market
             'expires_at' => date('Y-m-d H:i:s', Rallies::now() + $days * DAY_IN_SECONDS),
         ]);
 
-        return sprintf('Обявата за „%s“ е публикувана за %d € и важи %d дни.', $offer['name'], $price, $days);
+        return I18n::t('server.market.listed', ['item' => Texts::of($offer['name']), 'money' => I18n::money($price), 'days' => $days]);
     }
 
     public static function cancel(array $manager, int $listingId): string|WP_Error
     {
         $listing = self::find($listingId);
         if (!$listing || (int) $listing['seller_id'] !== (int) $manager['id'] || !self::close($listingId, 'cancelled')) {
-            return new WP_Error('bgr_not_found', 'Нямаш такава активна обява.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.market.noListing'), ['status' => 404]);
         }
         self::release($listing, (int) $manager['id']);
-        return sprintf('Обявата за „%s“ е свалена. Предметът е обратно в гаража.', $listing['name']);
+        return I18n::t('server.market.withdrawn', ['item' => Texts::of($listing['name'])]);
     }
 
     public static function buy(array $manager, int $listingId): string|WP_Error
@@ -280,50 +282,43 @@ final class Market
         $listing = self::find($listingId);
 
         if (!$listing || $listing['status'] !== 'active') {
-            return new WP_Error('bgr_not_found', 'Обявата вече не е активна.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.market.inactive'), ['status' => 404]);
         }
         if ((int) $listing['seller_id'] === $managerId) {
-            return new WP_Error('bgr_own', 'Това е твоя обява.', ['status' => 400]);
+            return new WP_Error('bgr_own', I18n::t('server.market.own'), ['status' => 400]);
         }
         if (Bank::blocked($managerId)) {
-            return new WP_Error('bgr_bank', Bank::BLOCKED, ['status' => 400]);
+            return new WP_Error('bgr_bank', I18n::t('server.bank.blocked'), ['status' => 400]);
         }
         if ($listing['kind'] === 'car' && count(Garage::cars($managerId)) >= GarageLevels::carSlots((int) $manager['garage_level'])) {
-            return new WP_Error('bgr_slots', 'Нямаш свободно място в гаража за още една кола.', ['status' => 400]);
+            return new WP_Error('bgr_slots', I18n::t('server.market.noSlot'), ['status' => 400]);
         }
 
         $delivery = self::delivery($listing, $manager);
         $price = (int) $listing['price'];
         if (!self::close($listingId, 'sold', $managerId)) {
-            return new WP_Error('bgr_sold', 'Някой друг току-що го купи.', ['status' => 400]);
+            return new WP_Error('bgr_sold', I18n::t('server.market.soldOut'), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -($price + $delivery), 'market', $listing['name'])) {
+        if (!Ledger::add($managerId, -($price + $delivery), 'market', Texts::of($listing['name']))) {
             $wpdb->update(self::table(), ['status' => 'active', 'buyer_id' => 0, 'closed_at' => null], ['id' => $listingId]);
-            return new WP_Error('bgr_money', sprintf('Нямате достатъчно пари (нужни са %d €).', $price + $delivery), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.common.moneyNeed', ['money' => I18n::money($price + $delivery)]), ['status' => 400]);
         }
 
         self::release($listing, $managerId);
         $sellerId = (int) $listing['seller_id'];
         $fee = (int) round($price * Settings::get('market_fee') / 100);
-        Ledger::add($sellerId, $price - $fee, 'market_sale', $listing['name']);
-        $sold = sprintf('Продаде „%s“ на пазара за %d € (комисиона %d €).', $listing['name'], $price, $fee);
-        Inbox::add($sellerId, $sold);
-        Push::notify($sellerId, 'market', 'Продадено на пазара', $sold, 'city/market');
+        Ledger::add($sellerId, $price - $fee, 'market_sale', Texts::of($listing['name'], I18n::of($sellerId)));
+        I18n::as($sellerId, function () use ($sellerId, $listing, $price, $fee) {
+            $sold = I18n::t('server.market.sold', ['item' => Texts::of($listing['name']), 'money' => I18n::money($price), 'fee' => I18n::money($fee)]);
+            Inbox::add($sellerId, $sold);
+            Push::notify($sellerId, 'market', I18n::t('server.market.pushSold'), $sold, 'city/market');
+        });
         if ($price >= Settings::int('rumor_market_min')) {
-            Rumors::about(
-                $sellerId,
-                '%s продаде „' . $listing['name'] . '“ на пазара за ' . $price . ' €.',
-                sprintf('На пазара се продаде „%s“ за %d €.', $listing['name'], $price)
-            );
+            Rumors::about($sellerId, 'sold', ['item' => ['name', $listing['name']], 'money' => ['money', $price]]);
         }
 
-        return sprintf(
-            'Купи „%s“ за %d €%s. %s',
-            $listing['name'],
-            $price,
-            $delivery ? sprintf(' + %d € доставка', $delivery) : '',
-            $listing['kind'] === 'car' ? 'Колата е в гаража.' : 'Ще го намериш в склада.'
-        );
+        return I18n::t($delivery ? 'server.market.boughtDelivery' : 'server.market.bought', ['item' => Texts::of($listing['name']), 'money' => I18n::money($price), 'delivery' => I18n::money($delivery)])
+            . ' ' . I18n::t($listing['kind'] === 'car' ? 'server.market.inGarage' : 'server.market.inStorage');
     }
 
     public static function dealer(array $manager, string $kind, int $id): string|WP_Error
@@ -338,11 +333,11 @@ final class Market
             return $offer;
         }
         if (!self::remove($managerId, $offer)) {
-            return new WP_Error('bgr_not_found', 'Предметът вече не е в гаража.', ['status' => 400]);
+            return new WP_Error('bgr_not_found', I18n::t('server.market.gone'), ['status' => 400]);
         }
 
-        Ledger::add($managerId, $offer['dealer'], 'dealer', $offer['name']);
-        return sprintf('Изкупвачът взе „%s“ за %d €.', $offer['name'], $offer['dealer']);
+        Ledger::add($managerId, $offer['dealer'], 'dealer', Texts::of($offer['name']));
+        return I18n::t('server.market.dealer', ['item' => Texts::of($offer['name']), 'money' => I18n::money($offer['dealer'])]);
     }
 
     public static function expire(): void
@@ -356,7 +351,7 @@ final class Market
         foreach ($rows as $listing) {
             if (self::close((int) $listing['id'], 'expired')) {
                 self::release($listing, (int) $listing['seller_id']);
-                Inbox::add((int) $listing['seller_id'], sprintf('Обявата за „%s“ изтече без купувач. Предметът е обратно в гаража.', $listing['name']));
+                Inbox::add((int) $listing['seller_id'], I18n::t('server.market.expired', ['item' => Texts::of($listing['name'], I18n::of((int) $listing['seller_id']))], I18n::of((int) $listing['seller_id'])));
             }
         }
     }
@@ -372,14 +367,14 @@ final class Market
         return [
             'id' => (int) $row['id'],
             'kind' => $row['kind'],
-            'kind_label' => Labels::MARKET_KINDS[$row['kind']] ?? $row['kind'],
-            'name' => $row['name'],
+            'kind_label' => Labels::text('MARKET_KINDS', $row['kind']),
+            'name' => Texts::of($row['name']),
             'details' => $details,
             'base_price' => (int) $row['base_price'],
             'price' => (int) $row['price'],
             'delivery' => $own ? 0 : self::delivery($row, $manager),
             'seller' => (string) ($row['seller'] ?? ''),
-            'city' => (string) ($row['city'] ?? ''),
+            'city' => Texts::of((string) ($row['city'] ?? '')),
             'expires_at' => str_replace(' ', 'T', $row['expires_at']),
         ];
     }

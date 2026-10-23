@@ -3,7 +3,9 @@
 namespace BgRally\Game;
 
 use BgRally\Catalog\Registry;
+use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
+use BgRally\I18n;
 use BgRally\Settings;
 use WP_Error;
 
@@ -59,12 +61,12 @@ final class Sabotage
             'cost' => Settings::int('sabotage_cost'),
             'energy' => Settings::int('sabotage_energy'),
             'level_gap' => Settings::int('sabotage_level_gap'),
-            'kinds' => Labels::SABOTAGE_KINDS,
+            'kinds' => Labels::all('SABOTAGE_KINDS'),
             'targets' => self::targets($manager, $entry),
             'orders' => array_map(fn($row) => [
                 'team' => Managers::name((int) $row['target_id']),
-                'kind_label' => Labels::SABOTAGE_KINDS[$row['kind']] ?? $row['kind'],
-                'status_label' => Labels::SABOTAGE_STATUSES[$row['status']] ?? $row['status'],
+                'kind_label' => Labels::text('SABOTAGE_KINDS', $row['kind']),
+                'status_label' => Labels::text('SABOTAGE_STATUSES', $row['status']),
                 'caught' => (bool) $row['caught'],
             ], $orders),
         ];
@@ -78,36 +80,36 @@ final class Sabotage
         $saboteur = Staff::member($managerId, 'saboteur');
 
         if (!$rally) {
-            return new WP_Error('bgr_not_found', 'Няма такова рали.', ['status' => 404]);
+            return new WP_Error('bgr_not_found', I18n::t('server.rallies.noRally'), ['status' => 404]);
         }
         if (!$saboteur) {
-            return new WP_Error('bgr_saboteur', 'Нямаш саботьор. Наема се в бара с гараж ниво 5.', ['status' => 400]);
+            return new WP_Error('bgr_saboteur', I18n::t('server.sabotage.noSaboteur'), ['status' => 400]);
         }
         if (!isset(Labels::SABOTAGE_KINDS[$kind])) {
-            return new WP_Error('bgr_kind', 'Няма такъв саботаж.', ['status' => 400]);
+            return new WP_Error('bgr_kind', I18n::t('server.sabotage.noKind'), ['status' => 400]);
         }
         if (Rallies::state($rally) !== 'open') {
-            return new WP_Error('bgr_closed', 'Саботаж се поръчва, докато записването е отворено.', ['status' => 400]);
+            return new WP_Error('bgr_closed', I18n::t('server.sabotage.closed'), ['status' => 400]);
         }
         $entry = self::entry($rallyId, $managerId);
         if (!$entry) {
-            return new WP_Error('bgr_entry', 'Трябва да си записан за ралито.', ['status' => 400]);
+            return new WP_Error('bgr_entry', I18n::t('server.sabotage.entry'), ['status' => 400]);
         }
         if (self::usedThisWeek($managerId)) {
-            return new WP_Error('bgr_week', 'Саботьорът вече има поръчка тази седмица.', ['status' => 400]);
+            return new WP_Error('bgr_week', I18n::t('server.sabotage.week'), ['status' => 400]);
         }
         $target = array_values(array_filter(self::targets($manager, $entry), fn($row) => $row['id'] === $targetId))[0] ?? null;
         if (!$target) {
-            return new WP_Error('bgr_target', sprintf('Целта трябва да е друг отбор от твоя клас в това рали, не повече от %d нива под теб.', Settings::int('sabotage_level_gap')), ['status' => 400]);
+            return new WP_Error('bgr_target', I18n::t('server.sabotage.target', ['gap' => Settings::int('sabotage_level_gap')]), ['status' => 400]);
         }
 
         $energy = Settings::int('sabotage_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
-        if (!Ledger::add($managerId, -Settings::int('sabotage_cost'), 'sabotage', 'Материали за саботаж')) {
+        if (!Ledger::add($managerId, -Settings::int('sabotage_cost'), 'sabotage', I18n::t('server.ledger.sabotage'))) {
             Energy::refund($managerId, $energy);
-            return new WP_Error('bgr_money', sprintf('Материалите струват %d €.', Settings::int('sabotage_cost')), ['status' => 400]);
+            return new WP_Error('bgr_money', I18n::t('server.sabotage.cost', ['money' => I18n::money(Settings::int('sabotage_cost'))]), ['status' => 400]);
         }
 
         $wpdb->insert(self::table(), [
@@ -119,9 +121,10 @@ final class Sabotage
             'week' => Rallies::week(),
             'created_at' => current_time('mysql'),
         ]);
-        self::warn((int) $wpdb->insert_id, $targetId, $rally);
+        $sabotageId = (int) $wpdb->insert_id;
+        I18n::as($targetId, fn() => self::warn($sabotageId, $targetId, $rally));
 
-        return sprintf('Саботьорът %s ще действа срещу %s при старта на „%s“.', $saboteur['name'], $target['team'], $rally['name']);
+        return I18n::t('server.sabotage.ordered', ['name' => $saboteur['name'], 'team' => $target['team'], 'rally' => Texts::of($rally['name'])]);
     }
 
     private static function warn(int $sabotageId, int $targetId, array $rally): void
@@ -137,7 +140,7 @@ final class Sabotage
         }
 
         $wpdb->update(self::table(), ['warned' => 1], ['id' => $sabotageId]);
-        $text = sprintf('Информаторът %s научи, че се готви саботаж срещу колата ти за „%s“.', $informant['name'], $rally['name']);
+        $text = I18n::t('server.sabotage.warned', ['name' => $informant['name'], 'rally' => Texts::of($rally['name'])]);
 
         if ($skill >= Settings::int('warn_names_skill')) {
             $real = array_map('intval', $wpdb->get_col($wpdb->prepare(
@@ -147,11 +150,11 @@ final class Sabotage
             )));
             $suspects = self::suspects($targetId, (int) $rally['id'], $real);
             $wpdb->update(self::table(), ['suspects' => wp_json_encode($suspects)], ['id' => $sabotageId]);
-            $text .= ' Заподозрени: ' . implode(', ', array_map(fn($s) => sprintf('%s %d%%', $s['team'], $s['chance']), $suspects)) . '.';
+            $text .= ' ' . I18n::t('server.sabotage.suspects', ['list' => implode(', ', array_map(fn($s) => sprintf('%s %d%%', $s['team'], $s['chance']), $suspects))]);
         }
 
         Inbox::add($targetId, mb_strimwidth($text, 0, 255, '…'));
-        Push::notify($targetId, 'sabotage', 'Готви се саботаж', $text, 'rallies/' . $rally['id']);
+        Push::notify($targetId, 'sabotage', I18n::t('server.sabotage.pushWarned'), $text, 'rallies/' . $rally['id']);
     }
 
     private static function split(int $total, int $parts): array
@@ -255,10 +258,10 @@ final class Sabotage
                 'resolved_at' => current_time('mysql'),
             ], ['id' => $row['id']]);
 
-            Inbox::add($ordererId, sprintf(
-                $success ? 'Саботажът срещу %s в „%s“ успя.' : 'Саботажът срещу %s в „%s“ не успя.',
-                Managers::name($targetId),
-                $rally['name']
+            Inbox::add($ordererId, I18n::t(
+                $success ? 'server.sabotage.success' : 'server.sabotage.failed',
+                ['team' => Managers::name($targetId), 'rally' => Texts::of($rally['name'], I18n::of($ordererId))],
+                I18n::of($ordererId)
             ));
             if ($caught) {
                 self::punish($row, $rally);
@@ -281,7 +284,7 @@ final class Sabotage
         $contracts = Tables::name('contracts');
 
         $fine = Settings::int('fine_sabotage') + Settings::int('fine_sabotage_per_level') * (int) $manager['level'];
-        Ledger::add($ordererId, -$fine, 'fine', 'Саботаж', true);
+        Ledger::add($ordererId, -$fine, 'fine', I18n::t('server.ledger.sabotageFine', [], I18n::of($ordererId)), true);
         $wpdb->delete($staff, ['manager_id' => $ordererId, 'role' => 'saboteur']);
         $wpdb->query($wpdb->prepare(
             "UPDATE $managers SET track_status = IF(track_status IN ('building', 'open'), 'closed', track_status), track_ban_season = %d WHERE id = %d",
@@ -312,14 +315,14 @@ final class Sabotage
         ));
 
         $name = Managers::name($ordererId);
-        Inbox::add($ordererId, mb_strimwidth(sprintf(
-            'Полицията разкри саботажа ти в „%s“: глоба %d €, саботьорът е арестуван, пистата е затворена до следващия сезон%s.',
-            $rally['name'],
-            $fine,
-            $lost ? ', договорът прекратиха: ' . implode(', ', $lost) : ''
-        ), 0, 255, '…'));
-        Inbox::add((int) $row['target_id'], sprintf('Полицията разкри саботаж срещу теб в „%s“, поръчан от %s.', $rally['name'], $name));
-        Rumors::add((int) $manager['city_id'], sprintf('Полицията разкри саботаж, поръчан от %s.', $name), 'Полицията разкри саботаж, поръчан от отбор от града.');
+        $caught = I18n::as($ordererId, fn() => I18n::t($lost ? 'server.sabotage.caughtLost' : 'server.sabotage.caught', [
+            'rally' => Texts::of($rally['name']),
+            'money' => I18n::money($fine),
+            'list' => implode(', ', $lost),
+        ]));
+        Inbox::add($ordererId, mb_strimwidth($caught, 0, 255, '…'));
+        Inbox::add((int) $row['target_id'], I18n::t('server.sabotage.exposed', ['rally' => Texts::of($rally['name'], I18n::of((int) $row['target_id'])), 'name' => $name], I18n::of((int) $row['target_id'])));
+        Rumors::add((int) $manager['city_id'], 'sabotage', ['team' => $name]);
     }
 
     public static function reportable(array $manager): array
@@ -337,7 +340,7 @@ final class Sabotage
             date('Y-m-d H:i:s', $now)
         ), ARRAY_A);
 
-        return array_map(fn($row) => ['id' => (int) $row['id'], 'name' => $row['name'], 'start_at' => str_replace(' ', 'T', $row['start_at'])], $rows);
+        return array_map(fn($row) => ['id' => (int) $row['id'], 'name' => Texts::of($row['name']), 'start_at' => str_replace(' ', 'T', $row['start_at'])], $rows);
     }
 
     public static function report(array $manager, int $rallyId): string|WP_Error
@@ -346,11 +349,11 @@ final class Sabotage
         $managerId = (int) $manager['id'];
 
         if (!in_array($rallyId, array_column(self::reportable($manager), 'id'), true)) {
-            return new WP_Error('bgr_report', sprintf('Сигнал се подава до %d дни след рали, в което си участвал, и само веднъж.', Settings::int('report_days')), ['status' => 400]);
+            return new WP_Error('bgr_report', I18n::t('server.sabotage.report', ['days' => Settings::int('report_days')]), ['status' => 400]);
         }
         $energy = Settings::int('report_energy');
         if (!Energy::spend($managerId, $energy)) {
-            return new WP_Error('bgr_energy', sprintf('Нямате достатъчно енергия (нужни са %d).', $energy), ['status' => 400]);
+            return new WP_Error('bgr_energy', I18n::t('server.common.energyNeed', ['energy' => $energy]), ['status' => 400]);
         }
         $wpdb->update(Tables::name('entries'), ['sabotage_report' => 1], ['rally_id' => $rallyId, 'manager_id' => $managerId]);
 
@@ -372,7 +375,7 @@ final class Sabotage
         }
 
         return $found
-            ? sprintf('Полицията разкри саботаж срещу теб, поръчан от %s.', implode(' и ', array_unique($found)))
-            : 'Полицията не откри следи от саботаж.';
+            ? I18n::t('server.sabotage.reportFound', ['names' => I18n::join(array_values(array_unique($found)))])
+            : I18n::t('server.sabotage.reportNone');
     }
 }

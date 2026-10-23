@@ -7,16 +7,8 @@ final class Dropins
     private const MARKER = 'BG Rally error page';
 
     private const PAGES = [
-        'db-error.php' => [
-            'kind' => 'db_error',
-            'message' => 'Няма връзка с базата данни.',
-            'hint' => 'Сървърът не може да зареди данните на играта. Опитай отново след малко.',
-        ],
-        'php-error.php' => [
-            'kind' => 'php_error',
-            'message' => 'На сървъра възникна техническа грешка.',
-            'hint' => 'Опитай отново след малко. Ако си администратор, провери имейла си за връзка към режима за възстановяване.',
-        ],
+        'db-error.php' => ['kind' => 'db_error', 'page' => 'db'],
+        'php-error.php' => ['kind' => 'php_error', 'page' => 'php'],
     ];
 
     public static function register(): void
@@ -24,19 +16,29 @@ final class Dropins
         add_action('admin_init', [self::class, 'sync']);
     }
 
-    public static function html(string $title, string $message, string $hint): string
+    public static function html(string $page, string $lang = I18n::DEFAULT): string
     {
-        return strtr((string) file_get_contents(BGR_DIR . '/dropins/error-page.tpl'), [
-            '{{TITLE}}' => esc_html($title),
-            '{{MESSAGE}}' => esc_html($message),
-            '{{HINT}}' => esc_html($hint),
-            '{{IMAGE}}' => esc_url(plugins_url('assets/error.jpg', BGR_FILE)),
-        ]);
+        $vars = ['{{LANG}}' => $lang, '{{IMAGE}}' => esc_url(plugins_url('assets/error.jpg', BGR_FILE))];
+        foreach (I18n::LANGS as $code) {
+            $suffix = strtoupper($code);
+            $vars['{{TITLE_' . $suffix . '}}'] = esc_html(I18n::t("server.errors.$page.title", [], $code));
+            $vars['{{MESSAGE_' . $suffix . '}}'] = esc_html(I18n::t("server.errors.$page.message", [], $code));
+            $vars['{{HINT_' . $suffix . '}}'] = esc_html(I18n::t("server.errors.$page.hint", [], $code));
+            $vars['{{HEADING_' . $suffix . '}}'] = esc_html(I18n::t('server.errors.heading', [], $code));
+            $vars['{{RETRY_' . $suffix . '}}'] = esc_html(I18n::t('server.errors.retry', [], $code));
+            $vars['{{HIDE_' . $suffix . '}}'] = $code === $lang ? '' : 'hidden';
+        }
+        $vars['{{TITLE}}'] = $vars['{{TITLE_' . strtoupper($lang) . '}}'];
+        return strtr((string) file_get_contents(BGR_DIR . '/dropins/error-page.tpl'), $vars);
     }
 
     private static function content(array $page): string
     {
-        $message = var_export($page['message'], true);
+        $messages = [];
+        foreach (I18n::LANGS as $code) {
+            $messages[$code] = I18n::t("server.errors.{$page['page']}.message", [], $code);
+        }
+        $messages = var_export($messages, true);
         $kind = $page['kind'];
         $php = <<<PHP
 <?php
@@ -51,7 +53,9 @@ if (str_contains((string) (\$_SERVER['REQUEST_URI'] ?? ''), '/wp-json/') || isse
     if (!headers_sent()) {
         header('Content-Type: application/json; charset=utf-8');
     }
-    echo json_encode(['code' => 'bgr_{$kind}', 'message' => {$message}, 'data' => ['status' => 500]], JSON_UNESCAPED_UNICODE);
+    \$messages = {$messages};
+    \$lang = strtolower((string) (\$_SERVER['HTTP_X_BGR_LANG'] ?? ''));
+    echo json_encode(['code' => 'bgr_{$kind}', 'message' => \$messages[\$lang] ?? reset(\$messages), 'data' => ['status' => 500]], JSON_UNESCAPED_UNICODE);
     return;
 }
 if (!headers_sent()) {
@@ -60,7 +64,7 @@ if (!headers_sent()) {
 ?>
 PHP;
 
-        return $php . self::html('техническа грешка', $page['message'], $page['hint']);
+        return $php . self::html($page['page']);
     }
 
     private static function ours(string $target): bool
