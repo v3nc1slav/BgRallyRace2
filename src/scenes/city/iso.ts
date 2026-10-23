@@ -36,3 +36,10 @@ export function hull(box: Box, top = box.h) {
     iso(box.x, box.y + box.d, z + top),
   ];
 }
+
+export function mix(color: number, r: number, g: number, b: number) {
+  const cr = Math.min(255, Math.round(((color >> 16) & 0xff) * r));
+  const cg = Math.min(255, Math.round(((color >> 8) & 0xff) * g));
+  const cb = Math.min(255, Math.round((color & 0xff) * b));
+  return (cr << 16) | (cg << 8) | cb;
+}

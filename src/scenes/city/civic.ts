@@ -62,7 +62,7 @@ export const bank: BuildingDef = {
       p.right(b, u, u + 0.08, 8, 68, 0xfbf8f1);
     }
     p.windows(b, [40, 54], 10, 0.2, 0.25, GLASS);
-    p.right(b, 0.3, b.d - 0.3, 14, 30, GLASS);
+    p.glow(p.right(b, 0.3, b.d - 0.3, 14, 30, GLASS), 0.6, true);
     for (let u = 0.3; u < b.d - 0.35; u += 0.45) {
       p.right(b, u + 0.2, u + 0.26, 14, 30, 0xfbf8f1);
     }
@@ -119,8 +119,8 @@ export const jobs: BuildingDef = {
   draw(p) {
     const b = jobsBox;
     p.box(b, 0xe8d9a8, 0xcbbd8e);
-    p.left(b, 0.12, b.w - 0.12, 1, 8, 0x4a6a85);
-    p.right(b, 0.12, b.d - 0.12, 1, 8, 0x4a6a85);
+    p.glow(p.left(b, 0.12, b.w - 0.12, 1, 8, 0x4a6a85), 1, true);
+    p.glow(p.right(b, 0.12, b.d - 0.12, 1, 8, 0x4a6a85), 0.8, true);
     p.left(b, 0.55, 0.85, 0, 8, 0x1d2a35);
     p.left(b, 0.06, b.w - 0.06, 8.5, 12.5, 0x2a9d8f);
     p.right(b, 0.06, b.d - 0.06, 8.5, 12.5, 0x2a9d8f);

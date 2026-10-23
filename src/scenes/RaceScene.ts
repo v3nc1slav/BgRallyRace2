@@ -17,7 +17,6 @@ export interface CarMarker {
 
 export interface Environment {
   weather: Weather;
-  darkness: number;
 }
 
 export type CameraMode = 'all' | 'me' | 'leader';
@@ -48,9 +47,6 @@ export class RaceScene extends Phaser.Scene {
   private tracks!: Phaser.GameObjects.Graphics;
   private wet!: Phaser.GameObjects.Graphics;
   private tint!: Phaser.GameObjects.Rectangle;
-  private night!: Phaser.GameObjects.Rectangle;
-  private windows!: Phaser.GameObjects.Graphics;
-  private beams!: Phaser.GameObjects.Graphics;
   private dustLayer!: Phaser.GameObjects.Graphics;
   private weatherLayer!: Phaser.GameObjects.Graphics;
   private title!: Phaser.GameObjects.Text;
@@ -82,11 +78,8 @@ export class RaceScene extends Phaser.Scene {
     this.tracks = this.add.graphics().setDepth(1.1);
     this.wet = this.add.graphics().setDepth(1.2);
     this.tint = this.add.rectangle(0, 0, width, height, 0x000000, 0).setOrigin(0).setDepth(2.4);
-    this.night = this.add.rectangle(0, 0, width, height, 0x0b1630, 0).setOrigin(0).setDepth(2.5);
-    this.windows = this.add.graphics().setDepth(2.6);
-    this.beams = this.add.graphics().setDepth(2.7).setBlendMode(Phaser.BlendModes.ADD);
     this.dustLayer = this.add.graphics().setDepth(2.8);
-    this.world.add([this.terrain, this.roadLayer, this.tracks, this.wet, this.tint, this.night, this.windows, this.beams, this.dustLayer]);
+    this.world.add([this.terrain, this.roadLayer, this.tracks, this.wet, this.tint, this.dustLayer]);
 
     this.weatherLayer = this.add.graphics().setDepth(1);
     const header = this.add.rectangle(0, 0, width, HEADER, 0x0d1117, 0.6).setOrigin(0).setDepth(5);
@@ -196,20 +189,13 @@ export class RaceScene extends Phaser.Scene {
 
     this.terrain.clear();
     drawRelief(this.terrain, stage.id, width, height, HEADER);
-    const houses = drawScenery(this.terrain, layout, this.road, this.palette, stage.id, width, height, HEADER);
+    drawScenery(this.terrain, layout, this.road, this.palette, stage.id, width, height, HEADER);
     const pois = layout.traced ? layout.pois : [...layout.pois, ...bridgesFromRivers(layout, this.road)];
 
     this.drawRoad(stage.surface);
     drawPois(this.roadLayer, pois, this.road, stage.id);
     this.drawWetShine();
     this.tracks.clear();
-
-    this.windows.clear();
-    for (const house of houses) {
-      this.windows.fillStyle(0xffd77a, 1);
-      this.windows.fillRect(house.x - 3, house.y, 2, 2);
-      this.windows.fillRect(house.x + 1, house.y, 2, 2);
-    }
 
     for (const label of layout.labels) {
       const text = this.add
@@ -370,9 +356,6 @@ export class RaceScene extends Phaser.Scene {
   }
 
   private updateEnvironment(env: Environment, dt: number) {
-    const night = Phaser.Math.Clamp(env.darkness, 0, 1);
-    this.night.setFillStyle(0x0b1630, night * 0.62);
-    this.windows.setAlpha(night);
     this.wet.setVisible(env.weather === 'rain');
 
     if (env.weather === 'rain') {
@@ -381,24 +364,6 @@ export class RaceScene extends Phaser.Scene {
       this.tint.setFillStyle(0xffffff, this.stage?.surface === 'snow' ? 0.08 : 0.25);
     } else {
       this.tint.setFillStyle(0x000000, 0);
-    }
-
-    this.beams.clear();
-    if (night > 0.05) {
-      for (const car of this.cars.values()) {
-        if (car.state === 'stop') {
-          continue;
-        }
-        const point = this.path!.getPointAt(car.f);
-        const t = this.path!.getTangentAt(car.f);
-        const n = { x: -t.y, y: t.x };
-        const tip = { x: point.x + t.x * 9, y: point.y + t.y * 9 };
-        const far = { x: point.x + t.x * 75, y: point.y + t.y * 75 };
-        this.beams.fillStyle(0xfff1c1, 0.3 * night);
-        this.beams.fillTriangle(tip.x, tip.y, far.x + n.x * 26, far.y + n.y * 26, far.x - n.x * 26, far.y - n.y * 26);
-        this.beams.fillStyle(0xfff1c1, 0.25 * night);
-        this.beams.fillCircle(tip.x, tip.y, 5);
-      }
     }
 
     this.precipitation.draw(this.weatherLayer, env.weather, dt);

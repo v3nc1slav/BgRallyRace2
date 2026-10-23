@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
-import { CityScene, type CityPlace } from './scenes/CityScene';
+import { CityScene, type CityPlace, type OwnTrackState } from './scenes/CityScene';
 
 export interface CityView {
   resize(): void;
   setPerks(text: string): void;
+  setBadges(list: { key: string; text: string }[]): void;
+  setOwnTrack(state: OwnTrackState, place: Omit<CityPlace, 'key'>): void;
   zoomBy(factor: number): void;
   reset(): void;
   destroy(): void;
@@ -37,6 +39,12 @@ export function createCityView(parent: HTMLElement, name: string, places: CityPl
     },
     setPerks(text) {
       scene.setPerks(text);
+    },
+    setBadges(list) {
+      scene.setBadges(list);
+    },
+    setOwnTrack(state, place) {
+      scene.setOwnTrack(state, place);
     },
     zoomBy(factor) {
       if (scene.ready) {

@@ -14,10 +14,10 @@ export const mall: BuildingDef = {
     const b = mallBox;
     const glass = 0x4d9cc6;
     p.box(b, 0xd6dbe1, 0xb7bec7);
-    p.left(b, 0.2, b.w - 0.2, 1, 9, 0x2d4a5e);
-    p.right(b, 0.2, b.d - 0.2, 1, 9, 0x2d4a5e);
-    p.left(b, 0.25, b.w - 0.25, 12, 42, glass);
-    p.right(b, 0.25, b.d - 0.25, 12, 42, glass);
+    p.glow(p.left(b, 0.2, b.w - 0.2, 1, 9, 0x2d4a5e), 1, true);
+    p.glow(p.right(b, 0.2, b.d - 0.2, 1, 9, 0x2d4a5e), 0.8, true);
+    p.glow(p.left(b, 0.25, b.w - 0.25, 12, 42, glass), 0.22, true, 0xbfe6ff);
+    p.glow(p.right(b, 0.25, b.d - 0.25, 12, 42, glass), 0.16, true, 0xbfe6ff);
     for (let u = 0.25; u < b.w - 0.3; u += 0.43) {
       p.left(b, u, u + 0.035, 12, 42, 0xe8edf2);
       p.right(b, u, u + 0.035, 12, 42, 0xe8edf2);
@@ -52,6 +52,12 @@ export const sponsors: BuildingDef = {
     p.box(b, 0x2f5d73, 0x264b5d);
     p.left(b, 0.08, b.w - 0.08, 7, b.h - 6, 0x3f7f9c);
     p.right(b, 0.08, b.d - 0.08, 7, b.h - 6, 0x3f7f9c);
+    for (let z = 9; z < b.h - 10; z += 9) {
+      for (let u = 0.1; u < 1.8; u += 0.25) {
+        p.glow(p.quad(b, 'left', u + 0.03, u + 0.22, z, z + 6), 0.85, false, 0xfff0c8);
+        p.glow(p.quad(b, 'right', u + 0.03, u + 0.22, z, z + 6), 0.65, false, 0xfff0c8);
+      }
+    }
     for (let u = 0.25; u < b.w - 0.1; u += 0.25) {
       p.left(b, u, u + 0.02, 7, b.h - 6, 0x9ccde2, 0.55);
       p.right(b, u, u + 0.02, 7, b.h - 6, 0x9ccde2, 0.55);
@@ -88,8 +94,8 @@ export const bar: BuildingDef = {
       p.right(b, 0, b.d, z, z + 0.5, 0x5c2a20, 0.35);
     }
     p.windows(b, [17], 7, 0.24, 0.22, 0xf2c46d);
-    p.left(b, 0.15, 0.85, 2, 9, 0xf2c46d);
-    p.right(b, 0.2, b.d - 0.2, 2, 9, 0xf2c46d);
+    p.glow(p.left(b, 0.15, 0.85, 2, 9, 0xf2c46d), 1, true);
+    p.glow(p.right(b, 0.2, b.d - 0.2, 2, 9, 0xf2c46d), 0.8, true);
     p.left(b, 1.05, 1.45, 0, 10, 0x3a2418);
     p.box({ x: b.x + 0.08, y: b.y + b.d, w: b.w - 0.16, d: 0.3, z: 10, h: 1.5 }, 0x1f5b3e);
     const neon = iso(b.x + b.w * 0.5, b.y + b.d, 24);
@@ -115,8 +121,8 @@ export const shop: BuildingDef = {
     const b = shopBox;
     const orange = 0xf28c28;
     p.box(b, 0xc9cdd2, 0xaeb3ba);
-    p.left(b, 0.12, b.w - 0.12, 2, 14, 0x4a6a85);
-    p.right(b, 0.12, b.d - 0.12, 2, 14, 0x4a6a85);
+    p.glow(p.left(b, 0.12, b.w - 0.12, 2, 14, 0x4a6a85), 1, true);
+    p.glow(p.right(b, 0.12, b.d - 0.12, 2, 14, 0x4a6a85), 0.8, true);
     for (let u = 0.5; u < b.w - 0.2; u += 0.5) {
       p.left(b, u, u + 0.04, 2, 14, 0xd9dde2);
     }

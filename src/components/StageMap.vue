@@ -2,7 +2,6 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { Leg, Timeline } from '../game';
 import type { StageView } from '../race';
-import { darkness } from '../scenes/map/effects';
 import type { CameraMode, CarMarker, Weather } from '../scenes/RaceScene';
 
 const props = defineProps<{ timeline: Timeline }>();
@@ -134,7 +133,7 @@ function render(timestamp: number) {
     const caption = props.timeline.finished && !replaying.value
       ? 'Ралито приключи. Пусни повторението, за да го изгледаш отново.'
       : `Време от старта ${clock(t)} · на трасето ${running} · финиширали ${done}`;
-    view.render(stage, cars, caption, { weather: weatherAt(t), darkness: darkness(props.timeline.start_at, t) });
+    view.render(stage, cars, caption, { weather: weatherAt(t) });
   }
 
   frame = requestAnimationFrame(render);

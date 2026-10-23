@@ -2,9 +2,9 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { CityView } from '../city';
-import type { CityPlace } from '../scenes/CityScene';
+import type { CityPlace, OwnTrackState } from '../scenes/CityScene';
 
-const props = defineProps<{ name: string; perks: string; places: CityPlace[] }>();
+const props = defineProps<{ name: string; perks: string; places: CityPlace[]; own: { state: OwnTrackState; place: Omit<CityPlace, 'key'> }; badges: { key: string; text: string }[] }>();
 const emit = defineEmits<{ failed: [] }>();
 const router = useRouter();
 const box = ref<HTMLElement>();
@@ -20,6 +20,8 @@ onMounted(async () => {
     }
     view = createCityView(box.value, props.name, props.places, (to) => router.push(to));
     view.setPerks(props.perks);
+    view.setOwnTrack(props.own.state, props.own.place);
+    view.setBadges(props.badges);
     observer = new ResizeObserver(() => view?.resize());
     observer.observe(box.value);
   } catch {
@@ -30,6 +32,16 @@ onMounted(async () => {
 watch(
   () => props.perks,
   (text) => view?.setPerks(text),
+);
+
+watch(
+  () => props.badges,
+  (list) => view?.setBadges(list),
+);
+
+watch(
+  () => props.own,
+  (own) => view?.setOwnTrack(own.state, own.place),
 );
 
 onBeforeUnmount(() => {

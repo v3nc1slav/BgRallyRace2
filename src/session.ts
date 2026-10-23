@@ -26,6 +26,7 @@ export interface Player {
   job: { name: string; pay: number; energy: number } | null;
   loan: { remaining: number; next: number; overdue: number } | null;
   perks: { discount: number; retry: boolean };
+  comeback: { days: number; notes: string[]; fresh: number | null; cooldown: number; loan_weeks: number } | null;
 }
 
 export interface City {

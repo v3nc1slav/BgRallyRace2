@@ -1283,3 +1283,20 @@ body.bgr-game .bgr {
 .bgr-finance h2 {
   margin-top: 20px;
 }
+
+.bgr-comeback {
+  text-align: left;
+}
+
+.bgr-comeback h2 {
+  margin: 0;
+}
+
+.bgr-comeback ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.bgr-comeback .bgr-panel p {
+  margin: 0 0 6px;
+}

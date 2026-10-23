@@ -1,5 +1,6 @@
-import { car, lamp } from './draw';
-import { iso, type Box } from './iso';
+import Phaser from 'phaser';
+import { car, conifer, type Painter } from './draw';
+import { iso, type Box, type Vec } from './iso';
 import { banner, footOf, ribs, tyres, type BuildingDef } from './kit';
 
 const garageBox: Box = { x: 14.35, y: 14.3, w: 2.3, d: 2.1, h: 28 };
@@ -27,6 +28,8 @@ export const garage: BuildingDef = {
   signs: () => [{ text: 'ГАРАЖ', at: iso(garageBox.x + 0.975, garageBox.y + garageBox.d, 23.8), size: 8, color: '#f4d35e' }],
 };
 
+// Официалната писта временно не е на картата, докато се тества изгледът на града: вместо нея има пътна табела (officialSign).
+// Рисунката се пази, за да може да се върне по-късно.
 const trackBox: Box = { x: 18.3, y: 12.3, w: 4.4, d: 4.4, h: 24 };
 const RING = { x: 20.5, y: 14.85, out: 1.85, in: 1.2 };
 
@@ -80,65 +83,78 @@ export const track: BuildingDef = {
   signs: () => [],
 };
 
-const blackBox: Box = { x: 18.3, y: 6.3, w: 4.4, d: 4.4, h: 34 };
+const OFFICIAL = { gx: 18.2, gy: 25.5 };
+const officialBox: Box = { x: OFFICIAL.gx - 1.3, y: OFFICIAL.gy - 1.3, w: 2.6, d: 2.6, h: 66 };
+const officialBoard = () => iso(OFFICIAL.gx, OFFICIAL.gy, 52);
+
+export const officialSign: BuildingDef = {
+  key: 'track',
+  box: officialBox,
+  foot: { x0: OFFICIAL.gx - 0.2, y0: OFFICIAL.gy - 0.2, x1: OFFICIAL.gx + 0.2, y1: OFFICIAL.gy + 0.2 },
+  top: 74,
+  noPlate: true,
+  draw(p) {
+    const foot = iso(OFFICIAL.gx, OFFICIAL.gy);
+    const at = officialBoard();
+    const v = (x: number, y: number) => new Phaser.Math.Vector2(x, y);
+    p.ellipse(foot.x + 4, foot.y + 1, 46, 7, 0x000000, 0.18);
+    for (const dx of [-40, 44]) {
+      p.line(v(foot.x + dx, foot.y), v(at.x + dx, at.y + 18), 0x9aa1ad, 3);
+    }
+    p.poly([v(at.x - 102, at.y), v(at.x - 80, at.y - 19), v(at.x + 94, at.y - 19), v(at.x + 94, at.y + 19), v(at.x - 80, at.y + 19)], 0x1f5fbf);
+    p.stroke([v(at.x - 96, at.y), v(at.x - 78, at.y - 15.5), v(at.x + 90.5, at.y - 15.5), v(at.x + 90.5, at.y + 15.5), v(at.x - 78, at.y + 15.5)], 0xffffff, 2);
+  },
+  signs: () => [{ text: 'Официална писта', at: officialBoard().add(new Phaser.Math.Vector2(6, 0)), size: 15, color: '#ffffff' }],
+};
+
+const LOOP = { x: 33.6, y: 8.8, rx: 2.3, ry: 1.8 };
+
+function loopPoints(offset: number): Vec[] {
+  const points: Vec[] = [];
+  for (let i = 0; i <= 48; i++) {
+    const a = (i / 48) * Math.PI * 2;
+    const rx = LOOP.rx * (1 + 0.08 * Math.sin(3 * a)) + offset;
+    const ry = LOOP.ry * (1 + 0.06 * Math.cos(2 * a)) + offset;
+    points.push(new Phaser.Math.Vector2(LOOP.x + Math.cos(a) * rx, LOOP.y + Math.sin(a) * ry));
+  }
+  return points;
+}
+
+function band(p: Painter, inner: Vec[], outer: Vec[], color: number) {
+  for (let i = 0; i < inner.length - 1; i++) {
+    p.poly([iso(inner[i].x, inner[i].y), iso(inner[i + 1].x, inner[i + 1].y), iso(outer[i + 1].x, outer[i + 1].y), iso(outer[i].x, outer[i].y)], color);
+  }
+}
+
+const blackBox: Box = { x: 30.9, y: 6.4, w: 5.4, d: 4.8, h: 8 };
 
 export const black: BuildingDef = {
   key: 'black',
   box: blackBox,
-  foot: footOf(blackBox),
-  top: 74,
+  foot: { x0: blackBox.x, y0: 6.0, x1: blackBox.x + blackBox.w, y1: blackBox.y + blackBox.d },
+  top: 44,
   draw(p) {
-    const b = blackBox;
-    p.tile(b.x, b.y, b.x + b.w, b.y + b.d, 0x5f5b55);
-    for (const [x, y, r] of [[19.4, 10.2, 0.35], [21.6, 8.7, 0.25], [20.2, 7.9, 0.3], [22.2, 10.1, 0.2]]) {
-      p.disc(x, y, r, 0x111214, 0, 0.35);
-    }
-    p.tile(18.4, 8.95, 22.6, 9.85, 0x34373c);
-    for (const y of [9.2, 9.6]) {
-      for (let x = 18.8; x < 21.8; x += 0.5) {
-        p.line(iso(x, y + Math.sin(x * 3) * 0.04), iso(x + 0.5, y + Math.sin((x + 0.5) * 3) * 0.04), 0x15161a, 2, 0.6);
+    p.tile(33.3, 6.0, 33.9, 7.1, 0x6a4c31);
+    band(p, loopPoints(-0.42), loopPoints(0.42), 0x5e4430);
+    band(p, loopPoints(-0.32), loopPoints(0.32), 0x7b5b3b);
+    for (const offset of [-0.13, 0.13]) {
+      const rut = loopPoints(offset);
+      for (let i = 0; i < rut.length - 1; i++) {
+        p.line(iso(rut[i].x, rut[i].y), iso(rut[i + 1].x, rut[i + 1].y), 0x5a4129, 1.4, 0.8);
       }
     }
-    p.line(iso(18.95, 8.95), iso(18.95, 9.85), 0xffffff, 2);
-    for (let i = 0; i < 6; i++) {
-      p.tile(22.25, 8.95 + i * 0.15, 22.4, 9.1 + i * 0.15, i % 2 ? 0x15171c : 0xffffff);
+    for (const a of [0.4, 2.2, 3.9, 5.3]) {
+      p.disc(LOOP.x + Math.cos(a) * LOOP.rx, LOOP.y + Math.sin(a) * LOOP.ry, 0.16, 0x4b4b3a, 0, 0.75);
     }
-
-    const shed: Box = { x: 18.45, y: 6.45, w: 2.3, d: 1.9, h: 34 };
-    p.box(shed, 0x6f7d8c, 0x5a6573);
-    ribs(p, shed, 0x47515c);
-    p.left(shed, 0.2, 0.95, 3, 13, 0xe63946, 0.85);
-    p.left(shed, 0.75, 1.55, 6, 16, 0xf4d35e, 0.8);
-    p.left(shed, 1.4, 2.1, 2, 11, 0x2a9d8f, 0.85);
-    p.right(shed, 0.3, 0.9, 4, 12, 0xff4fd8, 0.8);
-    p.right(shed, 0.8, 1.6, 2, 9, 0x4caf50, 0.75);
-
-    const store: Box = { x: 21.1, y: 6.45, w: 1.5, d: 1.4, h: 24 };
-    p.box(store, 0x9a5b3c, 0x7c4a31);
-    ribs(p, store, 0x6a3e29);
-    p.right(store, 0.2, 0.9, 3, 12, 0xf4d35e, 0.75);
-    p.box({ x: 21.1, y: 8.05, w: 1.3, d: 0.5, h: 10 }, 0xb33a2e);
-    p.box({ x: 21.1, y: 8.05, w: 1.3, d: 0.5, z: 10, h: 10 }, 0x2f5f9a);
-    for (const [x, y] of [[19.05, 8.45], [19.3, 8.5], [19.17, 8.25]]) {
-      p.box({ x, y, w: 0.18, d: 0.18, h: 7 }, 0xd9822b);
+    for (const [x, y] of [[32.2, 8.6], [34.8, 9.3], [33.4, 8.0]]) {
+      p.disc(x, y, 0.35, 0x8a7a50, 0, 0.6);
     }
-    tyres(p, 20.4, 8.45, 3);
-
-    const lights = iso(18.75, 8.8);
-    p.line(lights, iso(18.75, 8.8, 26), 0x30343b, 2);
-    [0xe63946, 0xf4d35e, 0x4caf50].forEach((color, i) => {
-      const at = iso(18.75, 8.8, 25 - i * 5);
-      p.circle(at.x + 3, at.y, 2.2, color);
-    });
-    lamp(p, 22.5, 8.55);
-
-    const fence = b.y + b.d - 0.12;
-    for (let x = b.x + 0.05; x <= b.x + b.w; x += 0.55) {
-      p.line(iso(x, fence), iso(x, fence, 14), 0x8a9099, 1.4);
+    for (const [x, y] of [[31.0, 7.2], [36.2, 9.6], [32.0, 10.9], [35.4, 7.0]]) {
+      p.box({ x, y, w: 0.22, d: 0.16, h: 4 }, 0x8c8f94);
     }
-    for (const z of [4, 9, 14]) {
-      p.line(iso(b.x + 0.05, fence, z), iso(b.x + b.w, fence, z), 0xaab1bb, 1, 0.6);
-    }
+    tyres(p, 30.95, 9.0, 2);
+    tyres(p, 36.35, 8.3, 3);
+    conifer(p, 33.6, 8.9, 1.1);
   },
   signs: () => [],
 };

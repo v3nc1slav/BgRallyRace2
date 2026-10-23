@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { HALF_H, HALF_W, iso, shade, type Box, type Vec } from './iso';
+import { HALF_H, HALF_W, iso, mix, shade, type Box, type Vec } from './iso';
 
 const INK = 0x15171c;
 const ROOT2 = Math.SQRT2;
@@ -7,41 +7,66 @@ const ROOT2 = Math.SQRT2;
 export class Painter {
   readonly g: Phaser.GameObjects.Graphics;
   light = 1;
+  tint: [number, number, number] = [1, 1, 1];
+  readonly bounds = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
+  readonly lit: { points: Vec[]; strength: number; color: number }[] = [];
 
   constructor(g: Phaser.GameObjects.Graphics) {
     this.g = g;
   }
 
   private c(color: number) {
-    return shade(color, this.light);
+    const [r, g, b] = this.tint;
+    return mix(color, this.light * r, this.light * g, this.light * b);
+  }
+
+  private grow(x: number, y: number, rx = 0, ry = rx) {
+    this.bounds.x0 = Math.min(this.bounds.x0, x - rx);
+    this.bounds.y0 = Math.min(this.bounds.y0, y - ry);
+    this.bounds.x1 = Math.max(this.bounds.x1, x + rx);
+    this.bounds.y1 = Math.max(this.bounds.y1, y + ry);
   }
 
   poly(points: Vec[], color: number, alpha = 1) {
+    points.forEach((p) => this.grow(p.x, p.y));
     this.g.fillStyle(this.c(color), alpha);
     this.g.fillPoints(points, true);
   }
 
   edge(points: Vec[], alpha = 0.28, width = 1) {
+    points.forEach((p) => this.grow(p.x, p.y, width));
     this.g.lineStyle(width, INK, alpha);
     this.g.strokePoints(points, true);
   }
 
+  stroke(points: Vec[], color: number, width = 1, alpha = 1) {
+    points.forEach((p) => this.grow(p.x, p.y, width));
+    this.g.lineStyle(width, this.c(color), alpha);
+    this.g.strokePoints(points, true);
+  }
+
   line(a: Vec, b: Vec, color: number, width = 1, alpha = 1) {
+    this.grow(a.x, a.y, width);
+    this.grow(b.x, b.y, width);
     this.g.lineStyle(width, this.c(color), alpha);
     this.g.lineBetween(a.x, a.y, b.x, b.y);
   }
 
   circle(x: number, y: number, r: number, color: number, alpha = 1) {
+    this.grow(x, y, r);
     this.g.fillStyle(this.c(color), alpha);
     this.g.fillCircle(x, y, r);
   }
 
   ellipse(x: number, y: number, rx: number, ry: number, color: number, alpha = 1) {
+    this.grow(x, y, rx, ry);
     this.g.fillStyle(this.c(color), alpha);
     this.g.fillEllipse(x, y, rx * 2, ry * 2);
   }
 
   rect(x: number, y: number, w: number, h: number, color: number, alpha = 1) {
+    this.grow(x, y);
+    this.grow(x + w, y + h);
     this.g.fillStyle(this.c(color), alpha);
     this.g.fillRect(x, y, w, h);
   }
@@ -74,14 +99,35 @@ export class Painter {
   left(b: Box, u0: number, u1: number, z0: number, z1: number, color: number, alpha = 1) {
     const z = b.z ?? 0;
     const y = b.y + b.d;
-    this.poly([iso(b.x + u0, y, z + z0), iso(b.x + u1, y, z + z0), iso(b.x + u1, y, z + z1), iso(b.x + u0, y, z + z1)], shade(color, 0.93), alpha);
+    const points = [iso(b.x + u0, y, z + z0), iso(b.x + u1, y, z + z0), iso(b.x + u1, y, z + z1), iso(b.x + u0, y, z + z1)];
+    this.poly(points, shade(color, 0.93), alpha);
+    return points;
   }
 
   right(b: Box, v0: number, v1: number, z0: number, z1: number, color: number, alpha = 1) {
     const z = b.z ?? 0;
     const x = b.x + b.w;
     const y = b.y + b.d;
-    this.poly([iso(x, y - v0, z + z0), iso(x, y - v1, z + z0), iso(x, y - v1, z + z1), iso(x, y - v0, z + z1)], shade(color, 0.74), alpha);
+    const points = [iso(x, y - v0, z + z0), iso(x, y - v1, z + z0), iso(x, y - v1, z + z1), iso(x, y - v0, z + z1)];
+    this.poly(points, shade(color, 0.74), alpha);
+    return points;
+  }
+
+  glow(points: Vec[], strength = 1, always = false, color = 0xffd77a) {
+    const key = Math.abs(Math.round(points[0].x * 7 + points[0].y * 13)) % 100;
+    if (always || key < 78) {
+      this.lit.push({ points, strength, color });
+    }
+  }
+
+  quad(b: Box, face: 'left' | 'right', u0: number, u1: number, z0: number, z1: number) {
+    const z = b.z ?? 0;
+    const y = b.y + b.d;
+    if (face === 'left') {
+      return [iso(b.x + u0, y, z + z0), iso(b.x + u1, y, z + z0), iso(b.x + u1, y, z + z1), iso(b.x + u0, y, z + z1)];
+    }
+    const x = b.x + b.w;
+    return [iso(x, y - u0, z + z0), iso(x, y - u1, z + z0), iso(x, y - u1, z + z1), iso(x, y - u0, z + z1)];
   }
 
   windows(b: Box, floors: number[], height: number, width: number, gap: number, color: number, faces: ('left' | 'right')[] = ['left', 'right']) {
@@ -92,7 +138,7 @@ export class Painter {
       for (const z0 of floors) {
         for (let i = 0; i < count; i++) {
           const u0 = margin + i * (width + gap);
-          this[face](b, u0, u0 + width, z0, z0 + height, color);
+          this.glow(this[face](b, u0, u0 + width, z0, z0 + height, color), face === 'left' ? 1 : 0.8);
         }
       }
     }

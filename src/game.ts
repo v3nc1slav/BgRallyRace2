@@ -686,6 +686,8 @@ async function post<T>(path: string, body: unknown = {}) {
   return sync(await apiPost<T & Response>(NS + path, body));
 }
 
+export const resolveComeback = (choice: 'fresh' | 'continue') => post<object>('comeback', { choice });
+
 export const getGarage = () => get<{ garage: Garage }>('garage');
 export const mountItem = (itemId: number) => post<{ garage: Garage }>('garage/mount', { item_id: itemId });
 export const repairItem = (itemId: number) => post<{ garage: Garage }>('garage/repair', { item_id: itemId });
@@ -712,7 +714,18 @@ export const getSponsors = () => get<{ sponsors: Sponsors }>('sponsors');
 export const negotiate = (id: number) => post<{ sponsors: Sponsors }>(`sponsors/${id}/negotiate`);
 
 export const getInbox = () => get<{ inbox: InboxItem[] }>('inbox');
-export const getCity = () => get<{ city: { name: string; privileges: string[]; perks: string } }>('city');
+export interface OwnTrack {
+  status: '' | 'building' | 'open' | 'closed';
+  ready_at: string | null;
+  progress: number;
+}
+
+export interface CityBadge {
+  key: string;
+  text: string;
+}
+
+export const getCity = () => get<{ city: { name: string; privileges: string[]; perks: string; own_track: OwnTrack; badges: CityBadge[] } }>('city');
 
 export const getTrack = () => get<{ track: TrackInfo }>('track');
 export const trainOfficial = (stageId: number) => post<{ track: TrackInfo }>('track/train', { stage_id: stageId });
