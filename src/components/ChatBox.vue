@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { t } from '../i18n';
 import { errorMessage } from '../api';
 import { stamp, when } from '../format';
 import { getChat, reportMessage, sendChat, type ChatInfo, type ChatMessage } from '../game';
@@ -57,12 +58,12 @@ async function send() {
 }
 
 async function report(message: ChatMessage) {
-  if (!window.confirm(`Да докладваш ли съобщението на ${message.author} на админа?`)) {
+  if (!window.confirm(t('chat.reportConfirm', { author: message.author }))) {
     return;
   }
   try {
     await reportMessage(message.id);
-    notice.value = 'Съобщението е докладвано.';
+    notice.value = t('chat.reported');
   } catch (e) {
     error.value = errorMessage(e);
   }
@@ -77,20 +78,20 @@ onBeforeUnmount(() => window.clearInterval(timer));
 
 <template>
   <section class="bgr-card">
-    <h2>Чат на града</h2>
+    <h2>{{ $t('chat.title') }}</h2>
     <div ref="list" class="bgr-chat">
-      <p v-if="!messages.length" class="bgr-muted">Още никой не е писал. Започни разговора.</p>
+      <p v-if="!messages.length" class="bgr-muted">{{ $t('chat.empty') }}</p>
       <div v-for="message in messages" :key="message.id" class="bgr-chat-line" :class="{ own: message.own }">
         <small class="bgr-muted">{{ stamp(message.at) }}</small>
         <b>{{ message.author }}</b>
         <span>{{ message.text }}</span>
-        <button v-if="!message.own" class="bgr-link bgr-report" title="Докладвай" @click="report(message)">докладвай</button>
+        <button v-if="!message.own" class="bgr-link bgr-report" :title="$t('common.reportTitle')" @click="report(message)">{{ $t('common.report') }}</button>
       </div>
     </div>
-    <p v-if="mutedUntil" class="bgr-error">Заглушен си до {{ when(mutedUntil) }}.</p>
+    <p v-if="mutedUntil" class="bgr-error">{{ $t('common.mutedUntil', { time: when(mutedUntil) }) }}</p>
     <form v-else class="bgr-chat-form" @submit.prevent="send">
-      <input v-model="text" :maxlength="maxLength" placeholder="Напиши съобщение…" />
-      <button :disabled="busy || !text.trim()">Изпрати</button>
+      <input v-model="text" :maxlength="maxLength" :placeholder="$t('chat.placeholder')" />
+      <button :disabled="busy || !text.trim()">{{ $t('chat.send') }}</button>
     </form>
     <p v-if="error" class="bgr-error">{{ error }}</p>
     <p v-else-if="notice" class="bgr-ok">{{ notice }}</p>

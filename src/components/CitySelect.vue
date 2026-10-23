@@ -12,7 +12,7 @@ onMounted(async () => {
 
 <template>
   <select v-model.number="model" required>
-    <option :value="0" disabled>Изберете град</option>
+    <option :value="0" disabled>{{ $t('auth.chooseCity') }}</option>
     <option v-for="city in cities" :key="city.id" :value="city.id">{{ city.name }}</option>
   </select>
 </template>

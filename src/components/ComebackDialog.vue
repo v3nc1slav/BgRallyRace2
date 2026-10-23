@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { money } from '../format';
 import { resolveComeback } from '../game';
+import { t } from '../i18n';
 import { session } from '../session';
 import { useAction } from '../useAction';
 
@@ -10,7 +11,7 @@ const result = ref('');
 const { busy, error, run } = useAction();
 
 async function choose(choice: 'fresh' | 'continue') {
-  if (choice === 'fresh' && !window.confirm('Да започнеш ли на чисто? Дълговете ще бъдат изчистени.')) {
+  if (choice === 'fresh' && !window.confirm(t('comeback.confirm'))) {
     return;
   }
   const response = await run(() => resolveComeback(choice));
@@ -24,29 +25,26 @@ async function choose(choice: 'fresh' | 'continue') {
   <div v-if="info || result" class="bgr-ad-overlay">
     <div class="bgr-ad bgr-comeback">
       <template v-if="result">
-        <h2>Готово</h2>
+        <h2>{{ $t('comeback.done') }}</h2>
         <p>{{ result }}</p>
-        <button @click="result = ''">Добре</button>
+        <button @click="result = ''">{{ $t('comeback.ok') }}</button>
       </template>
       <template v-else-if="info">
-        <h2>Добре дошъл отново!</h2>
-        <p>Нямаше те {{ info.days }} {{ info.days === 1 ? 'ден' : 'дни' }}. Докато те нямаше, отборът беше на пауза:</p>
+        <h2>{{ $t('comeback.title') }}</h2>
+        <p>{{ $t('comeback.away', { days: info.days }, info.days === 1 ? 1 : 2) }}</p>
         <ul v-if="info.notes.length">
           <li v-for="note in info.notes" :key="note">{{ note }}</li>
         </ul>
-        <p v-else class="bgr-muted">Нищо не беше начислявано.</p>
+        <p v-else class="bgr-muted">{{ $t('comeback.nothing') }}</p>
         <template v-if="info.fresh">
           <div class="bgr-panel">
-            <p>
-              Сметката ти е на минус или имаш просрочие. Можеш да започнеш на чисто: дълговете се изчистват, а парите стават
-              <b>{{ money(info.fresh) }}</b>. Нивото, опитът, колите, частите и служителите остават.
-            </p>
-            <small class="bgr-muted">Новото начало е възможно веднъж на {{ info.cooldown }} дни. След него {{ info.loan_weeks }} седмици не може да се тегли заем.</small>
+            <p>{{ $t('comeback.fresh', { amount: money(info.fresh) }) }}</p>
+            <small class="bgr-muted">{{ $t('comeback.freshRules', { days: info.cooldown, weeks: info.loan_weeks }) }}</small>
           </div>
-          <button :disabled="busy" @click="choose('fresh')">Започни на чисто</button>
-          <button class="bgr-secondary" :disabled="busy" @click="choose('continue')">Продължи с дълга</button>
+          <button :disabled="busy" @click="choose('fresh')">{{ $t('comeback.freshButton') }}</button>
+          <button class="bgr-secondary" :disabled="busy" @click="choose('continue')">{{ $t('comeback.keepDebt') }}</button>
         </template>
-        <button v-else :disabled="busy" @click="choose('continue')">Продължи</button>
+        <button v-else :disabled="busy" @click="choose('continue')">{{ $t('comeback.continue') }}</button>
         <p v-if="error" class="bgr-error">{{ error }}</p>
       </template>
     </div>

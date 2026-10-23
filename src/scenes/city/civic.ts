@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { t } from '../../i18n';
 import { flag } from './draw';
 import { iso, type Box } from './iso';
 import { GLASS, columns, footOf, steps, type BuildingDef } from './kit';
@@ -79,7 +80,7 @@ export const bank: BuildingDef = {
     const emblem = iso(slab.x + slab.w / 2, front, 34 + 5 + 4.5);
     p.circle(emblem.x, emblem.y, 4.5, 0xd4a73a);
   },
-  signs: () => [{ text: 'БАНКА', at: iso(bankBox.x + bankBox.w / 2, bankBox.y + bankBox.d, bankBox.h - 3), size: 11, color: '#b8892a' }],
+  signs: () => [{ text: t('city.sign.bank'), at: iso(bankBox.x + bankBox.w / 2, bankBox.y + bankBox.d, bankBox.h - 3), size: 11, color: '#b8892a' }],
 };
 
 const policeBox: Box = { x: 2.6, y: 2.55, w: 2.1, d: 1.85, h: 42 };
@@ -106,7 +107,7 @@ export const police: BuildingDef = {
     p.circle(light.x + 3, light.y, 2.6, 0x2a6fdb);
     p.line(iso(b.x + 1.7, b.y + 0.4, b.h), iso(b.x + 1.7, b.y + 0.4, b.h + 20), 0x8a9099, 1.2);
   },
-  signs: () => [{ text: 'ПОЛИЦИЯ', at: iso(policeBox.x + policeBox.w / 2, policeBox.y + policeBox.d, 25.5), size: 9, color: '#ffffff' }],
+  signs: () => [{ text: t('city.sign.police'), at: iso(policeBox.x + policeBox.w / 2, policeBox.y + policeBox.d, 25.5), size: 9, color: '#ffffff' }],
 };
 
 const jobsBox: Box = { x: 9.25, y: 2.5, w: 1.4, d: 1.75, h: 32 };
@@ -126,5 +127,5 @@ export const jobs: BuildingDef = {
     p.right(b, 0.06, b.d - 0.06, 8.5, 12.5, 0x2a9d8f);
     p.windows(b, [16, 24], 5.5, 0.2, 0.18, GLASS);
   },
-  signs: () => [{ text: 'РАБОТА', at: iso(jobsBox.x + jobsBox.w / 2, jobsBox.y + jobsBox.d, 10.5), size: 7, color: '#ffffff' }],
+  signs: () => [{ text: t('city.sign.jobs'), at: iso(jobsBox.x + jobsBox.w / 2, jobsBox.y + jobsBox.d, 10.5), size: 7, color: '#ffffff' }],
 };

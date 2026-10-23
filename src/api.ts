@@ -1,3 +1,4 @@
+import { chosen, lang, t } from './i18n';
 import { isApp } from './platform';
 
 const container = document.getElementById('app');
@@ -42,11 +43,14 @@ export function setNonce(value: string) {
 }
 
 export function errorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : 'Няма връзка със сървъра.';
+  return error instanceof ApiError ? error.message : t('api.offline');
 }
 
 async function request<T>(method: string, path: string, body?: unknown, retry = true): Promise<T> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { 'X-BGR-Lang': lang() };
+  if (chosen()) {
+    headers['X-BGR-Lang-Set'] = '1';
+  }
   const token = getToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
@@ -66,7 +70,7 @@ async function request<T>(method: string, path: string, body?: unknown, retry = 
       credentials: token ? 'omit' : 'same-origin',
     });
   } catch {
-    throw new ApiError('Няма връзка със сървъра. Провери интернета си.', 0);
+    throw new ApiError(t('api.network'), 0);
   }
   const data = await res.json().catch(() => null);
 
@@ -80,16 +84,16 @@ async function request<T>(method: string, path: string, body?: unknown, retry = 
     throw new ApiError(data?.message ?? failure(res.status), res.status, data?.data?.fields ?? {});
   }
   if (data === null) {
-    throw new ApiError('Сървърът върна неочакван отговор.', res.status);
+    throw new ApiError(t('api.unexpected'), res.status);
   }
   return data as T;
 }
 
 function failure(status: number) {
   if (status === 503) {
-    return 'Играта е в поддръжка. Опитай отново след малко.';
+    return t('api.maintenance');
   }
-  return status >= 500 ? `Техническа грешка на сървъра (${status}).` : `Неочакван отговор от сървъра (${status}).`;
+  return status >= 500 ? t('api.server', { status }) : t('api.status', { status });
 }
 
 export function apiGet<T>(path: string) {

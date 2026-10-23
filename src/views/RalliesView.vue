@@ -4,7 +4,7 @@ import Feedback from '../components/Feedback.vue';
 import { money, when } from '../format';
 import { getRallies, type RallySummary } from '../game';
 import { useAction } from '../useAction';
-import { statusLabels } from './rallyStatus';
+import { statusLabel } from './rallyStatus';
 
 const season = ref(0);
 const rallies = ref<RallySummary[]>([]);
@@ -21,9 +21,9 @@ onMounted(() =>
 
 <template>
   <section class="bgr-card">
-    <h1>Ралита<span v-if="season" class="bgr-muted"> · сезон {{ season }}</span></h1>
+    <h1>{{ $t('rallies.title') }}<span v-if="season" class="bgr-muted"> · {{ $t('rallies.season', { season }) }}</span></h1>
     <Feedback :error="error" />
-    <p v-if="!rallies.length && !error" class="bgr-muted">Няма обявени ралита.</p>
+    <p v-if="!rallies.length && !error" class="bgr-muted">{{ $t('rallies.none') }}</p>
     <ul class="bgr-list">
       <li v-for="rally in rallies" :key="rally.id">
         <RouterLink :to="`/rallies/${rally.id}`" class="bgr-rally">
@@ -32,12 +32,12 @@ onMounted(() =>
             <small class="bgr-muted">{{ when(rally.start_at) }} · {{ rally.city }}</small>
           </div>
           <div class="bgr-muted">
-            <small>{{ rally.stages.length }} етапа · {{ rally.total_km }} км · {{ money(rally.costs.total) }}</small>
+            <small>{{ $t('rallies.line', { stages: rally.stages.length, km: rally.total_km, cost: money(rally.costs.total) }) }}</small>
           </div>
           <div class="bgr-badges">
-            <span v-if="rally.home" class="bgr-tag">домакин</span>
-            <span v-if="rally.registered" class="bgr-tag bgr-tag-ok">записан</span>
-            <span class="bgr-status" :class="rally.status">{{ statusLabels[rally.status] }}</span>
+            <span v-if="rally.home" class="bgr-tag">{{ $t('rallies.home') }}</span>
+            <span v-if="rally.registered" class="bgr-tag bgr-tag-ok">{{ $t('rallies.registered') }}</span>
+            <span class="bgr-status" :class="rally.status">{{ statusLabel(rally.status) }}</span>
           </div>
         </RouterLink>
       </li>

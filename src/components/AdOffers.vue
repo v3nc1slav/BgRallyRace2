@@ -33,23 +33,23 @@ async function watch(reward: AdReward) {
 
 <template>
   <section class="bgr-card">
-    <h2>Бонуси срещу реклама</h2>
-    <p class="bgr-muted">Рекламата се гледа само ако искаш. Наградата идва, след като я изгледаш докрай.</p>
+    <h2>{{ $t('ads.title') }}</h2>
+    <p class="bgr-muted">{{ $t('ads.intro') }}</p>
     <Feedback :message="message" :error="error" />
-    <p v-if="session.player?.perks.discount" class="bgr-ok">Имаш {{ session.player.perks.discount }}% отстъпка за следващата покупка от магазина.</p>
-    <p v-if="session.player?.perks.retry" class="bgr-ok">Имаш втори опит при кмета или при отказан подкуп.</p>
+    <p v-if="session.player?.perks.discount" class="bgr-ok">{{ $t('ads.discount', { pct: session.player.perks.discount }) }}</p>
+    <p v-if="session.player?.perks.retry" class="bgr-ok">{{ $t('ads.retry') }}</p>
     <template v-if="ads">
-      <p v-if="ads.cooldown > 0" class="bgr-muted">Следващата реклама – след {{ ads.cooldown }} сек.</p>
+      <p v-if="ads.cooldown > 0" class="bgr-muted">{{ $t('ads.cooldown', { seconds: ads.cooldown }) }}</p>
       <div class="bgr-scroll">
         <table class="bgr-table">
           <tbody>
             <tr v-for="reward in ads.rewards" :key="reward.key">
               <td>
                 {{ reward.label }}
-                <small class="bgr-muted">{{ reward.blocked || `остават ${reward.left} от ${reward.daily} днес` }}</small>
+                <small class="bgr-muted">{{ reward.blocked || $t('ads.remaining', { left: reward.left, daily: reward.daily }) }}</small>
               </td>
               <td class="bgr-right">
-                <button class="bgr-small" :disabled="busy || !reward.left || !!reward.blocked || ads.cooldown > 0" @click="watch(reward)">Гледай</button>
+                <button class="bgr-small" :disabled="busy || !reward.left || !!reward.blocked || ads.cooldown > 0" @click="watch(reward)">{{ $t('ads.watch') }}</button>
               </td>
             </tr>
           </tbody>

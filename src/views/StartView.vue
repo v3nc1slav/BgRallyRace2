@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import CitySelect from '../components/CitySelect.vue';
+import LangSwitch from '../components/LangSwitch.vue';
 import { errorMessage } from '../api';
 import { createPlayer, logout, session } from '../session';
 
@@ -31,14 +32,15 @@ async function onLogout() {
 
 <template>
   <form class="bgr-card bgr-form" @submit.prevent="submit">
-    <h1>Добре дошъл, {{ session.user?.name }}</h1>
-    <p class="bgr-muted">Избери град, в който да регистрираш своя отбор.</p>
+    <LangSwitch />
+    <h1>{{ $t('auth.welcome', { name: session.user?.name ?? '' }) }}</h1>
+    <p class="bgr-muted">{{ $t('auth.pickCity') }}</p>
     <label>
-      Град
+      {{ $t('auth.city') }}
       <CitySelect v-model="cityId" />
     </label>
     <p v-if="error" class="bgr-error">{{ error }}</p>
-    <button :disabled="busy">Започни</button>
-    <button type="button" class="bgr-link" @click="onLogout">Изход</button>
+    <button :disabled="busy">{{ $t('auth.start') }}</button>
+    <button type="button" class="bgr-link" @click="onLogout">{{ $t('nav.logout') }}</button>
   </form>
 </template>

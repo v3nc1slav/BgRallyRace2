@@ -1,8 +1,6 @@
 import type { RallyStatus } from '../game';
+import { t } from '../i18n';
 
-export const statusLabels: Record<RallyStatus, string> = {
-  open: 'Записване',
-  closed: 'Затворено',
-  live: 'На живо',
-  finished: 'Завършило',
-};
+export function statusLabel(status: RallyStatus) {
+  return t(`rally.status.${status}`);
+}

@@ -33,51 +33,51 @@ async function trainOnOwn() {
 
 <template>
   <section class="bgr-card">
-    <p><RouterLink to="/city">&larr; Градът</RouterLink></p>
-    <h1>Официална писта</h1>
+    <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
+    <h1>{{ $t('track.title') }}</h1>
     <p class="bgr-muted">
-      Тук се карат ралитата на града. От понеделник до петък екипажът може да тренира на етапите тайно, но полицията следи.
-      Записване за ралитата има в <RouterLink to="/rallies">календара</RouterLink>.
+      {{ $t('track.intro') }}
+      {{ $t('track.calendar') }} <RouterLink to="/rallies">{{ $t('track.calendarLink') }}</RouterLink>.
     </p>
     <Feedback :message="message" :error="error" />
 
     <template v-if="track">
       <dl class="bgr-stats-list">
-        <dt>Риск от глоба</dt>
-        <dd>{{ track.risk }}% (глоба {{ money(track.fine) }}) · <RouterLink to="/city/police">подкупи</RouterLink></dd>
-        <dt>Шанс за +1 умение</dt>
-        <dd>{{ track.skill_chance }}% за пилота и за навигатора</dd>
-        <dt>Цена</dt>
-        <dd>{{ track.energy }} енергия + гориво</dd>
+        <dt>{{ $t('track.risk') }}</dt>
+        <dd>{{ $t('track.riskValue', { risk: track.risk, fine: money(track.fine) }) }} <RouterLink to="/city/police">{{ $t('common.bribes') }}</RouterLink></dd>
+        <dt>{{ $t('track.skill') }}</dt>
+        <dd>{{ $t('track.skillValue', { chance: track.skill_chance }) }}</dd>
+        <dt>{{ $t('track.price') }}</dt>
+        <dd>{{ $t('track.priceValue', { energy: track.energy }) }}</dd>
       </dl>
       <div v-if="track.own.status" class="bgr-panel">
-        <h3>Собствена тренировъчна писта</h3>
+        <h3>{{ $t('track.own') }}</h3>
         <template v-if="track.own.status === 'open'">
           <p class="bgr-muted">
-            {{ track.own.km }} км, всеки ден и без полиция: {{ track.energy }} енергия и {{ money(track.own.fuel) }} гориво. Пилотът и навигаторът получават +1 умение със сигурност.
+            {{ $t('track.ownInfo', { km: track.own.km, energy: track.energy, fuel: money(track.own.fuel) }) }}
           </p>
-          <p v-if="track.trained_today" class="bgr-muted">Екипажът вече тренира днес.</p>
-          <button v-else :disabled="busy" @click="trainOnOwn">Тренирай на собствената писта</button>
+          <p v-if="track.trained_today" class="bgr-muted">{{ $t('common.trainedToday') }}</p>
+          <button v-else :disabled="busy" @click="trainOnOwn">{{ $t('track.trainOwn') }}</button>
         </template>
-        <p v-else-if="track.own.status === 'building'" class="bgr-muted">Пистата се строи. Виж <RouterLink to="/city/hall">кметството</RouterLink>.</p>
-        <p v-else class="bgr-muted">Пистата е затворена. Кметът може да я отвори отново – <RouterLink to="/city/hall">кметство</RouterLink>.</p>
+        <p v-else-if="track.own.status === 'building'" class="bgr-muted">{{ $t('track.ownBuilding') }} <RouterLink to="/city/hall">{{ $t('track.hall') }}</RouterLink>.</p>
+        <p v-else class="bgr-muted">{{ $t('track.ownClosed') }} <RouterLink to="/city/hall">{{ $t('track.hallShort') }}</RouterLink>.</p>
       </div>
 
-      <p v-if="!track.weekday" class="bgr-error">Днес е почивен ден. Тренировки на официалната писта има само от понеделник до петък.</p>
-      <p v-else-if="track.trained_today" class="bgr-muted">Екипажът вече тренира днес.</p>
+      <p v-if="!track.weekday" class="bgr-error">{{ $t('track.weekend') }}</p>
+      <p v-else-if="track.trained_today" class="bgr-muted">{{ $t('common.trainedToday') }}</p>
 
       <div class="bgr-scroll">
         <table class="bgr-table">
-          <thead><tr><th>Етап</th><th>Настилка</th><th>Характер</th><th>Трудност</th><th>Гориво</th><th></th></tr></thead>
+          <thead><tr><th>{{ $t('track.stage') }}</th><th>{{ $t('track.surface') }}</th><th>{{ $t('track.profile') }}</th><th>{{ $t('track.difficulty') }}</th><th>{{ $t('track.fuel') }}</th><th></th></tr></thead>
           <tbody>
             <tr v-for="stage in track.stages" :key="stage.id">
-              <td>{{ stage.name }}<small class="bgr-muted">{{ stage.length_km }} км</small></td>
+              <td>{{ stage.name }}<small class="bgr-muted">{{ $t('common.km', { km: stage.length_km }) }}</small></td>
               <td>{{ stage.surface_label }}</td>
               <td>{{ stage.profile_label }}</td>
               <td>{{ stage.difficulty }}/10</td>
               <td>{{ money(stage.fuel) }}</td>
               <td class="bgr-right">
-                <button class="bgr-small" :disabled="busy || !track.weekday || track.trained_today" @click="train(stage.id)">Тренирай</button>
+                <button class="bgr-small" :disabled="busy || !track.weekday || track.trained_today" @click="train(stage.id)">{{ $t('track.train') }}</button>
               </td>
             </tr>
           </tbody>

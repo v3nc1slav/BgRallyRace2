@@ -23,20 +23,20 @@ onMounted(() => load());
 
 <template>
   <section class="bgr-card">
-    <h1>Класиране</h1>
+    <h1>{{ $t('standings.title') }}</h1>
     <label v-if="seasons.length > 1" class="bgr-inline">
-      Сезон
+      {{ $t('standings.season') }}
       <select :value="season" @change="load(Number(($event.target as HTMLSelectElement).value))">
         <option v-for="value in seasons" :key="value" :value="value">{{ value }}</option>
       </select>
     </label>
     <Feedback :error="error" />
-    <p v-if="!classes.length && !error" class="bgr-muted">Все още няма завършили ралита през сезон {{ season }}.</p>
+    <p v-if="!classes.length && !error" class="bgr-muted">{{ $t('standings.none', { season }) }}</p>
 
     <div v-for="group in classes" :key="group.class" class="bgr-scroll">
       <h2>{{ group.label }}</h2>
       <table class="bgr-table">
-        <thead><tr><th>#</th><th>Отбор</th><th>Ралита</th><th>Победи</th><th>Точки</th></tr></thead>
+        <thead><tr><th>#</th><th>{{ $t('standings.team') }}</th><th>{{ $t('standings.rallies') }}</th><th>{{ $t('standings.wins') }}</th><th>{{ $t('standings.points') }}</th></tr></thead>
         <tbody>
           <tr v-for="row in group.rows" :key="row.position" :class="{ 'bgr-me': row.is_me }">
             <td>{{ row.position }}</td>

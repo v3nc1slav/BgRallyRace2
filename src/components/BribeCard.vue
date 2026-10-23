@@ -11,16 +11,16 @@ const emit = defineEmits<{ bribe: []; notice: [message: string] }>();
 <template>
   <div class="bgr-panel">
     <h3>{{ title }}</h3>
-    <p v-if="info.active_until" class="bgr-ok">Действа до {{ when(info.active_until) }}.</p>
+    <p v-if="info.active_until" class="bgr-ok">{{ $t('bribe.active', { time: when(info.active_until) }) }}</p>
     <p v-else-if="locked" class="bgr-muted">{{ locked }}</p>
     <template v-else-if="info.refused && !session.player?.perks.retry">
-      <p class="bgr-error">Отказа подкуп тази седмица. Следващ опит – от понеделник.</p>
-      <AdButton reward="retry" text="Гледай реклама за втори опит" @done="(text) => emit('notice', text)" />
+      <p class="bgr-error">{{ $t('bribe.refused') }}</p>
+      <AdButton reward="retry" :text="$t('common.adRetry')" @done="(text) => emit('notice', text)" />
     </template>
     <template v-else>
-      <p v-if="info.refused" class="bgr-ok">Използваш втория си опит.</p>
-      <p class="bgr-muted">Шанс да го приеме: {{ info.chance }}%. Ако откаже, губиш енергията, но не и парите.</p>
-      <button :disabled="busy" @click="emit('bribe')">Подкупи ({{ money(info.price) }}, {{ energy }} енергия)</button>
+      <p v-if="info.refused" class="bgr-ok">{{ $t('bribe.second') }}</p>
+      <p class="bgr-muted">{{ $t('bribe.chance', { chance: info.chance }) }}</p>
+      <button :disabled="busy" @click="emit('bribe')">{{ $t('bribe.give', { price: money(info.price), energy }) }}</button>
     </template>
   </div>
 </template>

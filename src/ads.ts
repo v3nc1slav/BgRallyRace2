@@ -1,6 +1,7 @@
 import { AdMob, AdmobConsentStatus, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { reactive } from 'vue';
 import { ApiError } from './api';
+import { t } from './i18n';
 import { claimAd, startAd, type AdStart } from './game';
 import { platform } from './platform';
 
@@ -176,7 +177,7 @@ async function claim(ad: AdStart) {
 export async function watchAd(reward: string) {
   const { ad } = await startAd(reward, platform);
   if (!(await show(ad))) {
-    throw new ApiError('Рекламата не беше изгледана докрай, затова няма награда.', 0);
+    throw new ApiError(t('ads.notWatched'), 0);
   }
   return claim(ad);
 }

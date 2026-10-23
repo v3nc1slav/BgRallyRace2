@@ -90,7 +90,7 @@ function step(event: KeyboardEvent) {
         :width="width"
         :height="HEIGHT"
         role="img"
-        :aria-label="series.map((s) => s.name).join(' и ') + ' по ралита'"
+        :aria-label="$t('finance.chartLabel', { series: series.map((s) => s.name).join($t('finance.and')) })"
         tabindex="0"
         @pointermove="nearest"
         @pointerleave="active = null"

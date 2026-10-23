@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { t } from '../i18n';
 import { BUILDINGS, type BuildingDef } from './city/buildings';
 import { car as drawCar, Painter } from './city/draw';
 import { hull, iso, mix } from './city/iso';
@@ -745,7 +746,7 @@ export class CityScene extends Phaser.Scene {
     spot.plate.setText(spot.place.name).setVisible(true);
     const badge = this.badgeText.get(spot.def.key);
     const about = badge ? `${spot.place.text}\n! ${badge}` : spot.place.text;
-    this.tip.setText(touch ? `${about}\nДокосни отново, за да влезеш` : about).setVisible(true);
+    this.tip.setText(touch ? `${about}\n${t('city.tapAgain')}` : about).setVisible(true);
     this.placeTip();
   }
 

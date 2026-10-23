@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { t } from '../i18n';
 import CityMap from '../components/CityMap.vue';
 import { date } from '../format';
 import { getCity, type CityBadge, type OwnTrack } from '../game';
@@ -17,13 +18,13 @@ function ownPlace(track?: OwnTrack) {
   const state = { status, progress };
   switch (status) {
     case 'building':
-      return { state, place: { name: 'Тренировъчна писта – строи се', text: `Строежът е на ${Math.round(progress * 100)}%. Готова на ${track?.ready_at ? date(track.ready_at) : ''}.`, to: '/city/hall' } };
+      return { state, place: { name: t('city.own.building'), text: t('city.own.buildingText', { pct: Math.round(progress * 100), date: track?.ready_at ? date(track.ready_at) : '' }), to: '/city/hall' } };
     case 'open':
-      return { state, place: { name: 'Твоята тренировъчна писта', text: 'Тренирай всеки ден без полиция', to: '/city/track' } };
+      return { state, place: { name: t('city.own.open'), text: t('city.own.openText'), to: '/city/track' } };
     case 'closed':
-      return { state, place: { name: 'Тренировъчна писта – затворена', text: 'Нужни са нови преговори с кмета', to: '/city/hall' } };
+      return { state, place: { name: t('city.own.closed'), text: t('city.own.closedText'), to: '/city/hall' } };
     default:
-      return { state, place: { name: 'Парцел за тренировъчна писта', text: 'Преговори с кмета за собствена писта', to: '/city/hall' } };
+      return { state, place: { name: t('city.own.plot'), text: t('city.own.plotText'), to: '/city/hall' } };
   }
 }
 const mode = ref<'map' | 'list'>(readMode());
@@ -44,21 +45,32 @@ watch(mode, (value) => {
   }
 });
 
-const buildings = [
-  { key: 'garage', name: 'Твоят гараж', label: 'Гараж', text: 'Колата, складът и екипажът', to: '/garage' },
-  { key: 'hall', name: 'Кметство', text: 'Разрешения, собствена писта, подкуп, смяна на града', to: '/city/hall' },
-  { key: 'bank', name: 'Банка', text: 'Заеми и финанси', to: '/city/bank' },
-  { key: 'police', name: 'Полиция', text: 'Глоби, подкупи и сигнали за саботаж', to: '/city/police' },
-  { key: 'jobs', name: 'Бюро по труда', label: 'Работа', text: 'Работа срещу заплата всеки ден', to: '/city/jobs' },
-  { key: 'mall', name: 'МОЛ', text: 'Фитнес и дрехи', to: '/city/mall' },
-  { key: 'shop', name: 'Магазин за авто части', label: 'Авточасти', text: 'Коли, части и гуми', to: '/shop' },
-  { key: 'market', name: 'Пазар', text: 'Търговия между играчите', to: '/city/market' },
-  { key: 'bar', name: 'Бар', text: 'Служители, слухове и чат', to: '/city/bar' },
-  { key: 'sponsors', name: 'Спонсорски офиси', label: 'Спонсори', text: 'Преговори и договори', to: '/sponsors' },
-  { key: 'track', name: 'Официална писта', label: 'Писта', text: 'Тренировки през седмицата', to: '/city/track' },
-  { key: 'black', name: 'Черна писта', text: 'Нелегални надпревари и тренировки', to: '/city/black' },
-  { key: 'own', name: 'Парцел за тренировъчна писта', text: 'Преговори с кмета за собствена писта', to: '/city/hall', mapOnly: true },
+const PLACES = [
+  { key: 'garage', label: true, to: '/garage' },
+  { key: 'hall', to: '/city/hall' },
+  { key: 'bank', to: '/city/bank' },
+  { key: 'police', to: '/city/police' },
+  { key: 'jobs', label: true, to: '/city/jobs' },
+  { key: 'mall', to: '/city/mall' },
+  { key: 'shop', label: true, to: '/shop' },
+  { key: 'market', to: '/city/market' },
+  { key: 'bar', to: '/city/bar' },
+  { key: 'sponsors', label: true, to: '/sponsors' },
+  { key: 'track', label: true, to: '/city/track' },
+  { key: 'black', to: '/city/black' },
 ];
+
+const buildings = computed(() => [
+  ...PLACES.map((place) => ({
+    key: place.key,
+    name: t(`city.place.${place.key}`),
+    label: place.label ? t(`city.place.${place.key}Label`) : undefined,
+    text: t(`city.place.${place.key}Text`),
+    to: place.to,
+    mapOnly: false,
+  })),
+  { key: 'own', name: t('city.own.plot'), label: undefined, text: t('city.own.plotText'), to: '/city/hall', mapOnly: true },
+]);
 
 onMounted(async () => {
   const data = await getCity().catch(() => null);
@@ -73,13 +85,13 @@ onMounted(async () => {
     <h1>{{ session.player?.city }}</h1>
 
     <div class="bgr-tabs">
-      <button :class="{ active: mode === 'map' }" @click="mode = 'map'">Карта</button>
-      <button :class="{ active: mode === 'list' }" @click="mode = 'list'">Списък</button>
+      <button :class="{ active: mode === 'map' }" @click="mode = 'map'">{{ $t('city.map') }}</button>
+      <button :class="{ active: mode === 'list' }" @click="mode = 'list'">{{ $t('city.list') }}</button>
     </div>
 
     <template v-if="mode === 'map'">
       <CityMap :name="session.player?.city ?? ''" :perks="perks" :places="buildings" :own="own" :badges="badges" @failed="mode = 'list'" />
-      <p class="bgr-muted">Посочи или докосни сграда, за да влезеш. Табелата с името на града показва привилегиите му.</p>
+      <p class="bgr-muted">{{ $t('city.hint') }}</p>
     </template>
 
     <template v-else>

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import CitySelect from '../components/CitySelect.vue';
+import LangSwitch from '../components/LangSwitch.vue';
 import PrivacyLinks from '../components/PrivacyLinks.vue';
 import SocialButtons from '../components/SocialButtons.vue';
 import { ApiError, errorMessage } from '../api';
@@ -33,31 +34,32 @@ async function submit() {
 
 <template>
   <form class="bgr-card bgr-form" @submit.prevent="submit">
-    <h1>Регистрация</h1>
+    <LangSwitch />
+    <h1>{{ $t('auth.register') }}</h1>
     <label>
-      Потребителско име
+      {{ $t('auth.username') }}
       <input v-model="form.username" autocomplete="username" required />
       <small v-if="fields.username" class="bgr-error">{{ fields.username }}</small>
     </label>
     <label>
-      Имейл
+      {{ $t('auth.email') }}
       <input v-model="form.email" type="email" autocomplete="email" required />
       <small v-if="fields.email" class="bgr-error">{{ fields.email }}</small>
     </label>
     <label>
-      Парола
+      {{ $t('auth.password') }}
       <input v-model="form.password" type="password" autocomplete="new-password" minlength="8" required />
       <small v-if="fields.password" class="bgr-error">{{ fields.password }}</small>
     </label>
     <label>
-      Град
+      {{ $t('auth.city') }}
       <CitySelect v-model="form.city_id" />
       <small v-if="fields.city_id" class="bgr-error">{{ fields.city_id }}</small>
     </label>
     <p v-if="error" class="bgr-error">{{ error }}</p>
-    <button :disabled="busy">Регистрирай се</button>
+    <button :disabled="busy">{{ $t('auth.signUp') }}</button>
     <SocialButtons />
-    <p class="bgr-muted">Имаш профил? <RouterLink to="/login">Влез</RouterLink></p>
+    <p class="bgr-muted">{{ $t('auth.haveAccount') }} <RouterLink to="/login">{{ $t('auth.enter') }}</RouterLink></p>
     <PrivacyLinks />
   </form>
 </template>

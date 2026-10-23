@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { t } from '../../i18n';
 import { billboard, type Painter } from './draw';
 import { iso, type Box } from './iso';
 import { footOf, type BuildingDef } from './kit';
@@ -37,7 +38,7 @@ export const mall: BuildingDef = {
     p.box({ x: b.x + 0.5, y: b.y + 1.4, w: 1.2, d: 0.9, z: b.h, h: 8 }, 0xc4cbd3);
     billboard(p, iso(b.x + b.w * 0.6, b.y + b.d * 0.62, b.h + 30), 112, 34, 0xe63946);
   },
-  signs: () => [{ text: 'МОЛ', at: iso(mallBox.x + mallBox.w * 0.6, mallBox.y + mallBox.d * 0.62, mallBox.h + 30), size: 26, color: '#ffffff' }],
+  signs: () => [{ text: t('city.sign.mall'), at: iso(mallBox.x + mallBox.w * 0.6, mallBox.y + mallBox.d * 0.62, mallBox.h + 30), size: 26, color: '#ffffff' }],
 };
 
 const towerBox: Box = { x: 14.3, y: 2.45, w: 2.0, d: 2.0, h: 120 };
@@ -107,7 +108,7 @@ export const bar: BuildingDef = {
       new Phaser.Math.Vector2(neon.x - 19, neon.y + 8),
     ], 1, 1);
   },
-  signs: () => [{ text: 'БАР', at: iso(barBox.x + barBox.w * 0.5, barBox.y + barBox.d, 24), size: 12, color: '#ff4fd8' }],
+  signs: () => [{ text: t('city.sign.bar'), at: iso(barBox.x + barBox.w * 0.5, barBox.y + barBox.d, 24), size: 12, color: '#ff4fd8' }],
 };
 
 const shopBox: Box = { x: 2.75, y: 12.45, w: 1.95, d: 2.2, h: 26 };
@@ -134,7 +135,7 @@ export const shop: BuildingDef = {
     p.circle(board.x, board.y, 9, 0x1c1d20);
     p.circle(board.x, board.y, 4, 0x9aa1ad);
   },
-  signs: () => [{ text: 'АВТОЧАСТИ', at: iso(shopBox.x + shopBox.w / 2, shopBox.y + shopBox.d, 19.3), size: 7, color: '#ffffff' }],
+  signs: () => [{ text: t('city.sign.shop'), at: iso(shopBox.x + shopBox.w / 2, shopBox.y + shopBox.d, 19.3), size: 7, color: '#ffffff' }],
 };
 
 const marketBox: Box = { x: 6.4, y: 12.4, w: 4.2, d: 2.6, h: 20 };
@@ -184,6 +185,6 @@ export const market: BuildingDef = {
   signs: () => {
     const left = iso(marketBox.x + 1.6, marketBox.y + marketBox.d);
     const right = iso(marketBox.x + 2.6, marketBox.y + marketBox.d);
-    return [{ text: 'ПАЗАР', at: new Phaser.Math.Vector2((left.x + right.x) / 2, (left.y + right.y) / 2 - 32), size: 10, color: '#ffffff' }];
+    return [{ text: t('city.sign.market'), at: new Phaser.Math.Vector2((left.x + right.x) / 2, (left.y + right.y) / 2 - 32), size: 10, color: '#ffffff' }];
   },
 };

@@ -5,7 +5,7 @@ import HealthBar from '../components/HealthBar.vue';
 import { money, when } from '../format';
 import { getInbox, getRallies, type InboxItem, type RallySummary } from '../game';
 import { session } from '../session';
-import { statusLabels } from './rallyStatus';
+import { statusLabel } from './rallyStatus';
 
 const next = ref<RallySummary | null>(null);
 const inbox = ref<InboxItem[]>([]);
@@ -30,40 +30,40 @@ onMounted(async () => {
     <section class="bgr-card">
       <h1>{{ session.user?.name }}</h1>
       <dl class="bgr-stats-list">
-        <dt>Град</dt>
+        <dt>{{ $t('home.city') }}</dt>
         <dd>{{ session.player.city }}</dd>
-        <dt>Работа</dt>
+        <dt>{{ $t('home.job') }}</dt>
         <dd>
-          <template v-if="session.player.job">{{ session.player.job.name }} · {{ money(session.player.job.pay) }}/ден, {{ session.player.job.energy }} енергия</template>
-          <RouterLink v-else to="/city/jobs">потърси работа</RouterLink>
+          <template v-if="session.player.job">{{ $t('home.jobLine', { name: session.player.job.name, pay: money(session.player.job.pay), energy: session.player.job.energy }) }}</template>
+          <RouterLink v-else to="/city/jobs">{{ $t('home.findJob') }}</RouterLink>
         </dd>
-        <dt>Ниво {{ session.player.level }}</dt>
+        <dt>{{ $t('home.level', { level: session.player.level }) }}</dt>
         <dd>
           <HealthBar :value="levelProgress" />
           <small class="bgr-muted">
-            {{ session.player.xp }}{{ session.player.xp_next !== null ? ` / ${session.player.xp_next}` : '' }} опит
+            {{ session.player.xp }}{{ session.player.xp_next !== null ? ` / ${session.player.xp_next}` : '' }} {{ $t('home.xp') }}
           </small>
-          <small class="bgr-muted">Днес от тренировки, черна писта, гараж и фитнес: {{ session.player.xp_today }} / {{ session.player.xp_cap }} опит</small>
+          <small class="bgr-muted">{{ $t('home.xpToday', { used: session.player.xp_today, cap: session.player.xp_cap }) }}</small>
         </dd>
-        <dt>Пари</dt>
+        <dt>{{ $t('home.money') }}</dt>
         <dd>{{ money(session.player.money) }}</dd>
         <template v-if="session.player.loan">
-          <dt>Заем</dt>
+          <dt>{{ $t('home.loan') }}</dt>
           <dd>
-            <RouterLink to="/city/bank">остават {{ money(session.player.loan.remaining) }}</RouterLink>
-            <small v-if="session.player.loan.overdue" class="bgr-error">просрочие {{ money(session.player.loan.overdue) }}</small>
-            <small v-else class="bgr-muted">вноска {{ money(session.player.loan.next) }} в понеделник</small>
+            <RouterLink to="/city/bank">{{ $t('home.loanLeft', { amount: money(session.player.loan.remaining) }) }}</RouterLink>
+            <small v-if="session.player.loan.overdue" class="bgr-error">{{ $t('home.overdue', { amount: money(session.player.loan.overdue) }) }}</small>
+            <small v-else class="bgr-muted">{{ $t('home.installment', { amount: money(session.player.loan.next) }) }}</small>
           </dd>
         </template>
-        <dt>Енергия</dt>
+        <dt>{{ $t('home.energy') }}</dt>
         <dd>
           <HealthBar :value="(session.player.energy / session.player.energy_max) * 100" />
           <small class="bgr-muted">{{ session.player.energy }} / {{ session.player.energy_max }}</small>
           <small v-if="session.player.fatigue.pct < 100" class="bgr-error">
-            Умора: днес започна с {{ session.player.fatigue.pct }}% енергия. Остави поне {{ session.player.fatigue.threshold }} енергия до полунощ и утре си отново на 100%.
+            {{ $t('home.tired', { pct: session.player.fatigue.pct, threshold: session.player.fatigue.threshold }) }}
           </small>
           <small v-else-if="session.player.fatigue.days > 0" class="bgr-muted">
-            Изтощителни дни поред: {{ session.player.fatigue.days }} от {{ session.player.fatigue.limit }}. След {{ session.player.fatigue.limit }} поред идва умора и по-малко енергия.
+            {{ $t('home.tiredDays', { days: session.player.fatigue.days, limit: session.player.fatigue.limit }) }}
           </small>
         </dd>
       </dl>
@@ -72,22 +72,22 @@ onMounted(async () => {
     <AdOffers />
 
     <section v-if="next" class="bgr-card">
-      <h2>Следващо рали</h2>
+      <h2>{{ $t('home.nextRally') }}</h2>
       <RouterLink :to="`/rallies/${next.id}`" class="bgr-rally">
         <div>
           <b>{{ next.name }}</b>
           <small class="bgr-muted">{{ when(next.start_at) }} · {{ next.city }}</small>
         </div>
         <div class="bgr-badges">
-          <span v-if="next.registered" class="bgr-tag bgr-tag-ok">записан</span>
-          <span class="bgr-status" :class="next.status">{{ statusLabels[next.status] }}</span>
+          <span v-if="next.registered" class="bgr-tag bgr-tag-ok">{{ $t('home.registered') }}</span>
+          <span class="bgr-status" :class="next.status">{{ statusLabel(next.status) }}</span>
         </div>
       </RouterLink>
     </section>
 
     <section class="bgr-card">
-      <h2>Новини</h2>
-      <p v-if="!inbox.length" class="bgr-muted">Все още няма новини.</p>
+      <h2>{{ $t('home.news') }}</h2>
+      <p v-if="!inbox.length" class="bgr-muted">{{ $t('home.noNews') }}</p>
       <ul v-else class="bgr-chronicle">
         <li v-for="(item, index) in inbox" :key="index">
           <small class="bgr-muted">{{ when(item.at) }}</small>

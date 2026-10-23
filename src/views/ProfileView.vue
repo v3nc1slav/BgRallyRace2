@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { errorMessage } from '../api';
 import PrivacyLinks from '../components/PrivacyLinks.vue';
+import { t } from '../i18n';
 import { isApp } from '../platform';
 import { deleteAccount, logout, session } from '../session';
 
@@ -24,7 +25,7 @@ async function signOut() {
 }
 
 async function remove() {
-  if (!window.confirm('Профилът, отборът и всичко в играта ще бъдат изтрити завинаги. Сигурен ли си?')) {
+  if (!window.confirm(t('profile.deleteConfirm'))) {
     return;
   }
   busy.value = true;
@@ -43,35 +44,32 @@ async function remove() {
 <template>
   <div class="bgr-stack">
     <section class="bgr-card">
-      <h1>Профил</h1>
+      <h1>{{ $t('profile.title') }}</h1>
       <dl class="bgr-stats-list">
-        <dt>Име</dt>
+        <dt>{{ $t('profile.name') }}</dt>
         <dd>{{ session.user?.name }}</dd>
-        <dt>Град</dt>
+        <dt>{{ $t('profile.city') }}</dt>
         <dd>{{ session.player?.city }}</dd>
-        <dt>Версия</dt>
-        <dd>{{ isApp ? 'Приложение' : 'Браузър' }}</dd>
+        <dt>{{ $t('profile.version') }}</dt>
+        <dd>{{ isApp ? $t('profile.app') : $t('profile.browser') }}</dd>
       </dl>
       <div class="bgr-actions">
-        <RouterLink to="/settings" class="bgr-small-link">Настройки и известия</RouterLink>
-        <button class="bgr-secondary" :disabled="busy" @click="signOut">Изход</button>
+        <RouterLink to="/settings" class="bgr-small-link">{{ $t('profile.settings') }}</RouterLink>
+        <button class="bgr-secondary" :disabled="busy" @click="signOut">{{ $t('nav.logout') }}</button>
       </div>
       <PrivacyLinks />
     </section>
 
     <section class="bgr-card">
-      <h2>Изтрий профила</h2>
-      <p class="bgr-muted">
-        Изтриват се профилът, отборът, колите, служителите, парите, договорите, заемите и обявите.
-        Съобщенията в чата и форума и резултатите от минали ралита остават с името „Изтрит играч“. Действието не може да се отмени.
-      </p>
+      <h2>{{ $t('profile.deleteTitle') }}</h2>
+      <p class="bgr-muted">{{ $t('profile.deleteText') }}</p>
       <form class="bgr-form" @submit.prevent="remove">
         <label>
-          За потвърждение напиши ИЗТРИЙ
+          {{ $t('profile.confirmLabel', { word: $t('profile.confirmWord') }) }}
           <input v-model="confirm" autocomplete="off" />
         </label>
         <p v-if="error" class="bgr-error">{{ error }}</p>
-        <button class="bgr-danger" :disabled="busy || confirm.trim().toUpperCase() !== 'ИЗТРИЙ'">Изтрий профила завинаги</button>
+        <button class="bgr-danger" :disabled="busy || confirm.trim().toUpperCase() !== $t('profile.confirmWord')">{{ $t('profile.deleteButton') }}</button>
       </form>
     </section>
   </div>

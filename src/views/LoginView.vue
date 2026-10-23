@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { errorMessage } from '../api';
+import LangSwitch from '../components/LangSwitch.vue';
 import PrivacyLinks from '../components/PrivacyLinks.vue';
 import SocialButtons from '../components/SocialButtons.vue';
 import { login } from '../session';
@@ -27,23 +28,24 @@ async function submit() {
 
 <template>
   <form class="bgr-card bgr-form" @submit.prevent="submit">
-    <h1>Вход</h1>
+    <LangSwitch />
+    <h1>{{ $t('auth.login') }}</h1>
     <label>
-      Потребителско име или имейл
+      {{ $t('auth.loginField') }}
       <input v-model="form.login" autocomplete="username" required />
     </label>
     <label>
-      Парола
+      {{ $t('auth.password') }}
       <input v-model="form.password" type="password" autocomplete="current-password" required />
     </label>
     <label class="bgr-check">
       <input v-model="form.remember" type="checkbox" />
-      Запомни ме
+      {{ $t('auth.remember') }}
     </label>
     <p v-if="error" class="bgr-error">{{ error }}</p>
-    <button :disabled="busy">Влез</button>
+    <button :disabled="busy">{{ $t('auth.enter') }}</button>
     <SocialButtons />
-    <p class="bgr-muted">Нямаш профил? <RouterLink to="/register">Регистрирай се</RouterLink></p>
+    <p class="bgr-muted">{{ $t('auth.noAccount') }} <RouterLink to="/register">{{ $t('auth.signUp') }}</RouterLink></p>
     <PrivacyLinks />
   </form>
 </template>

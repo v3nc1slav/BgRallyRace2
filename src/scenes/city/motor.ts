@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { t } from '../../i18n';
 import { car, conifer, type Painter } from './draw';
 import { iso, type Box, type Vec } from './iso';
 import { banner, footOf, ribs, tyres, type BuildingDef } from './kit';
@@ -25,7 +26,7 @@ export const garage: BuildingDef = {
       p.box({ x: b.x + x, y: b.y + 0.6, w: 0.5, d: 0.7, z: b.h, h: 1.5 }, 0x9cc3db);
     }
   },
-  signs: () => [{ text: 'ГАРАЖ', at: iso(garageBox.x + 0.975, garageBox.y + garageBox.d, 23.8), size: 8, color: '#f4d35e' }],
+  signs: () => [{ text: t('city.sign.garage'), at: iso(garageBox.x + 0.975, garageBox.y + garageBox.d, 23.8), size: 8, color: '#f4d35e' }],
 };
 
 // Официалната писта временно не е на картата, докато се тества изгледът на града: вместо нея има пътна табела (officialSign).
@@ -104,7 +105,7 @@ export const officialSign: BuildingDef = {
     p.poly([v(at.x - 102, at.y), v(at.x - 80, at.y - 19), v(at.x + 94, at.y - 19), v(at.x + 94, at.y + 19), v(at.x - 80, at.y + 19)], 0x1f5fbf);
     p.stroke([v(at.x - 96, at.y), v(at.x - 78, at.y - 15.5), v(at.x + 90.5, at.y - 15.5), v(at.x + 90.5, at.y + 15.5), v(at.x - 78, at.y + 15.5)], 0xffffff, 2);
   },
-  signs: () => [{ text: 'Официална писта', at: officialBoard().add(new Phaser.Math.Vector2(6, 0)), size: 15, color: '#ffffff' }],
+  signs: () => [{ text: t('city.sign.official'), at: officialBoard().add(new Phaser.Math.Vector2(6, 0)), size: 15, color: '#ffffff' }],
 };
 
 const LOOP = { x: 33.6, y: 8.8, rx: 2.3, ry: 1.8 };

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { Leg, Timeline } from '../game';
+import { t as translate } from '../i18n';
 import type { StageView } from '../race';
 import type { CameraMode, CarMarker, Weather } from '../scenes/RaceScene';
 
@@ -131,8 +132,8 @@ function render(timestamp: number) {
 
     const running = cars.filter((car) => car.state !== 'stop').length;
     const caption = props.timeline.finished && !replaying.value
-      ? 'Ралито приключи. Пусни повторението, за да го изгледаш отново.'
-      : `Време от старта ${clock(t)} · на трасето ${running} · финиширали ${done}`;
+      ? translate('stageMap.finished')
+      : translate('stageMap.caption', { time: clock(t), running, done });
     view.render(stage, cars, caption, { weather: weatherAt(t) });
   }
 
@@ -166,23 +167,23 @@ onBeforeUnmount(() => {
   <div class="bgr-map">
     <div class="bgr-map-controls">
       <div class="bgr-tabs">
-        <button :class="{ active: manualSeq === null }" @click="manualSeq = null">Авто</button>
+        <button :class="{ active: manualSeq === null }" @click="manualSeq = null">{{ $t('stageMap.auto') }}</button>
         <button
           v-for="stage in timeline.stages"
           :key="stage.seq"
           :class="{ active: manualSeq === stage.seq || (manualSeq === null && currentSeq === stage.seq) }"
           @click="manualSeq = stage.seq"
         >
-          Етап {{ stage.seq }}
+          {{ $t('stageMap.stage', { seq: stage.seq }) }}
         </button>
       </div>
       <div class="bgr-tabs">
-        <button :class="{ active: camera === 'all' }" @click="camera = 'all'">Цял етап</button>
-        <button v-if="hasMe" :class="{ active: camera === 'me' }" @click="camera = 'me'">Моята кола</button>
-        <button :class="{ active: camera === 'leader' }" @click="camera = 'leader'">Лидер</button>
-        <button v-if="timeline.finished" @click="replay">{{ replaying ? 'Отначало' : 'Повторение' }}</button>
-        <button title="Отдалечи" @click="view?.zoomBy(0.8)">−</button>
-        <button title="Приближи" @click="view?.zoomBy(1.25)">+</button>
+        <button :class="{ active: camera === 'all' }" @click="camera = 'all'">{{ $t('stageMap.all') }}</button>
+        <button v-if="hasMe" :class="{ active: camera === 'me' }" @click="camera = 'me'">{{ $t('stageMap.me') }}</button>
+        <button :class="{ active: camera === 'leader' }" @click="camera = 'leader'">{{ $t('stageMap.leader') }}</button>
+        <button v-if="timeline.finished" @click="replay">{{ replaying ? $t('stageMap.restart') : $t('stageMap.replay') }}</button>
+        <button :title="$t('stageMap.zoomOut')" @click="view?.zoomBy(0.8)">−</button>
+        <button :title="$t('stageMap.zoomIn')" @click="view?.zoomBy(1.25)">+</button>
       </div>
     </div>
     <div ref="container" class="bgr-race"></div>

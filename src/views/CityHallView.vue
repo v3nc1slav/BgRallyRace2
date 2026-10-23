@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { t } from '../i18n';
 import AdButton from '../components/AdButton.vue';
 import BribeCard from '../components/BribeCard.vue';
 import Feedback from '../components/Feedback.vue';
@@ -35,7 +36,7 @@ async function move() {
   if (!targetCity.value || !hall.value) {
     return;
   }
-  if (!window.confirm(`Да се преместиш ли в ${targetCity.value.name} за ${money(hall.value.move.cost)}? Следващата смяна – чак през новия сезон.`)) {
+  if (!window.confirm(t('hall.moveConfirm', { city: targetCity.value.name, cost: money(hall.value.move.cost) }))) {
     return;
   }
   const result = await run(() => moveCity(target.value));
@@ -59,86 +60,82 @@ async function giveBribe() {
 <template>
   <div class="bgr-stack">
     <section class="bgr-card">
-      <p><RouterLink to="/city">&larr; Градът</RouterLink></p>
-      <h1>Кметство</h1>
+      <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
+      <h1>{{ $t('hall.title') }}</h1>
       <p class="bgr-muted">
-        Кметът дава разрешения за гаража и за собствена тренировъчна писта.
-        <template v-if="hall">Дрехите ти дават +{{ hall.clothes_bonus }}% в преговорите · <RouterLink to="/city/mall">МОЛ</RouterLink>.</template>
+        {{ $t('hall.intro') }}
+        <template v-if="hall">{{ $t('hall.clothes', { pct: hall.clothes_bonus }) }} <RouterLink to="/city/mall">{{ $t('hall.mall') }}</RouterLink>.</template>
       </p>
       <Feedback :message="message" :error="error" />
     </section>
 
     <template v-if="hall">
       <section class="bgr-card">
-        <h2>Разрешение за гаража</h2>
-        <p v-if="hall.permit.next_level === null" class="bgr-muted">Гаражът е на максимално ниво.</p>
+        <h2>{{ $t('hall.permit') }}</h2>
+        <p v-if="hall.permit.next_level === null" class="bgr-muted">{{ $t('hall.maxGarage') }}</p>
         <p v-else-if="hall.permit.has" class="bgr-ok">
-          {{ hall.permit.by_bribe ? 'Подкупът на кмета ти дава разрешение.' : 'Имаш разрешение.' }}
-          Можеш да подобриш гаража до ниво {{ hall.permit.next_level }} от <RouterLink to="/garage">гаража</RouterLink>.
+          {{ hall.permit.by_bribe ? $t('hall.byBribe') : $t('hall.hasPermit') }}
+          {{ $t('hall.canUpgrade', { level: hall.permit.next_level }) }} <RouterLink to="/garage">{{ $t('hall.garage') }}</RouterLink>.
         </p>
         <template v-else-if="hall.permit.refused_today && !session.player?.perks.retry">
-          <p class="bgr-error">Кметът отказа днес. Опитай утре.</p>
-          <AdButton reward="retry" text="Гледай реклама за втори опит" @done="(text) => (message = text)" />
+          <p class="bgr-error">{{ $t('hall.refused') }}</p>
+          <AdButton reward="retry" :text="$t('common.adRetry')" @done="(text) => (message = text)" />
         </template>
         <template v-else>
-          <p class="bgr-muted">Нужно е за гараж ниво {{ hall.permit.next_level }}. Шанс: {{ hall.permit.chance }}%.</p>
-          <button :disabled="busy" @click="negotiate('garage')">Поискай разрешение ({{ hall.energy }} енергия)</button>
+          <p class="bgr-muted">{{ $t('hall.permitNeed', { level: hall.permit.next_level, chance: hall.permit.chance }) }}</p>
+          <button :disabled="busy" @click="negotiate('garage')">{{ $t('hall.askPermit', { energy: hall.energy }) }}</button>
         </template>
       </section>
 
       <section class="bgr-card">
-        <h2>Собствена тренировъчна писта</h2>
-        <p v-if="(session.player?.level ?? 0) < hall.track.level" class="bgr-muted">Отключва се от ниво {{ hall.track.level }}.</p>
+        <h2>{{ $t('hall.track') }}</h2>
+        <p v-if="(session.player?.level ?? 0) < hall.track.level" class="bgr-muted">{{ $t('hall.trackLevel', { level: hall.track.level }) }}</p>
         <template v-else-if="hall.track.status === 'open'">
-          <p class="bgr-ok">Пистата е твоя. Тренирай всеки ден без полиция от <RouterLink to="/city/track">официалната писта</RouterLink>.</p>
+          <p class="bgr-ok">{{ $t('hall.trackOpen') }} <RouterLink to="/city/track">{{ $t('hall.official') }}</RouterLink>.</p>
         </template>
-        <p v-else-if="hall.track.status === 'building'" class="bgr-muted">Строи се. Готова на {{ hall.track.ready_at ? date(hall.track.ready_at) : '' }}.</p>
-        <p v-else-if="hall.track.banned" class="bgr-error">След разкрития саботаж кметът няма да преговаря за пистата до следващия сезон.</p>
+        <p v-else-if="hall.track.status === 'building'" class="bgr-muted">{{ $t('hall.building', { date: hall.track.ready_at ? date(hall.track.ready_at) : '' }) }}</p>
+        <p v-else-if="hall.track.banned" class="bgr-error">{{ $t('hall.banned') }}</p>
         <template v-else-if="hall.track.refused_today && !session.player?.perks.retry">
-          <p class="bgr-error">Кметът отказа днес. Опитай утре.</p>
-          <AdButton reward="retry" text="Гледай реклама за втори опит" @done="(text) => (message = text)" />
+          <p class="bgr-error">{{ $t('hall.refused') }}</p>
+          <AdButton reward="retry" :text="$t('common.adRetry')" @done="(text) => (message = text)" />
         </template>
         <template v-else>
           <p class="bgr-muted">
-            <template v-if="hall.track.status === 'closed'">Пистата е затворена. При успех кметът я отваря веднага, без нов строеж.</template>
-            <template v-else>При одобрение строежът струва {{ money(hall.track.cost) }} и трае {{ hall.track.weeks }} седмици.</template>
-            Шанс: {{ hall.track.chance }}%. Пистата остава, ако завършиш сезона в топ 5.
+            <template v-if="hall.track.status === 'closed'">{{ $t('hall.closed') }}</template>
+            <template v-else>{{ $t('hall.cost', { cost: money(hall.track.cost), weeks: hall.track.weeks }) }}</template>
+            {{ $t('hall.chance', { chance: hall.track.chance }) }}
           </p>
-          <button :disabled="busy" @click="negotiate('track')">Преговаряй ({{ hall.energy }} енергия)</button>
+          <button :disabled="busy" @click="negotiate('track')">{{ $t('hall.negotiate', { energy: hall.energy }) }}</button>
         </template>
       </section>
 
       <section class="bgr-card">
         <BribeCard
-          :title="`Подкуп на кмета – за ${hall.bribe.days} дни`"
+          :title="$t('hall.bribeTitle', { days: hall.bribe.days })"
           :info="hall.bribe"
           :energy="hall.energy"
           :busy="busy"
-          :locked="(session.player?.level ?? 0) < hall.bribe.level ? `Кметът приема подкупи от ниво ${hall.bribe.level}.` : undefined"
+          :locked="(session.player?.level ?? 0) < hall.bribe.level ? $t('hall.bribeLevel', { level: hall.bribe.level }) : undefined"
           @bribe="giveBribe"
           @notice="(text) => (message = text)"
         />
-        <p class="bgr-muted">Подкупът пази от глоби и дава разрешение за гаража без преговори.</p>
+        <p class="bgr-muted">{{ $t('hall.bribeHint') }}</p>
       </section>
 
       <section class="bgr-card">
-        <h2>Смяна на града</h2>
-        <p class="bgr-muted">
-          Веднъж на сезон, срещу {{ money(hall.move.cost) }} и {{ hall.move.energy }} енергия. Губиш привилегиите на {{ session.player?.city }},
-          работата (нова можеш да започнеш веднага), собствената писта и подкупите. Отворените ти предизвикателства на черната писта се отменят и залогът се връща.
-          Всеки договор с местен спонсор се прекратява с шанс {{ hall.move.sponsor_risk }}%, а преговорите с местни спонсори спират.
-        </p>
+        <h2>{{ $t('hall.move') }}</h2>
+        <p class="bgr-muted">{{ $t('hall.moveRules', { cost: money(hall.move.cost), energy: hall.move.energy, city: session.player?.city ?? '', risk: hall.move.sponsor_risk }) }}</p>
         <p v-if="hall.move.blocked" class="bgr-error">{{ hall.move.blocked }}</p>
         <template v-else>
           <div class="bgr-filters">
             <select v-model.number="target">
-              <option :value="0" disabled>Избери град</option>
+              <option :value="0" disabled>{{ $t('hall.pickCity') }}</option>
               <option v-for="city in hall.move.cities" :key="city.id" :value="city.id">{{ city.name }}</option>
             </select>
-            <button :disabled="busy || !targetCity" @click="move">Премести се</button>
+            <button :disabled="busy || !targetCity" @click="move">{{ $t('hall.moveButton') }}</button>
           </div>
           <p v-if="targetCity" class="bgr-muted">
-            Привилегии: {{ targetCity.privileges.length ? targetCity.privileges.join(', ') : 'няма' }} · Цени в магазина: {{ targetCity.price_pct }}%
+            {{ $t('hall.cityInfo', { list: targetCity.privileges.length ? targetCity.privileges.join(', ') : $t('hall.none'), pct: targetCity.price_pct }) }}
           </p>
         </template>
       </section>

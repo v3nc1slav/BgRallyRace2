@@ -42,21 +42,21 @@ onBeforeUnmount(() => stopLabels?.());
     <header v-if="session.player" class="bgr-top">
       <RouterLink to="/" class="bgr-logo"><img :src="logo" alt="BG Rally Race" /></RouterLink>
       <nav class="bgr-nav">
-        <RouterLink to="/">Мениджър</RouterLink>
-        <RouterLink to="/garage">Гараж</RouterLink>
-        <RouterLink to="/city">Град</RouterLink>
-        <RouterLink to="/shop">Магазин</RouterLink>
-        <RouterLink to="/rallies">Ралита</RouterLink>
-        <RouterLink to="/sponsors">Спонсори</RouterLink>
-        <RouterLink to="/standings">Класиране</RouterLink>
-        <RouterLink to="/forum">Форум</RouterLink>
-        <RouterLink to="/profile">Профил</RouterLink>
+        <RouterLink to="/">{{ $t('nav.manager') }}</RouterLink>
+        <RouterLink to="/garage">{{ $t('nav.garage') }}</RouterLink>
+        <RouterLink to="/city">{{ $t('nav.city') }}</RouterLink>
+        <RouterLink to="/shop">{{ $t('nav.shop') }}</RouterLink>
+        <RouterLink to="/rallies">{{ $t('nav.rallies') }}</RouterLink>
+        <RouterLink to="/sponsors">{{ $t('nav.sponsors') }}</RouterLink>
+        <RouterLink to="/standings">{{ $t('nav.standings') }}</RouterLink>
+        <RouterLink to="/forum">{{ $t('nav.forum') }}</RouterLink>
+        <RouterLink to="/profile">{{ $t('nav.profile') }}</RouterLink>
       </nav>
       <div class="bgr-stats">
-        <span>Ниво <b>{{ session.player.level }}</b></span>
+        <span>{{ $t('top.level') }} <b>{{ session.player.level }}</b></span>
         <b>{{ money(session.player.money) }}</b>
-        <span>Енергия <b>{{ session.player.energy }}/{{ session.player.energy_max }}</b></span>
-        <button class="bgr-link bgr-logout" @click="onLogout">Изход</button>
+        <span>{{ $t('top.energy') }} <b>{{ session.player.energy }}/{{ session.player.energy_max }}</b></span>
+        <button class="bgr-link bgr-logout" @click="onLogout">{{ $t('nav.logout') }}</button>
       </div>
     </header>
     <div v-else class="bgr-brand"><img :src="logo" alt="BG Rally Race" /></div>

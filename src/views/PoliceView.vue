@@ -28,35 +28,32 @@ const give = () => act(() => bribe('police'));
 
 <template>
   <section class="bgr-card">
-    <p><RouterLink to="/city">&larr; Градът</RouterLink></p>
-    <h1>Полиция</h1>
-    <p class="bgr-muted">Полицията следи тренировките на официалната писта през седмицата и черната писта.</p>
+    <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
+    <h1>{{ $t('police.title') }}</h1>
+    <p class="bgr-muted">{{ $t('police.intro') }}</p>
     <Feedback :message="message" :error="error" />
 
     <template v-if="police">
       <dl class="bgr-stats-list">
-        <dt>Риск на официалната писта</dt>
+        <dt>{{ $t('police.riskOfficial') }}</dt>
         <dd>{{ police.risks.official }}%</dd>
-        <dt>Риск на черната писта</dt>
+        <dt>{{ $t('police.riskBlack') }}</dt>
         <dd>{{ police.risks.black }}%</dd>
       </dl>
 
-      <BribeCard title="Подкуп на полицията – до края на деня" :info="police.police" :energy="police.energy" :busy="busy" @bribe="give" @notice="(text) => (message = text)" />
+      <BribeCard :title="$t('police.bribe')" :info="police.police" :energy="police.energy" :busy="busy" @bribe="give" @notice="(text) => (message = text)" />
 
       <p class="bgr-muted">
-        <RouterLink to="/city/hall">Подкуп на кмета – по-скъп, но пази цяла седмица и дава разрешение за гаража</RouterLink>
+        <RouterLink to="/city/hall">{{ $t('police.mayor') }}</RouterLink>
       </p>
 
       <div class="bgr-panel">
-        <h2>Сигнал за саботаж</h2>
-        <p class="bgr-muted">
-          Ако подозираш саботаж, подай сигнал до {{ police.report_days }} дни след ралито ({{ police.report_energy }} енергия).
-          С информатор полицията разкрива саботажите по-често.
-        </p>
-        <p v-if="!police.reports.length" class="bgr-muted">Няма скорошни ралита, за които да подадеш сигнал.</p>
+        <h2>{{ $t('police.report') }}</h2>
+        <p class="bgr-muted">{{ $t('police.reportHint', { days: police.report_days, energy: police.report_energy }) }}</p>
+        <p v-if="!police.reports.length" class="bgr-muted">{{ $t('police.noReports') }}</p>
         <div v-for="item in police.reports" :key="item.id" class="bgr-row">
           <span>{{ item.name }} <small class="bgr-muted">{{ when(item.start_at) }}</small></span>
-          <button class="bgr-small" :disabled="busy" @click="act(() => reportSabotage(item.id))">Подай сигнал</button>
+          <button class="bgr-small" :disabled="busy" @click="act(() => reportSabotage(item.id))">{{ $t('police.send') }}</button>
         </div>
       </div>
     </template>

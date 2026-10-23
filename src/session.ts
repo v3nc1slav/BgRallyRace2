@@ -1,5 +1,6 @@
 import { reactive } from 'vue';
 import { apiGet, apiPost, setNonce, setToken } from './api';
+import { chosen, setLang, type Lang } from './i18n';
 import { deviceName, isApp } from './platform';
 
 export const NS = 'bgrally/v1/';
@@ -27,6 +28,7 @@ export interface Player {
   loan: { remaining: number; next: number; overdue: number } | null;
   perks: { discount: number; retry: boolean };
   comeback: { days: number; notes: string[]; fresh: number | null; cooldown: number; loan_weeks: number } | null;
+  lang: Lang;
 }
 
 export interface City {
@@ -81,6 +83,9 @@ function apply(state: State) {
     setToken('');
   }
   setNonce(state.nonce);
+  if (state.player?.lang && !chosen()) {
+    setLang(state.player.lang);
+  }
   session.user = state.user;
   session.player = state.player;
   session.providers = state.providers;

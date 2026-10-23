@@ -27,11 +27,10 @@ async function start(id: number) {
 <template>
   <div v-if="data" class="bgr-stack">
     <section class="bgr-card">
-      <h1>Спонсори</h1>
+      <h1>{{ $t('sponsors.title') }}</h1>
       <p class="bgr-muted">
-        Преговорите напредват след всяко рали, в което участваш, но на всеки етап могат да се провалят.
-        Спонсорът плаща за всяко рали: цялата сума и бонус при изпълнена цел, половината при неизпълнена.
-        {{ data.misses_limit }} неизпълнени цели поред прекратяват договора.
+        {{ $t('sponsors.intro') }}
+        {{ $t('sponsors.misses', { count: data.misses_limit }) }}
       </p>
       <Feedback :message="message" :error="error" />
       <div class="bgr-tiles">
@@ -40,45 +39,45 @@ async function start(id: number) {
           <template v-if="slot.contract">
             <b>{{ slot.contract.sponsor }}</b>
             <template v-if="slot.contract.status === 'negotiating'">
-              <small>Преговори</small>
+              <small>{{ $t('sponsors.negotiating') }}</small>
               <HealthBar :value="slot.contract.progress" />
             </template>
             <template v-else>
-              <small>{{ money(slot.contract.payment) }} за рали, бонус {{ money(slot.contract.bonus) }} за топ {{ slot.contract.goal_place }}</small>
-              <small v-if="slot.contract.ends_at">до {{ date(slot.contract.ends_at) }}</small>
-              <small v-if="slot.contract.misses" class="bgr-error">неизпълнени цели: {{ slot.contract.misses }}</small>
+              <small>{{ $t('sponsors.contract', { payment: money(slot.contract.payment), bonus: money(slot.contract.bonus), place: slot.contract.goal_place }) }}</small>
+              <small v-if="slot.contract.ends_at">{{ $t('sponsors.until', { date: date(slot.contract.ends_at) }) }}</small>
+              <small v-if="slot.contract.misses" class="bgr-error">{{ $t('sponsors.missed', { count: slot.contract.misses }) }}</small>
             </template>
           </template>
-          <b v-else-if="slot.unlocked">свободно</b>
-          <small v-else>от ниво {{ slot.unlock_level }}</small>
+          <b v-else-if="slot.unlocked">{{ $t('sponsors.free') }}</b>
+          <small v-else>{{ $t('common.fromLevel', { level: slot.unlock_level }) }}</small>
         </div>
       </div>
     </section>
 
     <section class="bgr-card">
-      <h2>Оферти</h2>
+      <h2>{{ $t('sponsors.offers') }}</h2>
       <div class="bgr-scroll">
         <table class="bgr-table">
           <thead>
-            <tr><th>Спонсор</th><th>Място</th><th>За рали</th><th>Цел</th><th>Срок</th><th>Етап</th><th></th></tr>
+            <tr><th>{{ $t('sponsors.sponsor') }}</th><th>{{ $t('sponsors.slot') }}</th><th>{{ $t('sponsors.perRally') }}</th><th>{{ $t('sponsors.goal') }}</th><th>{{ $t('sponsors.term') }}</th><th>{{ $t('sponsors.step') }}</th><th></th></tr>
           </thead>
           <tbody>
             <tr v-for="offer in data.offers" :key="offer.id" :class="{ 'bgr-locked': offer.locked }">
               <td>
                 {{ offer.name }}
-                <small class="bgr-muted">{{ offer.city }} <span v-if="offer.local" class="bgr-tag">местен</span></small>
+                <small class="bgr-muted">{{ offer.city }} <span v-if="offer.local" class="bgr-tag">{{ $t('sponsors.local') }}</span></small>
               </td>
               <td>{{ offer.slot_label }}</td>
-              <td>{{ money(offer.payment) }}<small class="bgr-muted">+ {{ money(offer.bonus) }} бонус</small></td>
-              <td>топ {{ offer.goal_place }}</td>
-              <td>{{ offer.weeks }} седм.</td>
-              <td>+{{ offer.progress_step }}%<small class="bgr-muted">риск {{ offer.risk }}%</small></td>
+              <td>{{ money(offer.payment) }}<small class="bgr-muted">{{ $t('sponsors.bonus', { bonus: money(offer.bonus) }) }}</small></td>
+              <td>{{ $t('common.top', { place: offer.goal_place }) }}</td>
+              <td>{{ $t('sponsors.weeks', { weeks: offer.weeks }) }}</td>
+              <td>+{{ offer.progress_step }}%<small class="bgr-muted">{{ $t('sponsors.risk', { risk: offer.risk }) }}</small></td>
               <td class="bgr-right">
-                <small v-if="offer.locked" class="bgr-muted">от ниво {{ offer.min_level }}</small>
+                <small v-if="offer.locked" class="bgr-muted">{{ $t('common.fromLevel', { level: offer.min_level }) }}</small>
                 <button v-else-if="offer.available" class="bgr-small" :disabled="busy" @click="start(offer.id)">
-                  Преговори ({{ data.energy_cost }} енергия)
+                  {{ $t('sponsors.negotiate', { energy: data.energy_cost }) }}
                 </button>
-                <small v-else class="bgr-muted">мястото не е свободно</small>
+                <small v-else class="bgr-muted">{{ $t('sponsors.taken') }}</small>
               </td>
             </tr>
           </tbody>

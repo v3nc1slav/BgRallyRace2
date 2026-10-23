@@ -1,5 +1,6 @@
 import { PushNotifications } from '@capacitor/push-notifications';
 import { ApiError } from './api';
+import { t } from './i18n';
 import { addPushDevice, removePushDevice, type NotifyInfo } from './game';
 import { isApp, platform } from './platform';
 
@@ -27,18 +28,18 @@ function store(token: string) {
 
 async function webToken(info: NotifyInfo) {
   if (!info.web) {
-    throw new ApiError('Известията в браузъра още не са настроени от администратора.', 0);
+    throw new ApiError(t('push.notConfigured'), 0);
   }
   if (!window.isSecureContext || !('serviceWorker' in navigator) || !('Notification' in window)) {
-    throw new ApiError('Този браузър или адрес не поддържа известия (нужен е HTTPS).', 0);
+    throw new ApiError(t('push.needHttps'), 0);
   }
   if ((await Notification.requestPermission()) !== 'granted') {
-    throw new ApiError('Известията са забранени в настройките на браузъра.', 0);
+    throw new ApiError(t('push.blockedBrowser'), 0);
   }
 
   const [firebase, messaging] = await Promise.all([import('firebase/app'), import('firebase/messaging')]);
   if (!(await messaging.isSupported())) {
-    throw new ApiError('Този браузър не поддържа известия.', 0);
+    throw new ApiError(t('push.unsupported'), 0);
   }
   const { vapidKey, ...config } = info.web;
   const app = firebase.getApps()[0] ?? firebase.initializeApp(config);
@@ -48,18 +49,18 @@ async function webToken(info: NotifyInfo) {
 
 async function appToken() {
   if ((await PushNotifications.requestPermissions()).receive !== 'granted') {
-    throw new ApiError('Известията са забранени в настройките на телефона.', 0);
+    throw new ApiError(t('push.blockedPhone'), 0);
   }
   return new Promise<string>((resolve, reject) => {
     PushNotifications.addListener('registration', (token) => resolve(token.value));
-    PushNotifications.addListener('registrationError', () => reject(new ApiError('Телефонът не можа да се регистрира за известия.', 0)));
-    PushNotifications.register().catch(() => reject(new ApiError('Телефонът не можа да се регистрира за известия.', 0)));
+    PushNotifications.addListener('registrationError', () => reject(new ApiError(t('push.phoneFailed'), 0)));
+    PushNotifications.register().catch(() => reject(new ApiError(t('push.phoneFailed'), 0)));
   });
 }
 
 export async function enablePush(info: NotifyInfo) {
   if (!info.enabled) {
-    throw new ApiError('Известията още не са настроени от администратора.', 0);
+    throw new ApiError(t('push.appNotConfigured'), 0);
   }
   const token = isApp ? await appToken() : await webToken(info);
   const result = await addPushDevice(token, platform);

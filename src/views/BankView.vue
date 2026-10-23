@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { t } from '../i18n';
 import Feedback from '../components/Feedback.vue';
 import FinancePanel from '../components/FinancePanel.vue';
 import { date, money } from '../format';
@@ -44,7 +45,7 @@ async function act(task: () => Promise<{ bank: BankInfo; message: string }>) {
 }
 
 function repay() {
-  if (bank.value?.loan && window.confirm(`Да изплатиш ли целия заем сега с ${money(bank.value.loan.payoff)}?`)) {
+  if (bank.value?.loan && window.confirm(t('bank.repayConfirm', { amount: money(bank.value.loan.payoff) }))) {
     act(repayLoan);
   }
 }
@@ -52,11 +53,11 @@ function repay() {
 
 <template>
   <section class="bgr-card">
-    <p><RouterLink to="/city">&larr; Градът</RouterLink></p>
-    <h1>Банка</h1>
+    <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
+    <h1>{{ $t('bank.title') }}</h1>
     <div class="bgr-tabs">
-      <button :class="{ active: tab === 'loans' }" @click="tab = 'loans'">Заеми</button>
-      <button :class="{ active: tab === 'finance' }" @click="tab = 'finance'">Финанси</button>
+      <button :class="{ active: tab === 'loans' }" @click="tab = 'loans'">{{ $t('bank.loans') }}</button>
+      <button :class="{ active: tab === 'finance' }" @click="tab = 'finance'">{{ $t('bank.finance') }}</button>
     </div>
 
     <FinancePanel v-if="tab === 'finance'" />
@@ -65,58 +66,55 @@ function repay() {
 
     <template v-if="bank && tab === 'loans'">
       <div v-if="bank.loan" class="bgr-panel">
-        <h2>Твоят заем</h2>
+        <h2>{{ $t('bank.yourLoan') }}</h2>
         <p v-if="bank.loan.overdue" class="bgr-error">
-          Просрочие: {{ money(bank.loan.overdue) }}. Докато не го платиш, не можеш да купуваш от магазина и пазара.
-          След {{ bank.seize_after }} пропуснати вноски поред банката налага запор.
+          {{ $t('bank.overdue', { amount: money(bank.loan.overdue) }) }}
+          {{ $t('bank.seizeWarning', { count: bank.seize_after }) }}
         </p>
         <dl class="bgr-stats-list">
-          <dt>Взет</dt>
-          <dd>{{ money(bank.loan.principal) }} на {{ date(bank.loan.created_at) }}</dd>
-          <dt>Лихва</dt>
+          <dt>{{ $t('bank.taken') }}</dt>
+          <dd>{{ $t('bank.takenValue', { amount: money(bank.loan.principal), date: date(bank.loan.created_at) }) }}</dd>
+          <dt>{{ $t('bank.interest') }}</dt>
           <dd>{{ money(bank.loan.interest) }}</dd>
-          <dt>Остава</dt>
+          <dt>{{ $t('bank.remaining') }}</dt>
           <dd>{{ money(bank.loan.remaining) }}</dd>
-          <dt>Следваща вноска</dt>
-          <dd>{{ money(bank.loan.next) }} в понеделник</dd>
-          <dt>Седмици</dt>
-          <dd>{{ bank.loan.weeks_passed }} от {{ bank.loan.weeks }}</dd>
+          <dt>{{ $t('bank.next') }}</dt>
+          <dd>{{ $t('bank.nextValue', { amount: money(bank.loan.next) }) }}</dd>
+          <dt>{{ $t('bank.weeks') }}</dt>
+          <dd>{{ $t('bank.weeksValue', { passed: bank.loan.weeks_passed, total: bank.loan.weeks }) }}</dd>
         </dl>
         <div class="bgr-actions">
-          <button v-if="bank.loan.overdue" class="bgr-small" :disabled="busy" @click="act(payOverdue)">Плати просрочието ({{ money(bank.loan.overdue) }})</button>
-          <button class="bgr-small bgr-secondary" :disabled="busy" @click="repay">Изплати предсрочно ({{ money(bank.loan.payoff) }})</button>
+          <button v-if="bank.loan.overdue" class="bgr-small" :disabled="busy" @click="act(payOverdue)">{{ $t('bank.payOverdue', { amount: money(bank.loan.overdue) }) }}</button>
+          <button class="bgr-small bgr-secondary" :disabled="busy" @click="repay">{{ $t('bank.repay', { amount: money(bank.loan.payoff) }) }}</button>
         </div>
-        <p class="bgr-muted">При предсрочно изплащане лихвата за оставащите седмици не се плаща.</p>
+        <p class="bgr-muted">{{ $t('bank.repayHint') }}</p>
       </div>
 
       <div v-else class="bgr-panel">
-        <h2>Нов заем</h2>
+        <h2>{{ $t('bank.newLoan') }}</h2>
         <form class="bgr-form" @submit.prevent="act(() => takeLoan(amount, weeks))">
           <label>
-            Сума (от {{ money(bank.min) }} до {{ money(bank.max) }})
+            {{ $t('bank.amount', { min: money(bank.min), max: money(bank.max) }) }}
             <input v-model.number="amount" type="number" :min="bank.min" :max="bank.max" step="100" />
           </label>
           <div class="bgr-tabs">
             <button v-for="term in bank.terms" :key="term.weeks" type="button" :class="{ active: weeks === term.weeks }" @click="weeks = term.weeks">
-              {{ term.weeks }} седмици · {{ term.rate }}%
+              {{ $t('bank.term', { weeks: term.weeks, rate: term.rate }) }}
             </button>
           </div>
           <p v-if="preview" class="bgr-muted">
-            Връщаш {{ money(preview.total) }} (лихва {{ money(preview.interest) }}) на {{ weeks }} вноски по {{ money(preview.installment) }} всеки понеделник.
+            {{ $t('bank.preview', { total: money(preview.total), interest: money(preview.interest), weeks, installment: money(preview.installment) }) }}
           </p>
-          <button :disabled="busy || amount < bank.min || amount > bank.max">Вземи заема ({{ bank.energy }} енергия)</button>
+          <button :disabled="busy || amount < bank.min || amount > bank.max">{{ $t('bank.take', { energy: bank.energy }) }}</button>
         </form>
       </div>
 
-      <h2>Условия</h2>
+      <h2>{{ $t('bank.terms') }}</h2>
       <ul class="bgr-muted">
-        <li>Максималният заем расте с нивото на мениджъра. Може да имаш само един заем.</li>
-        <li>Вноските се плащат всеки понеделник заедно със заплатите.</li>
-        <li>Неплатена вноска носи наказателна лихва {{ bank.penalty }}% от вноската и спира покупките от магазина и пазара.</li>
-        <li>
-          След {{ bank.seize_after }} пропуснати вноски поред банката взима предмети от склада, а после неактивните коли
-          за {{ bank.seize_pct }}% от новата им цена. Ако не стигнат, балансът става отрицателен.
-        </li>
+        <li>{{ $t('bank.rule1') }}</li>
+        <li>{{ $t('bank.rule2') }}</li>
+        <li>{{ $t('bank.rule3', { pct: bank.penalty }) }}</li>
+        <li>{{ $t('bank.rule4', { count: bank.seize_after, pct: bank.seize_pct }) }}</li>
       </ul>
     </template>
   </section>

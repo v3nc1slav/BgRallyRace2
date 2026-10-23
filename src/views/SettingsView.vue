@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import Feedback from '../components/Feedback.vue';
+import LangSwitch from '../components/LangSwitch.vue';
 import { getNotifications, saveNotificationPreferences, type NotifyInfo } from '../game';
 import { disablePush, enablePush, storedPushToken } from '../push';
 import { useAction } from '../useAction';
@@ -36,23 +37,26 @@ function toggle(key: string, on: boolean) {
 <template>
   <div class="bgr-stack">
     <section class="bgr-card">
-      <p><RouterLink to="/profile">&larr; Профил</RouterLink></p>
-      <h1>Настройки</h1>
+      <p><RouterLink to="/profile">&larr; {{ $t('settings.back') }}</RouterLink></p>
+      <h1>{{ $t('settings.title') }}</h1>
+      <h2>{{ $t('settings.language') }}</h2>
+      <p class="bgr-muted">{{ $t('settings.languageHint') }}</p>
+      <LangSwitch class="bgr-lang-start" />
       <Feedback :message="message" :error="error" />
 
       <template v-if="info">
-        <h2>Известия на това устройство</h2>
-        <p v-if="!info.enabled" class="bgr-muted">Известията още не са настроени от администратора.</p>
+        <h2>{{ $t('settings.device') }}</h2>
+        <p v-if="!info.enabled" class="bgr-muted">{{ $t('settings.notConfigured') }}</p>
         <template v-else>
           <p class="bgr-muted">
-            {{ here ? 'Известията са включени на това устройство.' : 'Включи известията, за да научаваш за ралитата, резултатите и пазара, без да отваряш играта.' }}
-            Устройства с известия: {{ info.devices }}.
+            {{ here ? $t('settings.on') : $t('settings.pitch') }}
+            {{ $t('settings.devices', { count: info.devices }) }}
           </p>
-          <button v-if="!here" :disabled="busy" @click="act(() => enablePush(info!))">Включи известията</button>
-          <button v-else class="bgr-secondary" :disabled="busy" @click="act(disablePush)">Изключи на това устройство</button>
+          <button v-if="!here" :disabled="busy" @click="act(() => enablePush(info!))">{{ $t('settings.enable') }}</button>
+          <button v-else class="bgr-secondary" :disabled="busy" @click="act(disablePush)">{{ $t('settings.disable') }}</button>
         </template>
 
-        <h2>Кои известия да получавам</h2>
+        <h2>{{ $t('settings.types') }}</h2>
         <div class="bgr-columns">
           <label v-for="type in info.types" :key="type.key" class="bgr-check">
             <input type="checkbox" :checked="type.on" :disabled="busy" @change="toggle(type.key, ($event.target as HTMLInputElement).checked)" />

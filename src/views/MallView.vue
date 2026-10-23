@@ -34,17 +34,17 @@ async function train(staffId: number) {
 
 <template>
   <section class="bgr-card">
-    <p><RouterLink to="/city">&larr; Градът</RouterLink></p>
-    <h1>МОЛ</h1>
-    <h2>Фитнес</h2>
+    <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
+    <h1>{{ $t('mall.title') }}</h1>
+    <h2>{{ $t('mall.gym') }}</h2>
     <p class="bgr-muted">
-      Физическите умения намаляват умората в дългите ралита, затова на последните етапи екипажът греши по-малко.
-      <template v-if="mall">Една тренировка: {{ mall.energy }} енергия и {{ money(mall.price) }} за +{{ mall.gain }}, веднъж на ден за всеки.</template>
+      {{ $t('mall.gymIntro') }}
+      <template v-if="mall">{{ $t('mall.session', { energy: mall.energy, price: money(mall.price), gain: mall.gain }) }}</template>
     </p>
     <Feedback :message="message" :error="error" />
 
     <template v-if="mall">
-      <p v-if="!mall.crew.length" class="bgr-error">Нямаш пилот и навигатор.</p>
+      <p v-if="!mall.crew.length" class="bgr-error">{{ $t('mall.noCrew') }}</p>
       <div v-for="member in mall.crew" :key="member.id" class="bgr-row">
         <span><small class="bgr-muted">{{ member.role_label }}</small> {{ member.name }}</span>
         <span class="bgr-actions">
@@ -54,30 +54,30 @@ async function train(staffId: number) {
             :disabled="busy || member.fitness_today || (member.physical ?? 0) >= 100"
             @click="train(member.id)"
           >
-            {{ member.fitness_today ? 'Тренира днес' : 'Тренирай' }}
+            {{ member.fitness_today ? $t('mall.trainedToday') : $t('mall.train') }}
           </button>
         </span>
       </div>
     </template>
 
-    <h2 class="bgr-spaced">Дрехи</h2>
+    <h2 class="bgr-spaced">{{ $t('mall.clothes') }}</h2>
     <template v-if="mall">
       <p class="bgr-muted">
-        Облечените дрехи дават бонус в преговорите със спонсорите и с кмета. Сега: <b>+{{ mall.clothes.bonus }}%</b>.
+        {{ $t('mall.clothesIntro') }} <b>+{{ mall.clothes.bonus }}%</b>.
       </p>
       <div class="bgr-scroll">
         <table class="bgr-table">
-          <thead><tr><th>Дреха</th><th>Бонус</th><th>Цена</th><th></th></tr></thead>
+          <thead><tr><th>{{ $t('mall.item') }}</th><th>{{ $t('mall.bonus') }}</th><th>{{ $t('mall.price') }}</th><th></th></tr></thead>
           <tbody>
             <tr v-for="item in mall.clothes.items" :key="item.id" :class="{ 'bgr-locked': item.locked, 'bgr-me': item.equipped }">
               <td>{{ item.name }}<small class="bgr-muted">{{ item.slot_label }}</small></td>
               <td>+{{ item.bonus }}%</td>
               <td>{{ money(item.price) }}</td>
               <td class="bgr-right">
-                <small v-if="item.equipped" class="bgr-ok">облечена</small>
-                <button v-else-if="item.item_id" class="bgr-small bgr-secondary" :disabled="busy" @click="act(() => wearClothes(item.item_id!))">Облечи</button>
-                <small v-else-if="item.locked" class="bgr-muted">от ниво {{ item.min_level }}</small>
-                <button v-else class="bgr-small" :disabled="busy" @click="act(() => buyClothes(item.id))">Купи</button>
+                <small v-if="item.equipped" class="bgr-ok">{{ $t('mall.worn') }}</small>
+                <button v-else-if="item.item_id" class="bgr-small bgr-secondary" :disabled="busy" @click="act(() => wearClothes(item.item_id!))">{{ $t('mall.wear') }}</button>
+                <small v-else-if="item.locked" class="bgr-muted">{{ $t('common.fromLevel', { level: item.min_level }) }}</small>
+                <button v-else class="bgr-small" :disabled="busy" @click="act(() => buyClothes(item.id))">{{ $t('mall.buy') }}</button>
               </td>
             </tr>
           </tbody>

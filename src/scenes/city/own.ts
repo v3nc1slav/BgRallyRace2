@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { t } from '../../i18n';
 import type { Painter } from './draw';
 import { iso, type Box, type Vec } from './iso';
 import { footOf, tyres, type BuildingDef } from './kit';
@@ -154,12 +155,12 @@ export const own: BuildingDef = {
 export function ownSign(): { text: string; color: string } {
   switch (ownState.status) {
     case 'building':
-      return { text: `СТРОИ СЕ ${Math.round(ownState.progress * 100)}%`, color: '#15171c' };
+      return { text: t('city.sign.building', { pct: Math.round(ownState.progress * 100) }), color: '#15171c' };
     case 'open':
-      return { text: 'ТВОЯТА ПИСТА', color: '#ffffff' };
+      return { text: t('city.sign.open'), color: '#ffffff' };
     case 'closed':
-      return { text: 'ЗАТВОРЕНО', color: '#ffffff' };
+      return { text: t('city.sign.closed'), color: '#ffffff' };
     default:
-      return { text: 'ПРОДАВА СЕ', color: '#d62612' };
+      return { text: t('city.sign.forSale'), color: '#d62612' };
   }
 }

@@ -11,10 +11,10 @@ function retry() {
 <template>
   <section class="bgr-crash" :style="{ backgroundImage: `url(${crash})` }">
     <div class="bgr-crash-box">
-      <h1>Излязохме от пътя</h1>
+      <h1>{{ $t('crash.title') }}</h1>
       <p class="bgr-crash-message">{{ message }}</p>
-      <p class="bgr-muted">Опитай отново след малко. Ако проблемът продължава, екипът вече работи по него.</p>
-      <button @click="retry">Опитай отново</button>
+      <p class="bgr-muted">{{ $t('crash.hint') }}</p>
+      <button @click="retry">{{ $t('crash.retry') }}</button>
     </div>
   </section>
 </template>

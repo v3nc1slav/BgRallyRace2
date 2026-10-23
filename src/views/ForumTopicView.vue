@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { t } from '../i18n';
 import { useRoute } from 'vue-router';
 import Feedback from '../components/Feedback.vue';
 import { stamp, when } from '../format';
@@ -29,10 +30,10 @@ async function reply() {
 }
 
 async function report(post: ChatMessage) {
-  if (window.confirm(`Да докладваш ли мнението на ${post.author} на админа?`)) {
+  if (window.confirm(t('forum.reportConfirm', { author: post.author }))) {
     const result = await run(() => reportMessage(post.id));
     if (result) {
-      message.value = 'Мнението е докладвано.';
+      message.value = t('forum.reported');
     }
   }
 }
@@ -42,7 +43,7 @@ onMounted(() => load());
 
 <template>
   <section class="bgr-card">
-    <p><RouterLink to="/forum">&larr; Форум</RouterLink></p>
+    <p><RouterLink to="/forum">&larr; {{ $t('forum.title') }}</RouterLink></p>
     <Feedback :message="message" :error="error" />
 
     <template v-if="topic">
@@ -53,7 +54,7 @@ onMounted(() => load());
         <header>
           <b>{{ post.author }}</b>
           <small class="bgr-muted">{{ stamp(post.at) }}</small>
-          <button v-if="!post.own" class="bgr-link bgr-report" @click="report(post)">докладвай</button>
+          <button v-if="!post.own" class="bgr-link bgr-report" @click="report(post)">{{ $t('common.report') }}</button>
         </header>
         <p>{{ post.text }}</p>
       </article>
@@ -62,13 +63,13 @@ onMounted(() => load());
         <button v-for="page in topic.pages" :key="page" :class="{ active: page === topic.page }" @click="load(page)">{{ page }}</button>
       </div>
 
-      <p v-if="topic.muted_until" class="bgr-error">Заглушен си до {{ when(topic.muted_until) }}.</p>
+      <p v-if="topic.muted_until" class="bgr-error">{{ $t('common.mutedUntil', { time: when(topic.muted_until) }) }}</p>
       <form v-else class="bgr-form bgr-panel" @submit.prevent="reply">
         <label>
-          Отговор
+          {{ $t('forum.reply') }}
           <textarea v-model="text" rows="4" :maxlength="topic.max_length" required />
         </label>
-        <button :disabled="busy || !text.trim()">Публикувай</button>
+        <button :disabled="busy || !text.trim()">{{ $t('common.publish') }}</button>
       </form>
     </template>
   </section>

@@ -25,9 +25,9 @@ async function login(provider: 'google' | 'facebook') {
 
 <template>
   <div v-if="session.providers.google || session.providers.facebook" class="bgr-social">
-    <p class="bgr-muted">или</p>
-    <button v-if="session.providers.google" type="button" class="bgr-social-google" :disabled="busy" @click="login('google')">Вход с Google</button>
-    <button v-if="session.providers.facebook" type="button" class="bgr-social-facebook" :disabled="busy" @click="login('facebook')">Вход с Facebook</button>
+    <p class="bgr-muted">{{ $t('auth.or') }}</p>
+    <button v-if="session.providers.google" type="button" class="bgr-social-google" :disabled="busy" @click="login('google')">{{ $t('auth.google') }}</button>
+    <button v-if="session.providers.facebook" type="button" class="bgr-social-facebook" :disabled="busy" @click="login('facebook')">{{ $t('auth.facebook') }}</button>
     <p v-if="error" class="bgr-error">{{ error }}</p>
   </div>
 </template>

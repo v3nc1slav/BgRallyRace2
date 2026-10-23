@@ -1300,3 +1300,14 @@ body.bgr-game .bgr {
 .bgr-comeback .bgr-panel p {
   margin: 0 0 6px;
 }
+
+.bgr-lang {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.bgr-lang.bgr-lang-start {
+  justify-content: flex-start;
+  margin-bottom: 12px;
+}

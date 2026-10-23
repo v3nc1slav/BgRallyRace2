@@ -1,5 +1,6 @@
 import { SocialLogin } from '@capgo/capacitor-social-login';
 import { ApiError } from './api';
+import { t } from './i18n';
 import { session, socialLogin } from './session';
 
 let ready: Promise<void> | null = null;
@@ -29,10 +30,10 @@ export async function loginWith(provider: 'google' | 'facebook') {
   try {
     token = await providerToken(provider);
   } catch {
-    throw new ApiError('Входът беше прекъснат.', 0);
+    throw new ApiError(t('auth.socialCancelled'), 0);
   }
   if (!token) {
-    throw new ApiError('Входът не върна профил. Опитай отново.', 0);
+    throw new ApiError(t('auth.socialEmpty'), 0);
   }
   await socialLogin(provider, token);
 }

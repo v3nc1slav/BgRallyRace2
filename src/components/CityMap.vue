@@ -55,9 +55,9 @@ onBeforeUnmount(() => {
   <div class="bgr-city-map">
     <div ref="box" class="bgr-city-canvas" @wheel.prevent></div>
     <div class="bgr-city-tools">
-      <button class="bgr-small bgr-secondary" aria-label="Приближи" @click="view?.zoomBy(1.3)">+</button>
-      <button class="bgr-small bgr-secondary" aria-label="Отдалечи" @click="view?.zoomBy(0.77)">−</button>
-      <button class="bgr-small bgr-secondary" @click="view?.reset()">Целият град</button>
+      <button class="bgr-small bgr-secondary" :aria-label="$t('city.zoomIn')" @click="view?.zoomBy(1.3)">+</button>
+      <button class="bgr-small bgr-secondary" :aria-label="$t('city.zoomOut')" @click="view?.zoomBy(0.77)">−</button>
+      <button class="bgr-small bgr-secondary" @click="view?.reset()">{{ $t('city.whole') }}</button>
     </div>
   </div>
 </template>

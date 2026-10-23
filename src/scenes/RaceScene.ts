@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { t } from '../i18n';
 import { Dust, Precipitation, type Weather } from './map/effects';
 import { HEADER, generatedLayout, tracedLayout, type Layout, type StageShape } from './map/layout';
 import { PALETTES, type Palette } from './map/palette';
@@ -213,7 +214,7 @@ export class RaceScene extends Phaser.Scene {
       this.labels.push(text);
     }
 
-    this.title.setText(`Етап ${stage.seq}: ${stage.name} · ${stage.length_km} км`);
+    this.title.setText(t('stageMap.title', { seq: stage.seq, name: stage.name, km: stage.length_km }));
   }
 
   private drawRoad(surface: string) {
