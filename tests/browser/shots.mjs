@@ -5,6 +5,8 @@ import { BASE, CHROME, HOST, MU, OUTPUT, SITE, WP_LOAD, option, php, settings, s
 const routes = (process.argv[2] || 'home,garage,city,rallies,shop,market,bar,forum,profile').split(',');
 const prefix = process.argv[3] || 'm';
 const width = Number(process.argv[4] || 390);
+const lang = process.argv[6] || 'bg';
+const store = process.argv[7] === 'store';
 const map = { home: '', garage: 'garage', city: 'city', rallies: 'rallies', shop: 'shop', market: 'city/market', bar: 'city/bar', forum: 'forum', profile: 'profile', bank: 'city/bank', mall: 'city/mall', hall: 'city/hall', sponsors: 'sponsors', standings: 'standings', track: 'city/track', black: 'city/black', jobs: 'city/jobs', police: 'city/police', rally: 'rallies/RALLY', login: 'login' };
 
 const stamp = Date.now();
@@ -13,10 +15,11 @@ let userId = 0;
 let managerId = 0;
 try {
   const page = await browser.newPage();
-  await page.setViewport({ width, height: Number(process.argv[5] || 844), deviceScaleFactor: 1, isMobile: width < 800, hasTouch: width < 800 });
+  await page.evaluateOnNewDocument((code) => localStorage.setItem('bgr-lang', code), lang);
+  await page.setViewport({ width, height: Number(process.argv[5] || 844), deviceScaleFactor: store ? 2 : 1, isMobile: width < 800, hasTouch: width < 800 });
   await page.goto(`${SITE}/#/login`, { waitUntil: 'networkidle0' });
   if (routes.includes('login')) {
-    await page.screenshot({ path: `${OUTPUT}/${prefix}-login.png`, fullPage: true });
+    await page.screenshot({ path: `${OUTPUT}/${prefix}-login.png`, fullPage: !store });
   }
   const state = await page.evaluate(async (name) => {
     const base = document.getElementById('app').dataset.restUrl;
@@ -34,7 +37,7 @@ try {
     await page.goto(`${SITE}/#/${path}`, { waitUntil: 'networkidle0' });
     await page.reload({ waitUntil: 'networkidle0' });
     await new Promise((resolve) => setTimeout(resolve, 600));
-    await page.screenshot({ path: `${OUTPUT}/${prefix}-${route}.png`, fullPage: true });
+    await page.screenshot({ path: `${OUTPUT}/${prefix}-${route}.png`, fullPage: !store });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     console.log(`${route}: saved${overflow > 0 ? `, horizontal overflow ${overflow}px` : ''}`);
   }

@@ -16,6 +16,11 @@ const errors = [];
 async function open(width, height, scale, touch, night = '') {
   const page = await browser.newPage();
   page.on('pageerror', (error) => errors.push(error.message));
+  await page.evaluateOnNewDocument(() => {
+    try {
+      localStorage.setItem('bgr-lang', 'bg');
+    } catch {}
+  });
   if (night) {
     await page.emulateTimezone(night);
   }

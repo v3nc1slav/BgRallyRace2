@@ -42,6 +42,7 @@ try {
   const workerSession = await worker.createCDPSession();
   await workerSession.send('Network.enable');
   await workerSession.send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+  await page.evaluate(() => localStorage.setItem('bgr-lang', 'bg'));
   await page.setOfflineMode(true);
   await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
   const text = await page.evaluate(() => document.body.innerText);
@@ -49,6 +50,10 @@ try {
   const image = await page.evaluate(() => getComputedStyle(document.body).backgroundImage);
   await page.screenshot({ path: `${OUTPUT}/pwa-offline.png` });
   check('offline page uses the crash photo', image.includes('error.jpg'));
+  await page.evaluate(() => localStorage.setItem('bgr-lang', 'en'));
+  await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  const english = await page.evaluate(() => document.body.innerText);
+  check('offline page follows the chosen language', english.includes('No internet connection.') && !english.includes('Няма връзка'), english.slice(0, 80).replace(/\s+/g, ' '));
   await page.setOfflineMode(false);
 } finally {
   await browser.close();
