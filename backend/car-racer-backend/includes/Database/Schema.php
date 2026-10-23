@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '15';
+    private const VERSION = '17';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -85,6 +85,12 @@ final class Schema
   xp_today smallint(5) unsigned NOT NULL DEFAULT 0,
   tired_days smallint(5) unsigned NOT NULL DEFAULT 0,
   energy_pct smallint(5) unsigned NOT NULL DEFAULT 100,
+  bar_week varchar(10) NOT NULL DEFAULT '',
+  seen_date date DEFAULT NULL,
+  inactive_since datetime DEFAULT NULL,
+  inactive_notes text NULL,
+  comeback text NULL,
+  fresh_at datetime DEFAULT NULL,
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY user_id (user_id),

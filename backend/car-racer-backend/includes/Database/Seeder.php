@@ -56,6 +56,10 @@ final class Seeder
         if ($fresh || (int) $from < 15) {
             self::addCityShops();
         }
+        if ((int) $from < 17) {
+            global $wpdb;
+            $wpdb->query($wpdb->prepare('UPDATE ' . Tables::name('managers') . ' SET seen_date = %s WHERE seen_date IS NULL', wp_date('Y-m-d')));
+        }
     }
 
     private static function addCityShops(): void

@@ -5,6 +5,7 @@ namespace BgRally\Rest;
 use BgRally\Auth\Social;
 use BgRally\Catalog\Cities;
 use BgRally\Pages;
+use BgRally\Game\Inactivity;
 use BgRally\Game\Managers;
 use WP_Error;
 use WP_REST_Request;
@@ -28,6 +29,12 @@ final class PlayerController
     public static function me()
     {
         return self::state();
+    }
+
+    public static function comeback(WP_REST_Request $request)
+    {
+        $result = Inactivity::resolve(Auth::manager(), (string) $request->get_param('choice'));
+        return is_wp_error($result) ? $result : Auth::respond([], $result);
     }
 
     public static function create(WP_REST_Request $request)

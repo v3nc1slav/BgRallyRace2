@@ -41,6 +41,7 @@ final class Finance
         'track' => 'Собствена писта',
         'sabotage' => 'Саботаж',
         'move' => 'Преместване в друг град',
+        'fresh_start' => 'Ново начало',
     ];
 
     private static function boundary(string $startAt): string

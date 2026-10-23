@@ -23,7 +23,7 @@ final class Payroll
             $managerId,
             $previous
         ));
-        if ($claimed !== 1 || $previous === '') {
+        if ($claimed !== 1 || $previous === '' || Inactivity::isInactive($manager)) {
             return;
         }
 

@@ -232,8 +232,8 @@ final class Sponsors
         global $wpdb;
         $sponsors = Registry::get('sponsors')->table();
         $rows = $wpdb->get_results($wpdb->prepare(
-            'SELECT c.id, c.manager_id, s.name FROM ' . self::table() . " c JOIN $sponsors s ON s.id = c.sponsor_id
-             WHERE c.status = 'active' AND c.ends_at <= %s",
+            'SELECT c.id, c.manager_id, s.name FROM ' . self::table() . " c JOIN $sponsors s ON s.id = c.sponsor_id JOIN " . Tables::name('managers') . " m ON m.id = c.manager_id
+             WHERE c.status = 'active' AND c.ends_at <= %s AND m.inactive_since IS NULL",
             current_time('mysql')
         ), ARRAY_A);
 

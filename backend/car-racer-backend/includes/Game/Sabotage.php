@@ -32,7 +32,7 @@ final class Sabotage
         $managerId = (int) $manager['id'];
         $rows = $wpdb->get_results($wpdb->prepare(
             'SELECT e.manager_id, m.level FROM ' . Tables::name('entries') . ' e JOIN ' . Tables::name('managers') . ' m ON m.id = e.manager_id
-             WHERE e.rally_id = %d AND e.class = %s AND e.manager_id > 0 AND e.manager_id <> %d AND m.level >= %d
+             WHERE e.rally_id = %d AND e.class = %s AND e.manager_id > 0 AND e.manager_id <> %d AND m.level >= %d AND m.inactive_since IS NULL
              AND e.manager_id NOT IN (SELECT target_id FROM ' . self::table() . ' WHERE rally_id = %d AND manager_id = %d)
              ORDER BY e.start_number',
             $entry['rally_id'],

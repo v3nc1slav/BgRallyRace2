@@ -107,7 +107,7 @@ final class Work
     {
         global $wpdb;
         $rows = $wpdb->get_results($wpdb->prepare(
-            'SELECT * FROM ' . Tables::name('managers') . ' WHERE job_id > 0 AND (energy_date IS NULL OR energy_date < %s) LIMIT 200',
+            'SELECT * FROM ' . Tables::name('managers') . ' WHERE job_id > 0 AND inactive_since IS NULL AND (energy_date IS NULL OR energy_date < %s) LIMIT 200',
             wp_date('Y-m-d')
         ), ARRAY_A);
 

@@ -70,6 +70,7 @@ final class Rallies
         Market::expire();
         Push::reminders();
         Push::flush();
+        Inactivity::mark();
         Payroll::runAll();
     }
 

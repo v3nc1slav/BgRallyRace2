@@ -21,6 +21,7 @@ final class Routes
         self::route('/ads/admob-ssv', 'GET', [AdsController::class, 'admobSsv'], $public);
         self::route('/me', 'GET', [PlayerController::class, 'me'], $public);
         self::route('/player', 'POST', [PlayerController::class, 'create'], $loggedIn);
+        self::route('/comeback', 'POST', [PlayerController::class, 'comeback'], $player);
         self::route('/cities', 'GET', [CatalogController::class, 'cities'], $public);
         self::route('/manifest', 'GET', [\BgRally\Frontend::class, 'manifest'], $public);
 

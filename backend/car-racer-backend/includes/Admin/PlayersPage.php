@@ -25,24 +25,25 @@ final class PlayersPage
         );
 
         echo '<table class="widefat striped"><thead><tr>';
-        foreach (['Играч', 'Имейл', 'Град', 'Ниво', 'Пари', 'Регистриран', 'Статус', ''] as $heading) {
+        foreach (['Играч', 'Имейл', 'Град', 'Ниво', 'Пари', 'Регистриран', 'Последно влизане', 'Статус', ''] as $heading) {
             printf('<th>%s</th>', esc_html($heading));
         }
         echo '</tr></thead><tbody>';
 
         if (!$players) {
-            echo '<tr><td colspan="8">Няма играчи.</td></tr>';
+            echo '<tr><td colspan="9">Няма играчи.</td></tr>';
         }
 
         foreach ($players as $player) {
             printf(
-                '<tr><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s €</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+                '<tr><td>%s</td><td>%s</td><td>%s</td><td>%d</td><td>%s €</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
                 esc_html($player['user_login']),
                 esc_html($player['user_email']),
                 esc_html((string) $player['city']),
                 (int) $player['level'],
                 esc_html(number_format_i18n((int) $player['money'])),
                 esc_html(get_date_from_gmt($player['created_at'], 'd.m.Y H:i')),
+                esc_html($player['seen_date'] ? mysql2date('d.m.Y', $player['seen_date']) : '—'),
                 self::status($player),
                 self::actions($player)
             );
@@ -63,7 +64,8 @@ final class PlayersPage
     private static function status(array $player): string
     {
         if (!$player['banned_at']) {
-            return 'Активен' . TalkPage::mutedLabel($player['muted_until']);
+            $inactive = $player['inactive_since'] ? sprintf('<span style="color:#996800">Неактивен от %s</span>', esc_html(mysql2date('d.m.Y', $player['inactive_since']))) : 'Активен';
+            return $inactive . TalkPage::mutedLabel($player['muted_until']);
         }
 
         return sprintf(

@@ -53,6 +53,9 @@ final class Managers
         );
 
         $manager = $wpdb->get_row($query, ARRAY_A);
+        if ($manager) {
+            $manager = Inactivity::touch($manager);
+        }
         if ($manager && $manager['payroll_week'] !== Rallies::week()) {
             Payroll::process($manager);
             $manager = $wpdb->get_row($query, ARRAY_A);
@@ -143,6 +146,7 @@ final class Managers
             'job' => ($job = Work::job($manager)) ? ['name' => $job['name'], 'pay' => (int) $job['pay'], 'energy' => (int) $job['energy']] : null,
             'loan' => Bank::summary((int) $manager['id']),
             'perks' => ['discount' => (int) ($manager['shop_discount'] ?? 0), 'retry' => (bool) ($manager['ad_retry'] ?? false)],
+            'comeback' => Inactivity::info($manager),
         ];
     }
 

@@ -97,6 +97,10 @@ final class Bank
         if (self::active($managerId)) {
             return new WP_Error('bgr_loan', 'Вече имаш заем. Нов можеш да вземеш, след като го изплатиш.', ['status' => 400]);
         }
+        $blocked = Inactivity::loanBlockedUntil($manager);
+        if ($blocked) {
+            return new WP_Error('bgr_fresh', sprintf('След ново начало заем може да се тегли от %s.', date('d.m.Y', $blocked)), ['status' => 400]);
+        }
         if (!in_array($weeks, self::TERMS, true)) {
             return new WP_Error('bgr_term', 'Няма такъв срок.', ['status' => 400]);
         }
