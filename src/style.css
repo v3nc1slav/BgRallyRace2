@@ -989,7 +989,7 @@ body.bgr-game .bgr {
     left: 0;
     z-index: 60;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
     background: rgba(31, 35, 43, 0.97);
     border-top: 1px solid var(--line);

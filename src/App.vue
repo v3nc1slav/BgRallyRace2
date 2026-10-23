@@ -43,11 +43,9 @@ onBeforeUnmount(() => stopLabels?.());
       <RouterLink to="/" class="bgr-logo"><img :src="logo" alt="BG Rally Race" /></RouterLink>
       <nav class="bgr-nav">
         <RouterLink to="/">{{ $t('nav.manager') }}</RouterLink>
-        <RouterLink to="/garage">{{ $t('nav.garage') }}</RouterLink>
         <RouterLink to="/city">{{ $t('nav.city') }}</RouterLink>
         <RouterLink to="/shop">{{ $t('nav.shop') }}</RouterLink>
         <RouterLink to="/rallies">{{ $t('nav.rallies') }}</RouterLink>
-        <RouterLink to="/sponsors">{{ $t('nav.sponsors') }}</RouterLink>
         <RouterLink to="/standings">{{ $t('nav.standings') }}</RouterLink>
         <RouterLink to="/forum">{{ $t('nav.forum') }}</RouterLink>
         <RouterLink to="/profile">{{ $t('nav.profile') }}</RouterLink>

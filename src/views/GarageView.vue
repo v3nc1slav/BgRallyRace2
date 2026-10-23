@@ -60,6 +60,7 @@ function canUpgrade(next: NonNullable<Garage['garage']['next']>) {
 
     <template v-if="garage">
       <section class="bgr-card">
+        <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
         <h2>{{ $t('garage.level', { level: garage.garage.level }) }}</h2>
         <p v-if="garage.garage.next" class="bgr-muted">
           {{ $t('garage.next', { level: garage.garage.next.level, price: money(garage.garage.next.price), min: garage.garage.next.min_level }) }}

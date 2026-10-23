@@ -27,6 +27,7 @@ async function start(id: number) {
 <template>
   <div v-if="data" class="bgr-stack">
     <section class="bgr-card">
+      <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
       <h1>{{ $t('sponsors.title') }}</h1>
       <p class="bgr-muted">
         {{ $t('sponsors.intro') }}
