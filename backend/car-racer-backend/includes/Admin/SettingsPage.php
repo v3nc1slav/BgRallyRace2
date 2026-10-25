@@ -2,6 +2,7 @@
 
 namespace BgRally\Admin;
 
+use BgRally\Auth\Guard;
 use BgRally\Settings;
 
 final class SettingsPage
@@ -61,6 +62,47 @@ final class SettingsPage
         }
 
         submit_button('Запази');
-        echo '</form></div>';
+        echo '</form>';
+        self::locks();
+        echo '</div>';
+    }
+
+    private static function locks(): void
+    {
+        echo '<h2>Заключени входове</h2>';
+        if (!empty($_GET['unlocked'])) {
+            echo '<div class="notice notice-success"><p>Входът е отключен.</p></div>';
+        }
+        $locks = Guard::locks();
+        if (!$locks) {
+            echo '<p>Няма заключени профили или IP адреси.</p>';
+            return;
+        }
+        echo '<table class="widefat striped"><thead><tr><th>IP адрес</th><th>Профил</th><th>Заключен до</th><th></th></tr></thead><tbody>';
+        foreach ($locks as $lock) {
+            printf(
+                '<tr><td>%s</td><td>%s</td><td>%s</td><td><form method="post" action="%s"><input type="hidden" name="action" value="bgr_guard_unlock"><input type="hidden" name="ip" value="%s"><input type="hidden" name="login" value="%s">%s<button class="button">Отключи</button></form></td></tr>',
+                esc_html($lock['ip']),
+                esc_html($lock['login'] ?? 'всички профили'),
+                esc_html(wp_date('d.m.Y H:i', $lock['until'])),
+                esc_url(admin_url('admin-post.php')),
+                esc_attr($lock['ip']),
+                esc_attr($lock['login'] ?? ''),
+                wp_nonce_field('bgr_guard_unlock', '_wpnonce', true, false)
+            );
+        }
+        echo '</tbody></table>';
+    }
+
+    public static function handleUnlock(): void
+    {
+        check_admin_referer('bgr_guard_unlock');
+        if (!current_user_can('manage_options')) {
+            wp_die('Нямате права за това действие.', 403);
+        }
+        $login = sanitize_text_field(wp_unslash($_POST['login'] ?? ''));
+        Guard::clear(sanitize_text_field(wp_unslash($_POST['ip'] ?? '')), $login === '' ? null : $login);
+        wp_safe_redirect(admin_url('admin.php?page=bgrally-settings&unlocked=1'));
+        exit;
     }
 }

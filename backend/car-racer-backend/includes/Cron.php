@@ -2,6 +2,7 @@
 
 namespace BgRally;
 
+use BgRally\Auth\Guard;
 use BgRally\Game\Rallies;
 
 final class Cron
@@ -13,6 +14,7 @@ final class Cron
     {
         add_filter('cron_schedules', [self::class, 'schedules']);
         add_action(self::HOOK, [Rallies::class, 'runDue']);
+        add_action(self::HOOK, [Guard::class, 'purge']);
         add_action('init', [self::class, 'ensureScheduled']);
     }
 

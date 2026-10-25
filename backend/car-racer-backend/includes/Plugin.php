@@ -4,6 +4,7 @@ namespace BgRally;
 
 use BgRally\Admin\Menu;
 use BgRally\Auth\Bans;
+use BgRally\Auth\Guard;
 use BgRally\Auth\Tokens;
 use BgRally\Database\Schema;
 use BgRally\Rest\Routes;
@@ -15,6 +16,7 @@ final class Plugin
         add_action('plugins_loaded', [Schema::class, 'maybeUpgrade']);
         add_action('rest_api_init', [Routes::class, 'register']);
         Bans::register();
+        Guard::register();
         Tokens::register();
         Game\Push::register();
         Cron::register();

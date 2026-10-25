@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '20';
+    private const VERSION = '21';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -412,6 +412,15 @@ final class Schema
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   KEY manager_id (manager_id)",
+
+            'guard' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  kind varchar(10) NOT NULL,
+  ip varchar(45) NOT NULL,
+  login varchar(60) NOT NULL DEFAULT '',
+  created_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  KEY kind_ip (kind,ip,created_at),
+  KEY kind_login (kind,ip,login)",
         ];
     }
 }

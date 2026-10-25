@@ -2,6 +2,7 @@
 
 namespace BgRally\Rest;
 
+use BgRally\Auth\Guard;
 use BgRally\Auth\Social;
 use BgRally\Auth\Tokens;
 use BgRally\Catalog\Cities;
@@ -17,6 +18,10 @@ final class AuthController
     {
         if (is_user_logged_in()) {
             return new WP_Error('bgr_logged_in', I18n::t('server.auth.loggedIn'), ['status' => 400]);
+        }
+        $limited = Guard::registration();
+        if ($limited) {
+            return $limited;
         }
 
         $rawUsername = trim((string) $request->get_param('username'));
@@ -58,6 +63,7 @@ final class AuthController
         }
 
         Managers::create($userId, $cityId);
+        Guard::registered();
 
         return self::signIn($request, (int) $userId);
     }
@@ -75,6 +81,9 @@ final class AuthController
         }
 
         if (is_wp_error($user)) {
+            if ($user->get_error_code() === 'bgr_locked') {
+                return $user;
+            }
             $message = $user->get_error_code() === 'bgr_banned'
                 ? $user->get_error_message()
                 : I18n::t('server.auth.wrong');

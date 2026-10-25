@@ -18,6 +18,7 @@ final class Menu
         AdsPage::register();
         AuthPage::register();
         LevelsPage::register();
+        add_action('admin_post_bgr_guard_unlock', [SettingsPage::class, 'handleUnlock']);
         add_action('admin_post_bgr_revoke_tokens', [PlayersPage::class, 'handleRevoke']);
         add_action('admin_enqueue_scripts', [self::class, 'assets']);
     }

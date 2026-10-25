@@ -1303,7 +1303,9 @@
       "deleted": "The profile has been deleted.",
       "login": "Log in to your profile.",
       "noPlayer": "You do not have a manager profile.",
-      "hasPlayer": "You already have a manager profile."
+      "hasPlayer": "You already have a manager profile.",
+      "locked": "Too many failed attempts. Try again in {count} minute. | Too many failed attempts. Try again in {count} minutes.",
+      "registerLimit": "Too many new profiles from this network. Try again later."
     },
     "social": {
       "noResponse": "No response from the login provider.",
