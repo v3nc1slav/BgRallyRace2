@@ -8,7 +8,7 @@
     "name": "index.esm"
   },
   "index.html": {
-    "file": "game-CAhetvms.js",
+    "file": "game-JpEH2IBa.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
@@ -21,7 +21,7 @@
       "src/race.ts"
     ],
     "css": [
-      "game-DJstVlbc.css"
+      "game-DAOmWqt3.css"
     ],
     "assets": [
       "assets/BGRallyHD.png",
@@ -30,7 +30,7 @@
     ]
   },
   "node_modules/@capacitor-community/admob/dist/esm/web.js": {
-    "file": "game-web-G-m9uyLy.js",
+    "file": "game-web-C98mEiUp.js",
     "name": "web",
     "src": "node_modules/@capacitor-community/admob/dist/esm/web.js",
     "isDynamicEntry": true,
@@ -39,7 +39,7 @@
     ]
   },
   "node_modules/@capgo/capacitor-social-login/dist/esm/web.js": {
-    "file": "game-web-DRCEv6q2.js",
+    "file": "game-web-DiuoKs7_.js",
     "name": "web",
     "src": "node_modules/@capgo/capacitor-social-login/dist/esm/web.js",
     "isDynamicEntry": true,
@@ -78,7 +78,7 @@
     "src": "src/assets/error.jpg"
   },
   "src/city.ts": {
-    "file": "game-city-Ba7hm45L.js",
+    "file": "game-city-BNxq1Tgn.js",
     "name": "city",
     "src": "src/city.ts",
     "isDynamicEntry": true,
@@ -88,7 +88,7 @@
     ]
   },
   "src/race.ts": {
-    "file": "game-race-D2jYRElu.js",
+    "file": "game-race-DgT1zbbG.js",
     "name": "race",
     "src": "src/race.ts",
     "isDynamicEntry": true,
