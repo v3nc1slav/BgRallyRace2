@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { ask } from '../dialog';
 import { closeTestAd, testAd } from '../ads';
 import { t } from '../i18n';
 
-function close() {
-  if (testAd.left && !window.confirm(t('ads.closeConfirm'))) {
+async function close() {
+  if (testAd.left && !await ask(t('ads.closeConfirm'))) {
     return;
   }
   closeTestAd();

@@ -72,6 +72,17 @@ final class Sponsors
         ), ARRAY_A);
     }
 
+    public static function livery(int $managerId): array
+    {
+        $livery = [];
+        foreach (self::open($managerId) as $contract) {
+            if ($contract['status'] === 'active') {
+                $livery[$contract['slot']] = $contract['name'];
+            }
+        }
+        return $livery;
+    }
+
     public static function view(array $manager): array
     {
         global $wpdb;

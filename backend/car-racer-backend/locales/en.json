@@ -316,7 +316,52 @@
     "energyToday": "{energy} energy today",
     "unpaid": "has not been paid",
     "perWeek": "{amount}/wk",
-    "fire": "Let go"
+    "fire": "Let go",
+    "back": "Garage",
+    "scene": {
+      "label": "The garage with the car on the jack",
+      "sign": "GARAGE · LEVEL {level}",
+      "staff": "STAFF",
+      "shelves": "Parts in storage",
+      "rack": "Tyres in storage",
+      "parked": "Make {name} active",
+      "upgrade": "Upgrade the garage",
+      "nextLevel": "Garage level {level}",
+      "needLevel": "Manager level {level} (you have {have})",
+      "needMoney": "{price} (you have {have})",
+      "needPermit": "Permit from the mayor",
+      "toHall": "To the city hall",
+      "close": "Close",
+      "confirm": "Upgrade the garage to level {level} for {price}?",
+      "trunk": "Boot",
+      "trunkTake": "For the rally: {tyres} spare tyres and {parts} spare parts",
+      "trunkShort": "{tyres} tyres · {parts} parts",
+      "short": {
+        "engine": "eng.",
+        "turbo": "turbo",
+        "gearbox": "gearb.",
+        "suspension": "susp.",
+        "brakes": "brakes",
+        "chassis": "chassis",
+        "tyres": "tyres"
+      },
+      "tyresHint": "Tyres cannot be repaired. Replace them with a set from the rack on the left.",
+      "missingPart": "The car has no {part}. Fit a part from the shelf.",
+      "noRepair": "A repair will not improve “{name}” ({pct}). If the part is worn, replace it with a new one from the shelf.",
+      "repairConfirm": "Are you sure you want to repair “{name}” ({pct})? It will cost {cost} and {energy} energy.",
+      "spareTyre": "“{name}” is a spare tyre. It goes to the rally and is not fitted.",
+      "wrongClass": "“{name}” is not for this car's class.",
+      "swapConfirm": "Are you sure you want to replace “{old}” with “{name}”? It will cost {energy} energy.",
+      "putConfirm": "Are you sure you want to fit “{name}”? It will cost {energy} energy.",
+      "repairTitle": "Repair",
+      "repairOk": "Repair",
+      "swapTitle": "Replace",
+      "swapOk": "Replace",
+      "trophies": "Trophies",
+      "trophiesEmpty": "Your rally cups and medals will stand here. A cup for every win, a medal for second and third place.",
+      "trophiesSummary": "Wins: {wins} · Second places: {second} · Third places: {third}",
+      "trophyTitle": "{rally} · place {place}"
+    }
   },
   "shop": {
     "tradeInWarning": "{name} will be sold for {value}.",
@@ -1371,5 +1416,10 @@
     "manifest": {
       "description": "Online rally manager"
     }
+  },
+  "dialog": {
+    "yes": "Yes",
+    "no": "Cancel",
+    "ok": "OK"
   }
 }

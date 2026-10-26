@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import Feedback from '../components/Feedback.vue';
 import HealthBar from '../components/HealthBar.vue';
@@ -47,8 +48,8 @@ async function act(task: () => Promise<{ market: MarketInfo; message: string }>)
   }
 }
 
-function buy(listing: MarketListing) {
-  if (window.confirm(t('market.buyConfirm', { name: listing.name, price: money(listing.price + listing.delivery) }))) {
+async function buy(listing: MarketListing) {
+  if (await ask(t('market.buyConfirm', { name: listing.name, price: money(listing.price + listing.delivery) }))) {
     act(() => buyListing({ ...query }, listing.id));
   }
 }
@@ -57,8 +58,8 @@ function list(asset: MarketAsset) {
   act(() => listOnMarket({ ...query }, asset.kind, asset.id, prices[key(asset)]));
 }
 
-function dealer(asset: MarketAsset) {
-  if (window.confirm(t('market.dealerConfirm', { price: money(asset.dealer), name: asset.name }))) {
+async function dealer(asset: MarketAsset) {
+  if (await ask(t('market.dealerConfirm', { price: money(asset.dealer), name: asset.name }))) {
     act(() => sellToDealer({ ...query }, asset.kind, asset.id));
   }
 }

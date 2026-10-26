@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import { errorMessage } from '../api';
 import { stamp, when } from '../format';
@@ -58,7 +59,7 @@ async function send() {
 }
 
 async function report(message: ChatMessage) {
-  if (!window.confirm(t('chat.reportConfirm', { author: message.author }))) {
+  if (!await ask(t('chat.reportConfirm', { author: message.author }))) {
     return;
   }
   try {

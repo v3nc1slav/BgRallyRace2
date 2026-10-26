@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import Feedback from '../components/Feedback.vue';
 import { money } from '../format';
@@ -23,8 +24,8 @@ async function act(task: () => Promise<{ jobs: JobsInfo; message: string }>) {
   }
 }
 
-function quit() {
-  if (window.confirm(t('jobs.quitConfirm'))) {
+async function quit() {
+  if (await ask(t('jobs.quitConfirm'))) {
     act(quitJob);
   }
 }

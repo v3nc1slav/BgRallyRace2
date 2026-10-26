@@ -42,6 +42,7 @@ export interface StorageItem {
   id: number;
   kind: 'part' | 'tyre' | 'spare_tyre';
   name: string;
+  type: string;
   type_label: string;
   health: number;
   max_health: number;
@@ -353,6 +354,7 @@ export interface TopicInfo extends ForumRules {
 
 export interface GarageLevel {
   permit: boolean;
+  security: boolean;
   level: number;
   car_slots: number;
   next: { level: number; price: number; min_level: number; unlocks: string } | null;
@@ -380,6 +382,8 @@ export interface Garage {
   crew: CrewMember[];
   energy_costs: { mount: number; tyres: number; repair: number };
   spares: { tyres: number; parts: number };
+  livery: Partial<Record<'doors' | 'hood' | 'roof' | 'suits', string>>;
+  trophies: { place: number; rally: string; season: number }[];
 }
 
 export interface ShopCar {

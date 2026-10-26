@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import Feedback from '../components/Feedback.vue';
 import { money, percent } from '../format';
@@ -35,7 +36,7 @@ onMounted(() =>
 
 async function purchaseCar(car: ShopCar) {
   const warning = tradeIn.value ? `\n${t('shop.tradeInWarning', { name: tradeIn.value.name, value: money(tradeIn.value.value) })}` : '';
-  if (!window.confirm(`${t('shop.buyCarConfirm', { name: car.name, price: money(car.price) })}${warning}`)) {
+  if (!await ask(`${t('shop.buyCarConfirm', { name: car.name, price: money(car.price) })}${warning}`)) {
     return;
   }
   const result = await run(() => buyCar(car.id));

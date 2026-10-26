@@ -250,7 +250,9 @@ final class Garage
                 'class_label' => Labels::classLabel($row['class']),
                 'active' => $car && (int) $row['player_car_id'] === (int) $car['player_car_id'],
             ], self::cars($managerId)),
-            'garage' => GarageLevels::view((int) $manager['garage_level']) + ['permit' => Mayor::hasPermit($managerId)],
+            'garage' => GarageLevels::view((int) $manager['garage_level']) + ['permit' => Mayor::hasPermit($managerId), 'security' => GarageLevels::hasSecurity((int) $manager['garage_level'])],
+            'livery' => (object) Sponsors::livery($managerId),
+            'trophies' => self::trophies($managerId),
             'spares' => GarageLevels::spares((int) $manager['garage_level']),
             'slots' => $slots,
             'tyre' => $snapshot && $snapshot['tyre'] ? self::tyreView($snapshot['tyre']) : null,
@@ -263,6 +265,21 @@ final class Garage
                 'repair' => Settings::int('energy_repair'),
             ],
         ];
+    }
+
+    private static function trophies(int $managerId): array
+    {
+        global $wpdb;
+        $rows = $wpdb->get_results($wpdb->prepare(
+            'SELECT e.place, r.name, r.season FROM ' . Tables::name('entries') . ' e
+             JOIN ' . Registry::get('rallies')->table() . ' r ON r.id = e.rally_id
+             JOIN ' . Tables::name('rally_runs') . " u ON u.rally_id = e.rally_id AND u.published = 1
+             WHERE e.manager_id = %d AND e.status = 'finished' AND e.place BETWEEN 1 AND 3
+             ORDER BY e.place, r.start_at DESC",
+            $managerId
+        ), ARRAY_A);
+
+        return array_map(fn(array $row) => ['place' => (int) $row['place'], 'rally' => Texts::of($row['name']), 'season' => (int) $row['season']], $rows);
     }
 
     private static function partView(array $part, int $cityId): array
@@ -328,6 +345,7 @@ final class Garage
             'id' => (int) $row['id'],
             'kind' => $row['kind'],
             'name' => Texts::of($row['name']),
+            'type' => $row['kind'] === 'part' ? (string) $row['part_type'] : (string) $row['tyre_type'],
             'type_label' => $row['kind'] === 'part'
                 ? (Labels::text('PART_TYPES', $row['part_type']))
                 : ($row['kind'] === 'spare_tyre' ? I18n::t('server.garage.spareTyre') : '') . (Labels::text('TYRE_TYPES', $row['tyre_type'])) . ', ' . mb_strtolower(Labels::text('COMPOUNDS', $row['compound'])),

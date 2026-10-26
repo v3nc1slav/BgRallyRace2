@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { ask } from '../dialog';
 import { money, stamp } from '../format';
 import type { RallyIntel } from '../game';
 import { t as translate } from '../i18n';
@@ -19,9 +20,9 @@ watch(
   { immediate: true },
 );
 
-function order() {
+async function order() {
   const team = props.intel.sabotage?.targets.find((t) => t.id === target.value)?.team;
-  if (team && window.confirm(translate('intel.confirm', { team }))) {
+  if (team && await ask(translate('intel.confirm', { team }))) {
     emit('sabotage', target.value, kind.value);
   }
 }

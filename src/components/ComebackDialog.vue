@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { ask } from '../dialog';
 import { money } from '../format';
 import { resolveComeback } from '../game';
 import { t } from '../i18n';
@@ -11,7 +12,7 @@ const result = ref('');
 const { busy, error, run } = useAction();
 
 async function choose(choice: 'fresh' | 'continue') {
-  if (choice === 'fresh' && !window.confirm(t('comeback.confirm'))) {
+  if (choice === 'fresh' && !await ask(t('comeback.confirm'))) {
     return;
   }
   const response = await run(() => resolveComeback(choice));

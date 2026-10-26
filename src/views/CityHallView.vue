@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import AdButton from '../components/AdButton.vue';
 import BribeCard from '../components/BribeCard.vue';
@@ -36,7 +37,7 @@ async function move() {
   if (!targetCity.value || !hall.value) {
     return;
   }
-  if (!window.confirm(t('hall.moveConfirm', { city: targetCity.value.name, cost: money(hall.value.move.cost) }))) {
+  if (!await ask(t('hall.moveConfirm', { city: targetCity.value.name, cost: money(hall.value.move.cost) }))) {
     return;
   }
   const result = await run(() => moveCity(target.value));

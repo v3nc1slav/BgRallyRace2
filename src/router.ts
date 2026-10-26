@@ -8,6 +8,7 @@ import CityHallView from './views/CityHallView.vue';
 import CityView from './views/CityView.vue';
 import ForumTopicView from './views/ForumTopicView.vue';
 import ForumView from './views/ForumView.vue';
+import GarageStaffView from './views/GarageStaffView.vue';
 import GarageView from './views/GarageView.vue';
 import HomeView from './views/HomeView.vue';
 import JobsView from './views/JobsView.vue';
@@ -31,6 +32,7 @@ export const router = createRouter({
   routes: [
     { path: '/', component: HomeView },
     { path: '/garage', component: GarageView },
+    { path: '/garage/staff', component: GarageStaffView },
     { path: '/city', component: CityView },
     { path: '/city/bar', component: BarView },
     { path: '/city/track', component: TrackView },

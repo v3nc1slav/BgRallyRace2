@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import Feedback from '../components/Feedback.vue';
 import FinancePanel from '../components/FinancePanel.vue';
@@ -44,8 +45,8 @@ async function act(task: () => Promise<{ bank: BankInfo; message: string }>) {
   }
 }
 
-function repay() {
-  if (bank.value?.loan && window.confirm(t('bank.repayConfirm', { amount: money(bank.value.loan.payoff) }))) {
+async function repay() {
+  if (bank.value?.loan && await ask(t('bank.repayConfirm', { amount: money(bank.value.loan.payoff) }))) {
     act(repayLoan);
   }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import ChatBox from '../components/ChatBox.vue';
 import Feedback from '../components/Feedback.vue';
@@ -25,7 +26,7 @@ onMounted(() =>
 );
 
 async function hireCandidate(role: BarRole, id: number, name: string) {
-  if (role.current && !window.confirm(t('bar.replaceConfirm', { name, current: role.current.name }))) {
+  if (role.current && !await ask(t('bar.replaceConfirm', { name, current: role.current.name }))) {
     return;
   }
   const result = await run(() => hire(id));

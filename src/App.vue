@@ -5,6 +5,7 @@ import { errorMessage } from './api';
 import logo from './assets/BGRallyHD.png';
 import AdModal from './components/AdModal.vue';
 import ComebackDialog from './components/ComebackDialog.vue';
+import DialogHost from './components/DialogHost.vue';
 import ErrorScreen from './components/ErrorScreen.vue';
 import TabBar from './components/TabBar.vue';
 import { money } from './format';
@@ -65,5 +66,6 @@ onBeforeUnmount(() => stopLabels?.());
     <TabBar v-if="session.player" @logout="onLogout" />
     <AdModal />
     <ComebackDialog />
+    <DialogHost />
   </div>
 </template>

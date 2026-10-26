@@ -1311,3 +1311,371 @@ body.bgr-game .bgr {
   justify-content: flex-start;
   margin-bottom: 12px;
 }
+
+.bgr-garage {
+  position: relative;
+  margin: 12px 0;
+  overflow: hidden;
+  background: #2a2e36;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.bgr-garage > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.bgr-gs-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bgr-gs-layer > * {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.bgr-gs-sign {
+  font-size: max(7px, calc(19px * var(--gs, 1)));
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fff;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.bgr .bgr-gs-door {
+  padding: calc(4px * var(--gs, 1)) calc(10px * var(--gs, 1));
+  font-size: max(8px, calc(14px * var(--gs, 1)));
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+}
+
+.bgr .bgr-gs-up {
+  display: grid;
+  place-items: center;
+  width: clamp(32px, 5vw, 48px);
+  height: clamp(32px, 5vw, 48px);
+  padding: 0;
+  color: #cfd3da;
+  background: #5a606b;
+  border: 2px solid #2e333d;
+  border-radius: 50%;
+}
+
+.bgr-gs-up svg {
+  width: 60%;
+  height: 60%;
+  fill: currentColor;
+}
+
+.bgr .bgr-gs-up.ready {
+  color: #fff;
+  background: #3fae5a;
+  animation: bgr-gs-pulse 1.6s infinite;
+}
+
+@keyframes bgr-gs-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(63, 174, 90, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(63, 174, 90, 0);
+  }
+}
+
+.bgr-gs-layer > .bgr-gs-needs {
+  top: 20%;
+  right: 8px;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  width: min(280px, 80%);
+  padding: 10px 12px;
+  font-size: 13px;
+  background: rgba(21, 23, 28, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  transform: none;
+}
+
+.bgr-gs-needs ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bgr .bgr-gs-balloon {
+  display: grid;
+  gap: 1px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--text);
+  background: rgba(21, 23, 28, 0.92);
+  border: 1px solid #4b525c;
+  border-radius: 8px;
+}
+
+.bgr-gs-balloon b {
+  font-size: 15px;
+}
+
+.bgr-gs-balloon small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.bgr .bgr-gs-balloon:hover,
+.bgr .bgr-gs-balloon.open {
+  border-color: var(--accent);
+}
+
+.bgr .bgr-gs-balloon.weak {
+  border-color: #e63946;
+  box-shadow: 0 0 0 1px #e63946;
+}
+
+.bgr-gs-trunk {
+  display: grid;
+  gap: 1px;
+  width: max-content;
+  max-width: 180px;
+  padding: 5px 9px;
+  font-size: 12px;
+  text-align: center;
+  color: #fff;
+  background: rgba(230, 57, 70, 0.92);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.bgr-gs-trunk small {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bgr .bgr-gs-extra {
+  padding: 1px 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: #15171c;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.bgr-gs-dim {
+  opacity: 0.45;
+}
+
+.bgr-gs-layer > .bgr-gs-list {
+  right: auto;
+  left: 8px;
+  max-height: 72%;
+  overflow-y: auto;
+}
+
+.bgr .bgr-gs-item {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  font-weight: 400;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.bgr .bgr-gs-item:hover {
+  border-color: var(--accent);
+}
+
+.bgr-gs-item small {
+  color: var(--muted);
+}
+
+.bgr .bgr-garage-compact .bgr-gs-balloon {
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 6px;
+}
+
+.bgr-garage-compact .bgr-gs-balloon b {
+  font-size: 12px;
+}
+
+.bgr-garage-compact .bgr-gs-sign {
+  letter-spacing: 0.02em;
+}
+
+.bgr-garage-compact .bgr-gs-trunk {
+  max-width: 110px;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.bgr-gs-hot {
+  cursor: pointer;
+}
+
+.bgr-gs-hot:hover,
+.bgr-gs-hot:focus-visible {
+  filter: brightness(1.18);
+  outline: none;
+}
+
+.bgr-gs-leader line {
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+  opacity: 0.7;
+}
+
+.bgr-gs-leader circle {
+  fill: #fff;
+  stroke: #15171c;
+  stroke-width: 2;
+}
+
+.bgr-gs-sponsor {
+  font-family: system-ui, sans-serif;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: #fff;
+  stroke: #15171c;
+  stroke-width: 2px;
+  paint-order: stroke;
+}
+
+.bgr-gs-number {
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: #15171c;
+}
+
+.bgr-gs-led {
+  animation: bgr-gs-blink 1.2s steps(2) infinite;
+}
+
+@keyframes bgr-gs-blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.bgr-flash {
+  animation: bgr-flash 2.4s ease-out;
+}
+
+@keyframes bgr-flash {
+  0%,
+  40% {
+    background: rgba(230, 57, 70, 0.28);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.bgr-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(8, 9, 12, 0.65);
+  animation: bgr-dialog-fade 0.15s ease-out;
+}
+
+.bgr-dialog {
+  width: min(420px, 100%);
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5);
+  animation: bgr-dialog-pop 0.15s ease-out;
+}
+
+.bgr-dialog h2 {
+  margin: 0 0 8px;
+}
+
+.bgr-dialog p {
+  margin: 0 0 16px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.bgr-dialog .bgr-actions {
+  justify-content: flex-end;
+}
+
+@keyframes bgr-dialog-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes bgr-dialog-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.bgr-gs-medal {
+  font-family: system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  text-anchor: middle;
+  fill: #15171c;
+}
+
+.bgr-gs-plaque {
+  font-family: system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-anchor: middle;
+  text-transform: uppercase;
+  fill: #2b2f37;
+}
+
+.bgr-gs-passing {
+  animation: bgr-gs-drive 9s linear infinite;
+}
+
+@keyframes bgr-gs-drive {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(190px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgr-gs-passing,
+  .bgr-gs-led,
+  .bgr .bgr-gs-up.ready {
+    animation: none;
+  }
+}

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { ask } from '../dialog';
 import { useRouter } from 'vue-router';
 import { errorMessage } from '../api';
 import PrivacyLinks from '../components/PrivacyLinks.vue';
@@ -25,7 +26,7 @@ async function signOut() {
 }
 
 async function remove() {
-  if (!window.confirm(t('profile.deleteConfirm'))) {
+  if (!await ask(t('profile.deleteConfirm'))) {
     return;
   }
   busy.value = true;

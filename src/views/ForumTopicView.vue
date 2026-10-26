@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { ask } from '../dialog';
 import { t } from '../i18n';
 import { useRoute } from 'vue-router';
 import Feedback from '../components/Feedback.vue';
@@ -30,7 +31,7 @@ async function reply() {
 }
 
 async function report(post: ChatMessage) {
-  if (window.confirm(t('forum.reportConfirm', { author: post.author }))) {
+  if (await ask(t('forum.reportConfirm', { author: post.author }))) {
     const result = await run(() => reportMessage(post.id));
     if (result) {
       message.value = t('forum.reported');
