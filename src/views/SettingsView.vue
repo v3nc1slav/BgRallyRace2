@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import AccountSecurity from '../components/AccountSecurity.vue';
 import Feedback from '../components/Feedback.vue';
 import LangSwitch from '../components/LangSwitch.vue';
 import { getNotifications, saveNotificationPreferences, type NotifyInfo } from '../game';
@@ -65,5 +66,6 @@ function toggle(key: string, on: boolean) {
         </div>
       </template>
     </section>
+    <AccountSecurity />
   </div>
 </template>

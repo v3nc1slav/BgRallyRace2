@@ -44,6 +44,7 @@ async function submit() {
     </label>
     <p v-if="error" class="bgr-error">{{ error }}</p>
     <button :disabled="busy">{{ $t('auth.enter') }}</button>
+    <p class="bgr-muted"><RouterLink to="/forgot">{{ $t('auth.forgotLink') }}</RouterLink></p>
     <SocialButtons />
     <p class="bgr-muted">{{ $t('auth.noAccount') }} <RouterLink to="/register">{{ $t('auth.signUp') }}</RouterLink></p>
     <PrivacyLinks />

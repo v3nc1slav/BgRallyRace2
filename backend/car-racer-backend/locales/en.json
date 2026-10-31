@@ -9,11 +9,9 @@
   },
   "nav": {
     "manager": "Manager",
-    "garage": "Garage",
     "city": "City",
     "shop": "Shop",
     "rallies": "Rallies",
-    "sponsors": "Sponsors",
     "standings": "Standings",
     "forum": "Forum",
     "profile": "Profile",
@@ -58,7 +56,24 @@
     "facebook": "Continue with Facebook",
     "chooseCity": "Choose a city",
     "socialCancelled": "The login was cancelled.",
-    "socialEmpty": "The login did not return a profile. Please try again."
+    "socialEmpty": "The login did not return a profile. Please try again.",
+    "forgotLink": "Forgot your password?",
+    "forgotTitle": "Forgot password",
+    "forgotHint": "We will email you a link to set a new password.",
+    "forgotSend": "Send link",
+    "backToLogin": "Back to login",
+    "resetTitle": "New password",
+    "newPassword": "New password",
+    "resetSave": "Save password",
+    "confirmTitle": "Email confirmation",
+    "toGame": "To the game",
+    "account": "Account and security",
+    "emailConfirmed": "Your email is confirmed.",
+    "emailUnconfirmed": "Your email is not confirmed yet. Confirming it protects your account if someone tries to take it over with a Google sign-in.",
+    "resend": "Send the confirmation again",
+    "changePassword": "Change password",
+    "changeHint": "If you sign in with Google or Facebook, first set a password from \"Forgot your password?\" on the login screen.",
+    "currentPassword": "Current password"
   },
   "push": {
     "notConfigured": "Browser notifications have not been set up by the administrator yet.",
@@ -262,7 +277,6 @@
     "title": "Stage {seq}: {name} · {km} km"
   },
   "stats": {
-    "power": "Power",
     "handling": "Handling",
     "braking": "Braking",
     "reliability": "Reliability",
@@ -277,33 +291,15 @@
   },
   "garage": {
     "fireConfirm": "Let {name} ({role}) go?",
-    "level": "Garage level {level}",
-    "next": "Level {level}: {price}, requires manager level {min}.",
     "unlocks": "Unlocks: {list}.",
-    "nothingNew": "nothing new",
-    "max": "The garage is at its maximum level.",
-    "upgrade": "Upgrade the garage",
-    "permit": "A permit from the mayor is required",
     "hire": "Hire staff in the bar",
-    "spares": "You can take {tyres} spare tyres and {parts} spare parts to a rally.",
     "notReady": "The team is not ready: {list}.",
-    "base": "base {value}",
     "health": "Condition",
     "consumption": "Consumption",
     "consumptionUnit": "l/100 km",
-    "parts": "Parts",
     "worker": "The work is done by: {worker}.",
-    "poorRepair": "poor repair",
     "missing": "missing",
-    "maxHealth": "max. {pct}%",
-    "repair": "Repair ({cost}, {energy} energy)",
     "tyres": "Tyres",
-    "noTyres": "No tyres fitted.",
-    "storage": "Storage",
-    "emptyStorage": "Storage is empty. Buy parts and tyres in the shop.",
-    "mount": "Fit ({energy} energy)",
-    "spare": "rally spare",
-    "wrongClass": "not for this class",
     "staff": "Staff",
     "noStaff": "You have no staff. Hire a driver and a co-driver in the bar.",
     "role": "Role",
@@ -404,7 +400,6 @@
   },
   "common": {
     "backCity": "City",
-    "energy": "{value} energy",
     "poorRepair": "poor repair",
     "maxHealth": "max. {pct}%",
     "adRetry": "Watch an ad for a second try",
@@ -922,7 +917,8 @@
       "mutedUntil": "You are muted until {time}.",
       "team": "Team",
       "deleted": "Deleted player",
-      "noEnergy": "Not enough energy ({energy} needed)."
+      "noEnergy": "Not enough energy ({energy} needed).",
+      "busy": "Your previous action is still running. Try again in a moment."
     },
     "ledger": {
       "start": "Starting money",
@@ -1350,7 +1346,17 @@
       "noPlayer": "You do not have a manager profile.",
       "hasPlayer": "You already have a manager profile.",
       "locked": "Too many failed attempts. Try again in {count} minute. | Too many failed attempts. Try again in {count} minutes.",
-      "registerLimit": "Too many new profiles from this network. Try again later."
+      "registerLimit": "Too many new profiles from this network. Try again later.",
+      "forgotSent": "If that account exists, we have emailed a link to set a new password.",
+      "resetDone": "Your password is changed. Log in with the new password.",
+      "resetInvalid": "This link is invalid or has expired. Ask for a new one from \"Forgot your password?\".",
+      "confirmed": "Your email is confirmed. Thank you!",
+      "confirmSent": "We have sent you a new confirmation email.",
+      "confirmInvalid": "This link is invalid or has expired. Ask for a new one in Settings.",
+      "alreadyConfirmed": "Your email is already confirmed.",
+      "wrongCurrent": "The current password is wrong.",
+      "passwordChanged": "Your password is changed. Your other devices have been logged out.",
+      "mailLimit": "Too many email requests from this network. Try again later."
     },
     "social": {
       "noResponse": "No response from the login provider.",
@@ -1415,6 +1421,12 @@
     },
     "manifest": {
       "description": "Online rally manager"
+    },
+    "mail": {
+      "resetSubject": "BG Rally: new password",
+      "resetBody": "Hello, {name}!\n\nA new password was requested for your BG Rally account. Open this link to set it:\n\n{link}\n\nThe link is valid for 24 hours. If you did not ask for this, just ignore this email.",
+      "confirmSubject": "BG Rally: confirm your email",
+      "confirmBody": "Hello, {name}!\n\nConfirm the email for your BG Rally account with this link:\n\n{link}\n\nThe link is valid for 7 days. If you did not sign up, just ignore this email."
     }
   },
   "dialog": {

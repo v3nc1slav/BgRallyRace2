@@ -476,13 +476,17 @@ final class Garage
         }
 
         if ($tradeIn) {
-            $wpdb->update(Tables::name('items'), ['player_car_id' => 0], ['player_car_id' => $tradeIn['player_car_id']]);
-            $wpdb->delete(Tables::name('player_cars'), ['id' => $tradeIn['player_car_id']]);
             Ledger::add($managerId, $tradeInValue, 'car_sale', $tradeIn['name']);
         }
-
         if (!Ledger::add($managerId, -$price, 'car_purchase', $car['name'])) {
+            if ($tradeIn) {
+                Ledger::add($managerId, -$tradeInValue, 'car_sale', $tradeIn['name'], true);
+            }
             return new WP_Error('bgr_money', I18n::t('server.common.money'), ['status' => 400]);
+        }
+        if ($tradeIn) {
+            $wpdb->update(Tables::name('items'), ['player_car_id' => 0], ['player_car_id' => $tradeIn['player_car_id']]);
+            $wpdb->delete(Tables::name('player_cars'), ['id' => $tradeIn['player_car_id']]);
         }
         Ads::useDiscount($manager);
 

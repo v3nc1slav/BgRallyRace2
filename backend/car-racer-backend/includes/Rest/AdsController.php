@@ -7,9 +7,9 @@ use WP_REST_Request;
 
 final class AdsController
 {
-    public static function show()
+    public static function show(WP_REST_Request $request)
     {
-        return Auth::respond(['ads' => Ads::view(Auth::manager())]);
+        return Auth::respond(['ads' => Ads::view(Auth::manager(), (string) $request->get_param('platform'))]);
     }
 
     public static function start(WP_REST_Request $request)
@@ -27,6 +27,6 @@ final class AdsController
     public static function claim(WP_REST_Request $request)
     {
         $result = Ads::claim(Auth::manager(), absint($request->get_param('view_id')), (string) $request->get_param('token'));
-        return is_wp_error($result) ? $result : Auth::respond(['ads' => Ads::view(Auth::manager())], $result);
+        return is_wp_error($result) ? $result : Auth::respond(['ads' => Ads::view(Auth::manager(), (string) $request->get_param('platform'))], $result);
     }
 }

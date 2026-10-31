@@ -32,7 +32,7 @@ async function watch(reward: AdReward) {
 </script>
 
 <template>
-  <section class="bgr-card">
+  <section v-if="!ads || ads.rewards.length" class="bgr-card">
     <h2>{{ $t('ads.title') }}</h2>
     <p class="bgr-muted">{{ $t('ads.intro') }}</p>
     <Feedback :message="message" :error="error" />

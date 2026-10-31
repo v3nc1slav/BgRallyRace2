@@ -8,6 +8,7 @@ export const NS = 'bgrally/v1/';
 export interface User {
   id: number;
   name: string;
+  email_confirmed: boolean;
 }
 
 export interface Player {
@@ -124,6 +125,28 @@ export async function logout() {
 export async function deleteAccount(confirm: string) {
   const state = await apiPost<State>(NS + 'account/delete', { confirm });
   setToken('');
+  apply(state);
+  return state.message ?? '';
+}
+
+export function forgotPassword(login: string) {
+  return apiPost<{ message: string }>(NS + 'auth/forgot', { login });
+}
+
+export function resetPassword(login: string, key: string, password: string) {
+  return apiPost<{ message: string }>(NS + 'auth/reset', { login, key, password });
+}
+
+export function confirmEmail(id: number, exp: number, sig: string) {
+  return apiPost<{ message: string }>(NS + 'auth/confirm', { id, exp, sig });
+}
+
+export function resendConfirmation() {
+  return apiPost<{ message: string }>(NS + 'account/confirm');
+}
+
+export async function changePassword(current: string, password: string) {
+  const state = await apiPost<State>(NS + 'account/password', { current, password, ...appMode() });
   apply(state);
   return state.message ?? '';
 }

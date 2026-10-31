@@ -212,10 +212,11 @@ final class BlackTrack
         $challengerId = (int) $row['challenger_id'];
         $rival = Simulator::streetCrew($challengerId);
         if (!$rival) {
-            $wpdb->update(self::table(), ['status' => 'cancelled'], ['id' => $id]);
-            $rivalLang = I18n::of($challengerId);
-            Ledger::add($challengerId, $bet, 'black_refund', I18n::t('server.ledger.blackCancel', [], $rivalLang));
-            Inbox::add($challengerId, I18n::t('server.black.rivalNotReadyInbox', [], $rivalLang));
+            if ($wpdb->query($wpdb->prepare('UPDATE ' . self::table() . " SET status = 'cancelled' WHERE id = %d AND status = 'open'", $id)) === 1) {
+                $rivalLang = I18n::of($challengerId);
+                Ledger::add($challengerId, $bet, 'black_refund', I18n::t('server.ledger.blackCancel', [], $rivalLang));
+                Inbox::add($challengerId, I18n::t('server.black.rivalNotReadyInbox', [], $rivalLang));
+            }
             return new WP_Error('bgr_challenge', I18n::t('server.black.rivalNotReady'), ['status' => 400]);
         }
 

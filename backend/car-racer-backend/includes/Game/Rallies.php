@@ -11,6 +11,8 @@ use WP_Error;
 
 final class Rallies
 {
+    private const STUCK_MINUTES = 10;
+
     public static function now(): int
     {
         return strtotime(current_time('mysql'));
@@ -67,6 +69,14 @@ final class Rallies
         foreach ($wpdb->get_col($wpdb->prepare("SELECT rally_id FROM $runs WHERE published = 0 AND broadcast_end <= %s", $now)) as $id) {
             Simulator::publish((int) $id);
         }
+    }
+
+    public static function tick(): void
+    {
+        self::recover();
+        self::runDue();
+        Simulator::resume();
+        Seasons::closeDue();
         Sponsors::expire();
         Work::runDaily();
         Market::expire();
@@ -74,6 +84,42 @@ final class Rallies
         Push::flush();
         Inactivity::mark();
         Payroll::runAll();
+    }
+
+    private static function stuckSince(): string
+    {
+        return date('Y-m-d H:i:s', self::now() - self::STUCK_MINUTES * MINUTE_IN_SECONDS);
+    }
+
+    public static function stuck(): array
+    {
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            'SELECT id, name FROM ' . self::table() . " WHERE status = 'computing' AND (computing_at IS NULL OR computing_at < %s)",
+            self::stuckSince()
+        ), ARRAY_A);
+    }
+
+    private static function recover(): void
+    {
+        global $wpdb;
+        foreach (self::stuck() as $rally) {
+            $id = (int) $rally['id'];
+            $claimed = $wpdb->query($wpdb->prepare(
+                'UPDATE ' . self::table() . " SET computing_at = %s WHERE id = %d AND status = 'computing' AND (computing_at IS NULL OR computing_at < %s)",
+                current_time('mysql'),
+                $id,
+                self::stuckSince()
+            ));
+            if ($claimed !== 1) {
+                continue;
+            }
+            if (self::runRow($id)) {
+                $wpdb->update(self::table(), ['status' => 'finished'], ['id' => $id]);
+            } else {
+                self::clearResults($id);
+            }
+        }
     }
 
     public static function adminRun(int $id): string
@@ -98,6 +144,12 @@ final class Rallies
 
     public static function adminReset(int $id): string
     {
+        self::clearResults($id);
+        return 'Резултатите са изтрити и ралито отново предстои. Вече раздадените пари, опит и износване не се връщат.';
+    }
+
+    private static function clearResults(int $id): void
+    {
         global $wpdb;
         $entries = Tables::name('entries');
 
@@ -106,12 +158,10 @@ final class Rallies
         $wpdb->delete(Tables::name('rally_runs'), ['rally_id' => $id]);
         $wpdb->query($wpdb->prepare("DELETE FROM $entries WHERE rally_id = %d AND bot_id > 0", $id));
         $wpdb->query($wpdb->prepare(
-            "UPDATE $entries SET status = 'registered', team_name = '', pilot_name = '', total_ms = 0, dnf_stage = 0, place = 0, points = 0, prize = 0, xp = 0, wear = NULL WHERE rally_id = %d",
+            "UPDATE $entries SET status = 'registered', team_name = '', pilot_name = '', total_ms = 0, dnf_stage = 0, place = 0, points = 0, prize = 0, xp = 0, wear = NULL, effects = NULL, reward_pending = 0 WHERE rally_id = %d",
             $id
         ));
-        $wpdb->update(self::table(), ['status' => 'scheduled'], ['id' => $id]);
-
-        return 'Резултатите са изтрити и ралито отново предстои. Вече раздадените пари, опит и износване не се връщат.';
+        $wpdb->update(self::table(), ['status' => 'scheduled', 'computing_at' => null], ['id' => $id]);
     }
 
     public static function currentSeason(): int

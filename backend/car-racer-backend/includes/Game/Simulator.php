@@ -7,6 +7,7 @@ use BgRally\Catalog\Texts;
 use BgRally\Database\Tables;
 use BgRally\I18n;
 use BgRally\Settings;
+use Throwable;
 
 final class Simulator
 {
@@ -61,7 +62,7 @@ final class Simulator
         global $wpdb;
         $table = Registry::get('rallies')->table();
 
-        $claimed = $wpdb->query($wpdb->prepare("UPDATE $table SET status = 'computing' WHERE id = %d AND status = 'scheduled'", $rallyId));
+        $claimed = $wpdb->query($wpdb->prepare("UPDATE $table SET status = 'computing', computing_at = %s WHERE id = %d AND status = 'scheduled'", current_time('mysql'), $rallyId));
         if ($claimed !== 1) {
             return false;
         }
@@ -87,21 +88,45 @@ final class Simulator
         $runs = Tables::name('rally_runs');
         $entries = Tables::name('entries');
 
-        $claimed = $wpdb->query($wpdb->prepare("UPDATE $runs SET published = 1 WHERE rally_id = %d AND published = 0", $rallyId));
-        if ($claimed !== 1) {
-            return;
+        $claimed = $wpdb->query($wpdb->prepare(
+            "UPDATE $runs u LEFT JOIN $entries e ON e.rally_id = u.rally_id AND e.manager_id > 0
+             SET u.published = 1, e.reward_pending = 1 WHERE u.rally_id = %d AND u.published = 0",
+            $rallyId
+        ));
+        if ($claimed) {
+            self::payOut($rallyId);
         }
+    }
 
+    public static function resume(): void
+    {
+        global $wpdb;
+        foreach ($wpdb->get_col('SELECT DISTINCT rally_id FROM ' . Tables::name('entries') . ' WHERE reward_pending = 1') as $id) {
+            self::payOut((int) $id);
+        }
+    }
+
+    private static function payOut(int $rallyId): void
+    {
+        global $wpdb;
+        $entries = Tables::name('entries');
         $rally = Registry::get('rallies')->find($rallyId);
         $name = $rally['name'] ?? '';
         $sizes = [];
         foreach ($wpdb->get_results($wpdb->prepare("SELECT class, COUNT(*) AS size FROM $entries WHERE rally_id = %d GROUP BY class", $rallyId), ARRAY_A) as $row) {
             $sizes[$row['class']] = (int) $row['size'];
         }
-        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM $entries WHERE rally_id = %d AND manager_id > 0", $rallyId), ARRAY_A);
+        $rows = $wpdb->get_results($wpdb->prepare("SELECT * FROM $entries WHERE rally_id = %d AND reward_pending = 1", $rallyId), ARRAY_A);
 
         foreach ($rows as $entry) {
-            I18n::as((int) $entry['manager_id'], fn() => self::reward($entry, Texts::of($name), $rallyId, $sizes[$entry['class']] ?? 1));
+            if ($wpdb->query($wpdb->prepare("UPDATE $entries SET reward_pending = 0 WHERE id = %d AND reward_pending = 1", $entry['id'])) !== 1) {
+                continue;
+            }
+            try {
+                I18n::as((int) $entry['manager_id'], fn() => self::reward($entry, Texts::of($name), $rallyId, $sizes[$entry['class']] ?? 1));
+            } catch (Throwable $error) {
+                error_log(sprintf('BG Rally: rally %d entry %d: %s', $rallyId, $entry['id'], $error->getMessage()));
+            }
         }
 
         Seasons::maybeClose((int) ($rally['season'] ?? 0));

@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '21';
+    private const VERSION = '22';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -177,10 +177,12 @@ final class Schema
   spares text NULL,
   effects text NULL,
   sabotage_report tinyint(1) NOT NULL DEFAULT 0,
+  reward_pending tinyint(1) NOT NULL DEFAULT 0,
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY rally_competitor (rally_id,manager_id,bot_id),
-  KEY manager_id (manager_id)",
+  KEY manager_id (manager_id),
+  KEY reward_pending (reward_pending)",
 
             'stage_times' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   rally_id bigint(20) unsigned NOT NULL,
@@ -412,6 +414,13 @@ final class Schema
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   KEY manager_id (manager_id)",
+
+            'season_prizes' => "  season int(11) NOT NULL,
+  manager_id bigint(20) unsigned NOT NULL,
+  class varchar(5) NOT NULL,
+  place int(11) NOT NULL,
+  paid tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY  (season,manager_id)",
 
             'guard' => "  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   kind varchar(10) NOT NULL,

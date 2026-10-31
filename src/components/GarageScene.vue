@@ -341,6 +341,7 @@ function showTrophies() {
           tabindex="0"
           @click="choose('parts', entry.item)"
           @keydown.enter="choose('parts', entry.item)"
+          @keydown.space.prevent="choose('parts', entry.item)"
         >
           <title>{{ entry.item.name }} · {{ Math.round(entry.item.health) }}%</title>
           <rect :x="entry.x - 2" :y="entry.y - 2" width="34" height="30" fill="transparent" />
@@ -358,6 +359,7 @@ function showTrophies() {
           transform="translate(658 382) scale(0.42)"
           @click="emit('activate', parked.player_car_id)"
           @keydown.enter="emit('activate', parked.player_car_id)"
+          @keydown.space.prevent="emit('activate', parked.player_car_id)"
         >
           <title>{{ $t('garage.scene.parked', { name: parked.name }) }}</title>
           <GarageCar :color="colorOf(parked.name)" />
@@ -380,6 +382,7 @@ function showTrophies() {
             tabindex="0"
             @click="choose('tyres', tyreSlot.item)"
             @keydown.enter="choose('tyres', tyreSlot.item)"
+            @keydown.space.prevent="choose('tyres', tyreSlot.item)"
           >
             <title>{{ tyreSlot.item.name }} · {{ Math.round(tyreSlot.item.health) }}%</title>
             <rect :x="tyreSlot.x" :y="tyreSlot.y" width="32" height="62" rx="10" fill="#16171b" />
@@ -389,7 +392,7 @@ function showTrophies() {
         </g>
       </g>
 
-      <g class="bgr-gs-hot" role="button" tabindex="0" @click="router.push('/garage/staff')" @keydown.enter="router.push('/garage/staff')">
+      <g class="bgr-gs-hot" role="button" tabindex="0" @click="router.push('/garage/staff')" @keydown.enter="router.push('/garage/staff')" @keydown.space.prevent="router.push('/garage/staff')">
         <title>{{ $t('garage.staff') }}</title>
         <rect x="834" y="188" width="124" height="258" fill="#1c1f25" />
         <rect x="842" y="196" width="108" height="248" fill="#59606b" />

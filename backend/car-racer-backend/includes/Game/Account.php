@@ -65,7 +65,7 @@ final class Account
         $wpdb->delete($listings, ['seller_id' => $managerId]);
 
         $wpdb->query($wpdb->prepare("DELETE FROM $items WHERE player_car_id IN (SELECT id FROM $playerCars WHERE manager_id = %d)", $managerId));
-        foreach (['items', 'staff', 'player_cars', 'ledger', 'contracts', 'inbox', 'bribes', 'mayor_requests', 'ad_views', 'loans'] as $table) {
+        foreach (['items', 'staff', 'player_cars', 'ledger', 'contracts', 'inbox', 'bribes', 'mayor_requests', 'ad_views', 'loans', 'season_prizes'] as $table) {
             $wpdb->delete(Tables::name($table), ['manager_id' => $managerId]);
         }
         $wpdb->query($wpdb->prepare('DELETE FROM ' . Tables::name('sabotages') . ' WHERE manager_id = %d OR target_id = %d', $managerId, $managerId));

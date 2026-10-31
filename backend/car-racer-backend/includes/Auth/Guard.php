@@ -11,6 +11,7 @@ use WP_User;
 final class Guard
 {
     private const KEEP_HOURS = 24;
+    private const MAIL_GAP_MINUTES = 5;
 
     public static function register(): void
     {
@@ -38,7 +39,8 @@ final class Guard
             default => '',
         };
         if ($header !== '' && !empty($_SERVER[$header])) {
-            $candidate = trim(explode(',', (string) $_SERVER[$header])[0]);
+            $values = explode(',', (string) $_SERVER[$header]);
+            $candidate = trim((string) end($values));
             if (filter_var($candidate, FILTER_VALIDATE_IP)) {
                 return $candidate;
             }
@@ -133,6 +135,37 @@ final class Guard
         if (!self::exempt()) {
             self::record('register', '');
         }
+    }
+
+    public static function mailLimit(): ?WP_Error
+    {
+        global $wpdb;
+        $limit = Settings::int('guard_mail_limit');
+        if (self::exempt() || $limit <= 0) {
+            return null;
+        }
+        $count = (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT COUNT(*) FROM ' . self::table() . " WHERE kind = 'mail' AND ip = %s AND created_at > %s",
+            self::ip(),
+            gmdate('Y-m-d H:i:s', time() - HOUR_IN_SECONDS)
+        ));
+        return $count >= $limit ? new WP_Error('bgr_mail_limit', I18n::t('server.auth.mailLimit'), ['status' => 429]) : null;
+    }
+
+    public static function mailDue(string $login): bool
+    {
+        global $wpdb;
+        if (self::exempt()) {
+            return true;
+        }
+        $login = self::login($login);
+        $recent = $login !== '' && $wpdb->get_var($wpdb->prepare(
+            'SELECT 1 FROM ' . self::table() . " WHERE kind = 'mail' AND login = %s AND created_at > %s LIMIT 1",
+            $login,
+            gmdate('Y-m-d H:i:s', time() - self::MAIL_GAP_MINUTES * MINUTE_IN_SECONDS)
+        ));
+        self::record('mail', $login);
+        return !$recent;
     }
 
     private static function record(string $kind, string $login): void

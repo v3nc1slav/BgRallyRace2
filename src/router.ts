@@ -1,60 +1,38 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import { errorMessage } from './api';
 import { loadSession, session } from './session';
-import BankView from './views/BankView.vue';
-import BarView from './views/BarView.vue';
-import BlackTrackView from './views/BlackTrackView.vue';
-import CityHallView from './views/CityHallView.vue';
-import CityView from './views/CityView.vue';
-import ForumTopicView from './views/ForumTopicView.vue';
-import ForumView from './views/ForumView.vue';
-import GarageStaffView from './views/GarageStaffView.vue';
-import GarageView from './views/GarageView.vue';
-import HomeView from './views/HomeView.vue';
-import JobsView from './views/JobsView.vue';
-import LoginView from './views/LoginView.vue';
-import MallView from './views/MallView.vue';
-import MarketView from './views/MarketView.vue';
-import PoliceView from './views/PoliceView.vue';
-import ProfileView from './views/ProfileView.vue';
-import RalliesView from './views/RalliesView.vue';
-import RallyView from './views/RallyView.vue';
-import RegisterView from './views/RegisterView.vue';
-import SettingsView from './views/SettingsView.vue';
-import ShopView from './views/ShopView.vue';
-import SponsorsView from './views/SponsorsView.vue';
-import StandingsView from './views/StandingsView.vue';
-import StartView from './views/StartView.vue';
-import TrackView from './views/TrackView.vue';
 
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', component: HomeView },
-    { path: '/garage', component: GarageView },
-    { path: '/garage/staff', component: GarageStaffView },
-    { path: '/city', component: CityView },
-    { path: '/city/bar', component: BarView },
-    { path: '/city/track', component: TrackView },
-    { path: '/city/police', component: PoliceView },
-    { path: '/city/hall', component: CityHallView },
-    { path: '/city/jobs', component: JobsView },
-    { path: '/city/black', component: BlackTrackView },
-    { path: '/city/mall', component: MallView },
-    { path: '/city/market', component: MarketView },
-    { path: '/city/bank', component: BankView },
-    { path: '/forum', component: ForumView },
-    { path: '/forum/:id', component: ForumTopicView },
-    { path: '/profile', component: ProfileView },
-    { path: '/settings', component: SettingsView },
-    { path: '/shop', component: ShopView },
-    { path: '/sponsors', component: SponsorsView },
-    { path: '/rallies', component: RalliesView },
-    { path: '/rallies/:id', component: RallyView },
-    { path: '/standings', component: StandingsView },
-    { path: '/login', component: LoginView, meta: { guest: true } },
-    { path: '/register', component: RegisterView, meta: { guest: true } },
-    { path: '/start', component: StartView },
+    { path: '/', component: () => import('./views/HomeView.vue') },
+    { path: '/garage', component: () => import('./views/GarageView.vue') },
+    { path: '/garage/staff', component: () => import('./views/GarageStaffView.vue') },
+    { path: '/city', component: () => import('./views/CityView.vue') },
+    { path: '/city/bar', component: () => import('./views/BarView.vue') },
+    { path: '/city/track', component: () => import('./views/TrackView.vue') },
+    { path: '/city/police', component: () => import('./views/PoliceView.vue') },
+    { path: '/city/hall', component: () => import('./views/CityHallView.vue') },
+    { path: '/city/jobs', component: () => import('./views/JobsView.vue') },
+    { path: '/city/black', component: () => import('./views/BlackTrackView.vue') },
+    { path: '/city/mall', component: () => import('./views/MallView.vue') },
+    { path: '/city/market', component: () => import('./views/MarketView.vue') },
+    { path: '/city/bank', component: () => import('./views/BankView.vue') },
+    { path: '/forum', component: () => import('./views/ForumView.vue') },
+    { path: '/forum/:id', component: () => import('./views/ForumTopicView.vue') },
+    { path: '/profile', component: () => import('./views/ProfileView.vue') },
+    { path: '/settings', component: () => import('./views/SettingsView.vue') },
+    { path: '/shop', component: () => import('./views/ShopView.vue') },
+    { path: '/sponsors', component: () => import('./views/SponsorsView.vue') },
+    { path: '/rallies', component: () => import('./views/RalliesView.vue') },
+    { path: '/rallies/:id', component: () => import('./views/RallyView.vue') },
+    { path: '/standings', component: () => import('./views/StandingsView.vue') },
+    { path: '/login', component: () => import('./views/LoginView.vue'), meta: { guest: true } },
+    { path: '/register', component: () => import('./views/RegisterView.vue'), meta: { guest: true } },
+    { path: '/forgot', component: () => import('./views/ForgotView.vue'), meta: { guest: true } },
+    { path: '/reset', component: () => import('./views/ResetView.vue'), meta: { open: true } },
+    { path: '/confirm', component: () => import('./views/ConfirmView.vue'), meta: { open: true } },
+    { path: '/start', component: () => import('./views/StartView.vue') },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 });
@@ -69,6 +47,9 @@ router.beforeEach(async (to) => {
     }
   }
 
+  if (to.meta.open) {
+    return true;
+  }
   if (!session.user) {
     return to.meta.guest ? true : '/login';
   }

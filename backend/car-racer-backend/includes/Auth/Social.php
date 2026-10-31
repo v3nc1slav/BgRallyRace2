@@ -122,7 +122,7 @@ final class Social
         $email = sanitize_email($profile['email']);
         $existing = $email !== '' ? get_user_by('email', $email) : false;
         if ($existing) {
-            if (!$profile['verified']) {
+            if (!$profile['verified'] || !Recovery::isConfirmed($existing->ID)) {
                 return new WP_Error('bgr_social', I18n::t('server.social.emailUsed'), ['status' => 409]);
             }
             update_user_meta($existing->ID, self::metaKey($provider), $profile['subject']);
@@ -141,6 +141,9 @@ final class Social
             return new WP_Error('bgr_social', I18n::t('server.social.createFailed'), ['status' => 400]);
         }
         update_user_meta($userId, self::metaKey($provider), $profile['subject']);
+        if ($profile['verified']) {
+            Recovery::markConfirmed(get_userdata($userId));
+        }
         return (int) $userId;
     }
 

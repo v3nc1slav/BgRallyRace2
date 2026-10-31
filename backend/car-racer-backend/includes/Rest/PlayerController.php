@@ -2,6 +2,7 @@
 
 namespace BgRally\Rest;
 
+use BgRally\Auth\Recovery;
 use BgRally\Auth\Social;
 use BgRally\Catalog\Cities;
 use BgRally\Game\Inactivity;
@@ -19,7 +20,7 @@ final class PlayerController
         $manager = $user->exists() ? Managers::findByUser($user->ID) : null;
 
         return [
-            'user' => $user->exists() ? ['id' => $user->ID, 'name' => $user->display_name] : null,
+            'user' => $user->exists() ? ['id' => $user->ID, 'name' => $user->display_name, 'email_confirmed' => Recovery::isConfirmed($user->ID)] : null,
             'player' => $manager ? Managers::toApi($manager) : null,
             'nonce' => wp_create_nonce('wp_rest'),
             'providers' => Social::providers(),

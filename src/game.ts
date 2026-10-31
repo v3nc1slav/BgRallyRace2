@@ -1,4 +1,5 @@
 import { apiGet, apiPost } from './api';
+import { platform as device } from './platform';
 import { NS, session, type Player } from './session';
 
 export interface Stats {
@@ -765,9 +766,9 @@ export const saveNotificationPreferences = (on: string[]) => post<NotifyResult>(
 export const addPushDevice = (token: string, platform: string) => post<NotifyResult>('notifications/device', { token, platform });
 export const removePushDevice = (token: string) => post<NotifyResult>('notifications/device/remove', { token });
 
-export const getAds = () => get<{ ads: AdsInfo }>('ads');
+export const getAds = () => get<{ ads: AdsInfo }>(`ads?platform=${device}`);
 export const startAd = (reward: string, platform: string) => post<{ ad: AdStart }>('ads/start', { reward, platform });
-export const claimAd = (viewId: number, token: string) => post<{ ads: AdsInfo }>('ads/claim', { view_id: viewId, token });
+export const claimAd = (viewId: number, token: string) => post<{ ads: AdsInfo }>('ads/claim', { view_id: viewId, token, platform: device });
 
 type MarketResult = { market: MarketInfo };
 export const getMarket = (query: MarketQuery) => get<MarketResult>(`market?scope=${query.scope}&filter=${query.filter}`);

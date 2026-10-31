@@ -30,7 +30,7 @@ final class AdsPage
         foreach (Ads::PROVIDERS as $key => $label) {
             $options .= sprintf('<option value="%s"%s>%s</option>', esc_attr($key), selected($config['provider'], $key, false), esc_html($label));
         }
-        printf('<tr><th scope="row"><label for="bgr-provider">Рекламна мрежа</label></th><td><select id="bgr-provider" name="provider">%s</select><p class="description">Тестовата реклама е брояч без истинска реклама – за проверка на наградите.</p></td></tr>', $options);
+        printf('<tr><th scope="row"><label for="bgr-provider">Рекламна мрежа</label></th><td><select id="bgr-provider" name="provider">%s</select><p class="description">Тестовата реклама е брояч без истинска реклама и работи само на локален сайт. Google Ad Manager в сайта дава награди без потвърждение от Google, затова там няма награда в пари.</p></td></tr>', $options);
         printf(
             '<tr><th scope="row"><label for="bgr-gpt">Ad Manager: рекламна единица</label></th><td><input id="bgr-gpt" name="gpt_unit" class="regular-text" value="%s" placeholder="/1234567/bgrally_rewarded"><p class="description">Пътят на rewarded единицата от Google Ad Manager.</p></td></tr>',
             esc_attr($config['gpt_unit'])
@@ -41,7 +41,7 @@ final class AdsPage
         );
         echo '<tr><th colspan="2"><h2 style="margin:0">Приложение (AdMob)</h2></th></tr>';
         printf(
-            '<tr><th scope="row"><label for="bgr-admob">AdMob: rewarded единица</label></th><td><input id="bgr-admob" name="admob_unit" class="regular-text" value="%s" placeholder="ca-app-pub-1234567890123456/1234567890"><p class="description">Без нея приложението показва тестовата реклама. Тестова единица на Google за Android: ca-app-pub-3940256099942544/5224354917.</p></td></tr>',
+            '<tr><th scope="row"><label for="bgr-admob">AdMob: rewarded единица</label></th><td><input id="bgr-admob" name="admob_unit" class="regular-text" value="%s" placeholder="ca-app-pub-1234567890123456/1234567890"><p class="description">Без нея рекламите в приложението са изключени, освен на локален сайт. Тестова единица на Google за Android: ca-app-pub-3940256099942544/5224354917.</p></td></tr>',
             esc_attr($config['admob_unit'])
         );
         printf(

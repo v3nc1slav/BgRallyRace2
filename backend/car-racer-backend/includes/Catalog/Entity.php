@@ -19,6 +19,7 @@ final class Entity
         private readonly ?Closure $label = null,
         public readonly array $actions = [],
         private readonly string $orderBy = 'id',
+        private readonly string $columns = '',
     ) {
     }
 
@@ -34,7 +35,7 @@ final class Entity
             $columns .= "  {$field->name} {$field->columnSql()},\n";
         }
 
-        return "CREATE TABLE {$this->table()} (\n  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n{$columns}  PRIMARY KEY  (id)\n) $charset;";
+        return "CREATE TABLE {$this->table()} (\n  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,\n{$columns}{$this->columns}  PRIMARY KEY  (id)\n) $charset;";
     }
 
     public function defaults(): array

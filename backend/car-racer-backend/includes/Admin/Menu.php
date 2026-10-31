@@ -18,6 +18,7 @@ final class Menu
         AdsPage::register();
         AuthPage::register();
         LevelsPage::register();
+        HealthPage::register();
         add_action('admin_post_bgr_guard_unlock', [SettingsPage::class, 'handleUnlock']);
         add_action('admin_post_bgr_revoke_tokens', [PlayersPage::class, 'handleRevoke']);
         add_action('admin_enqueue_scripts', [self::class, 'assets']);
@@ -49,5 +50,6 @@ final class Menu
         add_submenu_page(self::SLUG, 'Реклами', 'Реклами', 'manage_options', AdsPage::SLUG, [AdsPage::class, 'render']);
         add_submenu_page(self::SLUG, 'Нива', 'Нива', 'manage_options', LevelsPage::SLUG, [LevelsPage::class, 'render']);
         add_submenu_page(self::SLUG, 'Настройки', 'Настройки', 'manage_options', 'bgrally-settings', [SettingsPage::class, 'render']);
+        add_submenu_page(self::SLUG, 'Състояние', 'Състояние', 'manage_options', HealthPage::SLUG, [HealthPage::class, 'render']);
     }
 }

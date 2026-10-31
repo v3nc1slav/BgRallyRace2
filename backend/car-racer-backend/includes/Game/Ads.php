@@ -42,6 +42,23 @@ final class Ads
         };
     }
 
+    private static function provider(string $platform): ?string
+    {
+        $config = self::config();
+        $provider = $platform === 'app' ? ($config['admob_unit'] !== '' ? 'admob' : 'test') : $config['provider'];
+        $testing = apply_filters('bgrally_test_ads', in_array(wp_get_environment_type(), ['local', 'development'], true));
+        return $provider === 'test' && !$testing ? null : $provider;
+    }
+
+    private static function rewards(?string $provider): array
+    {
+        return match ($provider) {
+            null => [],
+            'gpt' => array_values(array_diff(self::REWARDS, ['money'])),
+            default => self::REWARDS,
+        };
+    }
+
     private static function today(): string
     {
         return wp_date('Y-m-d') . ' 00:00:00';
@@ -81,7 +98,7 @@ final class Ads
         return max(0, Settings::int('ad_' . $reward . '_daily') - (int) (self::used((int) $manager['id'])[$reward] ?? 0));
     }
 
-    public static function view(array $manager): array
+    public static function view(array $manager, string $platform = 'web'): array
     {
         return [
             'cooldown' => self::cooldown((int) $manager['id']),
@@ -91,7 +108,7 @@ final class Ads
                 'daily' => Settings::int('ad_' . $reward . '_daily'),
                 'left' => self::left($manager, $reward),
                 'blocked' => self::blocked($manager, $reward),
-            ], self::REWARDS),
+            ], self::rewards(self::provider($platform))),
         ];
     }
 
@@ -100,7 +117,8 @@ final class Ads
         global $wpdb;
         $managerId = (int) $manager['id'];
 
-        if (!in_array($reward, self::REWARDS, true)) {
+        $provider = self::provider($platform);
+        if (!in_array($reward, self::rewards($provider), true)) {
             return new WP_Error('bgr_reward', I18n::t('server.ads.noReward'), ['status' => 400]);
         }
         if (!self::left($manager, $reward)) {
@@ -116,7 +134,6 @@ final class Ads
         }
 
         $config = self::config();
-        $provider = $platform === 'app' ? ($config['admob_unit'] !== '' ? 'admob' : 'test') : $config['provider'];
         $token = wp_generate_password(32, false);
         $wpdb->insert(self::table(), [
             'manager_id' => $managerId,

@@ -2,6 +2,8 @@
 
 namespace BgRally\Rest;
 
+use WP_REST_Request;
+
 final class Routes
 {
     public const NAMESPACE = 'bgrally/v1';
@@ -17,7 +19,12 @@ final class Routes
         self::route('/auth/login', 'POST', [AuthController::class, 'login'], $public);
         self::route('/auth/logout', 'POST', [AuthController::class, 'logout'], $loggedIn);
         self::route('/auth/social', 'POST', [AuthController::class, 'social'], $public);
+        self::route('/auth/forgot', 'POST', [AuthController::class, 'forgot'], $public);
+        self::route('/auth/reset', 'POST', [AuthController::class, 'reset'], $public);
+        self::route('/auth/confirm', 'POST', [AuthController::class, 'confirm'], $public);
         self::route('/account/delete', 'POST', [AuthController::class, 'deleteAccount'], $loggedIn);
+        self::route('/account/password', 'POST', [AuthController::class, 'changePassword'], $loggedIn);
+        self::route('/account/confirm', 'POST', [AuthController::class, 'resendConfirmation'], $loggedIn);
         self::route('/ads/admob-ssv', 'GET', [AdsController::class, 'admobSsv'], $public);
         self::route('/me', 'GET', [PlayerController::class, 'me'], $public);
         self::route('/player', 'POST', [PlayerController::class, 'create'], $loggedIn);
@@ -104,9 +111,10 @@ final class Routes
 
     private static function route(string $path, string $method, callable $callback, callable $permission): void
     {
+        $exclusive = $method === 'POST' && $permission === [Auth::class, 'player'];
         register_rest_route(self::NAMESPACE, $path, [
             'methods' => $method,
-            'callback' => $callback,
+            'callback' => $exclusive ? fn(WP_REST_Request $request) => Auth::exclusive(fn() => $callback($request)) : $callback,
             'permission_callback' => $permission,
         ]);
     }

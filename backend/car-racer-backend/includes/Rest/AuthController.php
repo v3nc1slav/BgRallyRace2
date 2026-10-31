@@ -3,6 +3,7 @@
 namespace BgRally\Rest;
 
 use BgRally\Auth\Guard;
+use BgRally\Auth\Recovery;
 use BgRally\Auth\Social;
 use BgRally\Auth\Tokens;
 use BgRally\Catalog\Cities;
@@ -64,6 +65,7 @@ final class AuthController
 
         Managers::create($userId, $cityId);
         Guard::registered();
+        Recovery::sendConfirmation(get_userdata($userId));
 
         return self::signIn($request, (int) $userId);
     }
@@ -104,6 +106,44 @@ final class AuthController
             return new WP_Error('bgr_login_failed', I18n::t('server.auth.banned'), ['status' => 401]);
         }
         return self::signIn($request, $userId);
+    }
+
+    public static function forgot(WP_REST_Request $request)
+    {
+        $limited = Guard::mailLimit();
+        if ($limited) {
+            return $limited;
+        }
+        Recovery::forgot((string) $request->get_param('login'));
+        return ['message' => I18n::t('server.auth.forgotSent')];
+    }
+
+    public static function reset(WP_REST_Request $request)
+    {
+        $result = Recovery::reset((string) $request->get_param('login'), (string) $request->get_param('key'), (string) $request->get_param('password'));
+        return is_wp_error($result) ? $result : ['message' => I18n::t('server.auth.resetDone')];
+    }
+
+    public static function confirm(WP_REST_Request $request)
+    {
+        $result = Recovery::confirm(absint($request->get_param('id')), absint($request->get_param('exp')), (string) $request->get_param('sig'));
+        return is_wp_error($result) ? $result : ['message' => I18n::t('server.auth.confirmed')];
+    }
+
+    public static function resendConfirmation()
+    {
+        $result = Recovery::resend(get_current_user_id());
+        return is_wp_error($result) ? $result : ['message' => I18n::t('server.auth.confirmSent')];
+    }
+
+    public static function changePassword(WP_REST_Request $request)
+    {
+        $userId = get_current_user_id();
+        $result = Recovery::change($userId, (string) $request->get_param('current'), (string) $request->get_param('password'));
+        if (is_wp_error($result)) {
+            return $result;
+        }
+        return self::signIn($request, $userId) + ['message' => I18n::t('server.auth.passwordChanged')];
     }
 
     public static function logout()
