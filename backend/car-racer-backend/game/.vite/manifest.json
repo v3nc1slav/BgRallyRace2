@@ -1,24 +1,138 @@
 {
+  "_game-BribeCard-DqOq72qs.js": {
+    "file": "game-BribeCard-DqOq72qs.js",
+    "name": "BribeCard",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html"
+    ]
+  },
+  "_game-CitySelect-Dnc8sVak.js": {
+    "file": "game-CitySelect-Dnc8sVak.js",
+    "name": "CitySelect",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html"
+    ]
+  },
+  "_game-Feedback-B4Z8CfhX.js": {
+    "file": "game-Feedback-B4Z8CfhX.js",
+    "name": "Feedback",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js"
+    ]
+  },
+  "_game-HealthBar-Kc1yLPLS.js": {
+    "file": "game-HealthBar-Kc1yLPLS.js",
+    "name": "HealthBar",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js"
+    ]
+  },
+  "_game-LangSwitch-BDMUQn-e.js": {
+    "file": "game-LangSwitch-BDMUQn-e.js",
+    "name": "LangSwitch",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js"
+    ]
+  },
+  "_game-PrivacyLinks-B9ZdNMS2.js": {
+    "file": "game-PrivacyLinks-B9ZdNMS2.js",
+    "name": "PrivacyLinks",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js"
+    ]
+  },
+  "_game-SocialButtons-Cpe7uRWn.js": {
+    "file": "game-SocialButtons-Cpe7uRWn.js",
+    "name": "SocialButtons",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-dist-CMedSjkm.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html"
+    ],
+    "dynamicImports": [
+      "node_modules/@capgo/capacitor-social-login/dist/esm/web.js"
+    ]
+  },
+  "_game-dist-CMedSjkm.js": {
+    "file": "game-dist-CMedSjkm.js",
+    "name": "dist"
+  },
   "_game-effects-mIwpQDlh.js": {
     "file": "game-effects-mIwpQDlh.js",
     "name": "effects"
+  },
+  "_game-i18n-Dgu4k3C6.js": {
+    "file": "game-i18n-Dgu4k3C6.js",
+    "name": "i18n"
   },
   "_game-index.esm-0zm88QH2.js": {
     "file": "game-index.esm-0zm88QH2.js",
     "name": "index.esm"
   },
+  "_game-rallyStatus-DZxXHo2B.js": {
+    "file": "game-rallyStatus-DZxXHo2B.js",
+    "name": "rallyStatus",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js"
+    ]
+  },
+  "_game-session-I3O-FSnT.js": {
+    "file": "game-session-I3O-FSnT.js",
+    "name": "session",
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-dist-CMedSjkm.js"
+    ]
+  },
   "index.html": {
-    "file": "game-JpEH2IBa.js",
+    "file": "game-2d7G7-GD.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-dist-CMedSjkm.js",
+      "_game-session-I3O-FSnT.js"
+    ],
     "dynamicImports": [
       "node_modules/@capacitor-community/admob/dist/esm/web.js",
       "node_modules/firebase/app/dist/esm/index.esm.js",
       "node_modules/firebase/messaging/dist/esm/index.esm.js",
-      "src/city.ts",
-      "node_modules/@capgo/capacitor-social-login/dist/esm/web.js",
-      "src/race.ts"
+      "src/views/HomeView.vue",
+      "src/views/GarageView.vue",
+      "src/views/GarageStaffView.vue",
+      "src/views/CityView.vue",
+      "src/views/BarView.vue",
+      "src/views/TrackView.vue",
+      "src/views/PoliceView.vue",
+      "src/views/CityHallView.vue",
+      "src/views/JobsView.vue",
+      "src/views/BlackTrackView.vue",
+      "src/views/MallView.vue",
+      "src/views/MarketView.vue",
+      "src/views/BankView.vue",
+      "src/views/ForumView.vue",
+      "src/views/ForumTopicView.vue",
+      "src/views/ProfileView.vue",
+      "src/views/SettingsView.vue",
+      "src/views/ShopView.vue",
+      "src/views/SponsorsView.vue",
+      "src/views/RalliesView.vue",
+      "src/views/RallyView.vue",
+      "src/views/StandingsView.vue",
+      "src/views/LoginView.vue",
+      "src/views/RegisterView.vue",
+      "src/views/ForgotView.vue",
+      "src/views/ResetView.vue",
+      "src/views/ConfirmView.vue",
+      "src/views/StartView.vue"
     ],
     "css": [
       "game-DAOmWqt3.css"
@@ -30,21 +144,23 @@
     ]
   },
   "node_modules/@capacitor-community/admob/dist/esm/web.js": {
-    "file": "game-web-C98mEiUp.js",
+    "file": "game-web-BqX074-i.js",
     "name": "web",
     "src": "node_modules/@capacitor-community/admob/dist/esm/web.js",
     "isDynamicEntry": true,
     "imports": [
+      "_game-dist-CMedSjkm.js",
       "index.html"
     ]
   },
   "node_modules/@capgo/capacitor-social-login/dist/esm/web.js": {
-    "file": "game-web-DiuoKs7_.js",
+    "file": "game-web-B060l5ZI.js",
     "name": "web",
     "src": "node_modules/@capgo/capacitor-social-login/dist/esm/web.js",
     "isDynamicEntry": true,
     "imports": [
-      "index.html"
+      "_game-dist-CMedSjkm.js",
+      "_game-SocialButtons-Cpe7uRWn.js"
     ]
   },
   "node_modules/firebase/app/dist/esm/index.esm.js": {
@@ -78,23 +194,369 @@
     "src": "src/assets/error.jpg"
   },
   "src/city.ts": {
-    "file": "game-city-BNxq1Tgn.js",
+    "file": "game-city-CX1X2G3t.js",
     "name": "city",
     "src": "src/city.ts",
     "isDynamicEntry": true,
     "imports": [
-      "index.html",
+      "_game-i18n-Dgu4k3C6.js",
       "_game-effects-mIwpQDlh.js"
     ]
   },
   "src/race.ts": {
-    "file": "game-race-DgT1zbbG.js",
+    "file": "game-race-DLCqbJRD.js",
     "name": "race",
     "src": "src/race.ts",
     "isDynamicEntry": true,
     "imports": [
-      "index.html",
+      "_game-i18n-Dgu4k3C6.js",
       "_game-effects-mIwpQDlh.js"
+    ]
+  },
+  "src/views/BankView.vue": {
+    "file": "game-BankView-jJeETtGD.js",
+    "name": "BankView",
+    "src": "src/views/BankView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/BarView.vue": {
+    "file": "game-BarView-BFjLGkOl.js",
+    "name": "BarView",
+    "src": "src/views/BarView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-HealthBar-Kc1yLPLS.js"
+    ]
+  },
+  "src/views/BlackTrackView.vue": {
+    "file": "game-BlackTrackView-DUPgKQWP.js",
+    "name": "BlackTrackView",
+    "src": "src/views/BlackTrackView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/CityHallView.vue": {
+    "file": "game-CityHallView-DKJc1Df0.js",
+    "name": "CityHallView",
+    "src": "src/views/CityHallView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-BribeCard-DqOq72qs.js"
+    ]
+  },
+  "src/views/CityView.vue": {
+    "file": "game-CityView-C-JgaDo1.js",
+    "name": "CityView",
+    "src": "src/views/CityView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html"
+    ],
+    "dynamicImports": [
+      "src/city.ts"
+    ]
+  },
+  "src/views/ConfirmView.vue": {
+    "file": "game-ConfirmView-_GcdeMQY.js",
+    "name": "ConfirmView",
+    "src": "src/views/ConfirmView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/ForgotView.vue": {
+    "file": "game-ForgotView-Cfojj20r.js",
+    "name": "ForgotView",
+    "src": "src/views/ForgotView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-LangSwitch-BDMUQn-e.js"
+    ]
+  },
+  "src/views/ForumTopicView.vue": {
+    "file": "game-ForumTopicView-BZlONkzw.js",
+    "name": "ForumTopicView",
+    "src": "src/views/ForumTopicView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/ForumView.vue": {
+    "file": "game-ForumView-Dr8GZL9B.js",
+    "name": "ForumView",
+    "src": "src/views/ForumView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/GarageStaffView.vue": {
+    "file": "game-GarageStaffView-B4zQuO_R.js",
+    "name": "GarageStaffView",
+    "src": "src/views/GarageStaffView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-HealthBar-Kc1yLPLS.js"
+    ]
+  },
+  "src/views/GarageView.vue": {
+    "file": "game-GarageView-BfuiMB5G.js",
+    "name": "GarageView",
+    "src": "src/views/GarageView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/HomeView.vue": {
+    "file": "game-HomeView-wAgDLE3z.js",
+    "name": "HomeView",
+    "src": "src/views/HomeView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-HealthBar-Kc1yLPLS.js",
+      "_game-rallyStatus-DZxXHo2B.js"
+    ]
+  },
+  "src/views/JobsView.vue": {
+    "file": "game-JobsView-6S6s4xTf.js",
+    "name": "JobsView",
+    "src": "src/views/JobsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/LoginView.vue": {
+    "file": "game-LoginView-GwHGcEfe.js",
+    "name": "LoginView",
+    "src": "src/views/LoginView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-SocialButtons-Cpe7uRWn.js",
+      "_game-LangSwitch-BDMUQn-e.js",
+      "_game-PrivacyLinks-B9ZdNMS2.js"
+    ]
+  },
+  "src/views/MallView.vue": {
+    "file": "game-MallView-DH7Z2UBi.js",
+    "name": "MallView",
+    "src": "src/views/MallView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-HealthBar-Kc1yLPLS.js"
+    ]
+  },
+  "src/views/MarketView.vue": {
+    "file": "game-MarketView-B0Rp7Zc-.js",
+    "name": "MarketView",
+    "src": "src/views/MarketView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-HealthBar-Kc1yLPLS.js"
+    ]
+  },
+  "src/views/PoliceView.vue": {
+    "file": "game-PoliceView-DQFviNtH.js",
+    "name": "PoliceView",
+    "src": "src/views/PoliceView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-BribeCard-DqOq72qs.js"
+    ]
+  },
+  "src/views/ProfileView.vue": {
+    "file": "game-ProfileView-DoKM5IX0.js",
+    "name": "ProfileView",
+    "src": "src/views/ProfileView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-PrivacyLinks-B9ZdNMS2.js"
+    ]
+  },
+  "src/views/RalliesView.vue": {
+    "file": "game-RalliesView-C3dCWZFj.js",
+    "name": "RalliesView",
+    "src": "src/views/RalliesView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-rallyStatus-DZxXHo2B.js"
+    ]
+  },
+  "src/views/RallyView.vue": {
+    "file": "game-RallyView-Czl-Zsb8.js",
+    "name": "RallyView",
+    "src": "src/views/RallyView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-rallyStatus-DZxXHo2B.js"
+    ],
+    "dynamicImports": [
+      "src/race.ts"
+    ]
+  },
+  "src/views/RegisterView.vue": {
+    "file": "game-RegisterView-9OUOUaoG.js",
+    "name": "RegisterView",
+    "src": "src/views/RegisterView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-SocialButtons-Cpe7uRWn.js",
+      "_game-LangSwitch-BDMUQn-e.js",
+      "_game-PrivacyLinks-B9ZdNMS2.js",
+      "_game-CitySelect-Dnc8sVak.js"
+    ]
+  },
+  "src/views/ResetView.vue": {
+    "file": "game-ResetView-DjFFUg72.js",
+    "name": "ResetView",
+    "src": "src/views/ResetView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/SettingsView.vue": {
+    "file": "game-SettingsView-Cf9yiR1z.js",
+    "name": "SettingsView",
+    "src": "src/views/SettingsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-LangSwitch-BDMUQn-e.js"
+    ]
+  },
+  "src/views/ShopView.vue": {
+    "file": "game-ShopView-DjjUvt6O.js",
+    "name": "ShopView",
+    "src": "src/views/ShopView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/SponsorsView.vue": {
+    "file": "game-SponsorsView-C-j4SjPC.js",
+    "name": "SponsorsView",
+    "src": "src/views/SponsorsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js",
+      "_game-HealthBar-Kc1yLPLS.js"
+    ]
+  },
+  "src/views/StandingsView.vue": {
+    "file": "game-StandingsView-CoirC-lF.js",
+    "name": "StandingsView",
+    "src": "src/views/StandingsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
+    ]
+  },
+  "src/views/StartView.vue": {
+    "file": "game-StartView-vmpdfqmN.js",
+    "name": "StartView",
+    "src": "src/views/StartView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "_game-session-I3O-FSnT.js",
+      "index.html",
+      "_game-LangSwitch-BDMUQn-e.js",
+      "_game-CitySelect-Dnc8sVak.js"
+    ]
+  },
+  "src/views/TrackView.vue": {
+    "file": "game-TrackView-D6IzvHrI.js",
+    "name": "TrackView",
+    "src": "src/views/TrackView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "_game-i18n-Dgu4k3C6.js",
+      "index.html",
+      "_game-Feedback-B4Z8CfhX.js"
     ]
   }
 }
