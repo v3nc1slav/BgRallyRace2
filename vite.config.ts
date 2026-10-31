@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    outDir: mode === 'app' ? 'dist-app' : 'C:/Users/Admin/Local Sites/bg-race/app/public/wp-content/plugins/car-racer-backend/game',
+    outDir: mode === 'app' ? 'dist-app' : 'backend/car-racer-backend/game',
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
