@@ -4,6 +4,9 @@ $_SERVER['REQUEST_URI'] = '/';
 require (getenv('BGR_WP_ROOT') ?: 'C:/Users/Admin/Local Sites/bg-race/app/public') . '/wp-load.php';
 
 switch ($argv[1] ?? '') {
+    case 'tick':
+        do_action(BgRally\Cron::HOOK);
+        break;
     case 'mark':
         BgRally\Game\Inactivity::mark();
         break;

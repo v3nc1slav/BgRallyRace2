@@ -30,4 +30,5 @@ $_GET = [];
 ob_start(); BgRally\Admin\PlayersPage::render(); echo 'players  ', strlen(ob_get_clean()), "\n";
 ob_start(); BgRally\Admin\SettingsPage::render(); $settings = ob_get_clean(); echo 'settings ', strlen($settings), ' fields ', substr_count($settings, 'type="number"'), "\n";
 echo 'cron next: ', wp_next_scheduled('bgr_tick') ? 'scheduled' : 'missing', "\n";
+ob_start(); BgRally\Admin\HealthPage::render(); echo 'health   ', strlen(ob_get_clean()), "\n";
 ob_start(); BgRally\Admin\LevelsPage::render(); $levels = ob_get_clean(); echo 'levels   ', strlen($levels), ' fields ', substr_count($levels, 'type="number"'), "\n";

@@ -142,6 +142,7 @@ try {
     sql(`DELETE FROM wp_bgr_rallies WHERE id = ${rallyId}`);
   }
   sql('DELETE FROM wp_bgr_seasons WHERE season = 98');
+  sql('DELETE FROM wp_bgr_season_prizes WHERE season = 98');
   if (id) {
     for (const t of ['items', 'staff', 'player_cars', 'ledger', 'entries', 'contracts', 'inbox', 'bribes', 'mayor_requests']) sql(`DELETE FROM wp_bgr_${t} WHERE manager_id = ${id}`);
     sql(`DELETE FROM wp_bgr_managers WHERE id = ${id}`);
