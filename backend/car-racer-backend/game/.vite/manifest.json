@@ -1,59 +1,66 @@
 {
-  "_game-BribeCard-DqOq72qs.js": {
-    "file": "game-BribeCard-DqOq72qs.js",
+  "_game-BribeCard-GNS6Klvj.js": {
+    "file": "game-BribeCard-GNS6Klvj.js",
     "name": "BribeCard",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html"
     ]
   },
-  "_game-CitySelect-Dnc8sVak.js": {
-    "file": "game-CitySelect-Dnc8sVak.js",
+  "_game-CitySelect-pvUh2sXC.js": {
+    "file": "game-CitySelect-pvUh2sXC.js",
     "name": "CitySelect",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html"
     ]
   },
-  "_game-Feedback-B4Z8CfhX.js": {
-    "file": "game-Feedback-B4Z8CfhX.js",
+  "_game-Feedback-2xwunRRW.js": {
+    "file": "game-Feedback-2xwunRRW.js",
     "name": "Feedback",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js"
+      "_game-i18n-n63MlQBZ.js"
     ]
   },
-  "_game-HealthBar-Kc1yLPLS.js": {
-    "file": "game-HealthBar-Kc1yLPLS.js",
+  "_game-HealthBar-k5uzWHfA.js": {
+    "file": "game-HealthBar-k5uzWHfA.js",
     "name": "HealthBar",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js"
+      "_game-i18n-n63MlQBZ.js"
     ]
   },
-  "_game-LangSwitch-BDMUQn-e.js": {
-    "file": "game-LangSwitch-BDMUQn-e.js",
+  "_game-LangSwitch-BUlHAuJq.js": {
+    "file": "game-LangSwitch-BUlHAuJq.js",
     "name": "LangSwitch",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js"
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js"
     ]
   },
-  "_game-PrivacyLinks-B9ZdNMS2.js": {
-    "file": "game-PrivacyLinks-B9ZdNMS2.js",
+  "_game-PartIcon-Dn-zjuGg.js": {
+    "file": "game-PartIcon-Dn-zjuGg.js",
+    "name": "PartIcon",
+    "imports": [
+      "_game-i18n-n63MlQBZ.js"
+    ]
+  },
+  "_game-PrivacyLinks-ISCtTMs-.js": {
+    "file": "game-PrivacyLinks-ISCtTMs-.js",
     "name": "PrivacyLinks",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js"
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js"
     ]
   },
-  "_game-SocialButtons-Cpe7uRWn.js": {
-    "file": "game-SocialButtons-Cpe7uRWn.js",
+  "_game-SocialButtons-BTTUljf6.js": {
+    "file": "game-SocialButtons-BTTUljf6.js",
     "name": "SocialButtons",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "_game-dist-CMedSjkm.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-session-C_dZd24N.js",
       "index.html"
     ],
     "dynamicImports": [
@@ -68,38 +75,38 @@
     "file": "game-effects-mIwpQDlh.js",
     "name": "effects"
   },
-  "_game-i18n-Dgu4k3C6.js": {
-    "file": "game-i18n-Dgu4k3C6.js",
+  "_game-i18n-n63MlQBZ.js": {
+    "file": "game-i18n-n63MlQBZ.js",
     "name": "i18n"
   },
   "_game-index.esm-0zm88QH2.js": {
     "file": "game-index.esm-0zm88QH2.js",
     "name": "index.esm"
   },
-  "_game-rallyStatus-DZxXHo2B.js": {
-    "file": "game-rallyStatus-DZxXHo2B.js",
+  "_game-rallyStatus-eQxbdNeJ.js": {
+    "file": "game-rallyStatus-eQxbdNeJ.js",
     "name": "rallyStatus",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js"
+      "_game-i18n-n63MlQBZ.js"
     ]
   },
-  "_game-session-I3O-FSnT.js": {
-    "file": "game-session-I3O-FSnT.js",
+  "_game-session-C_dZd24N.js": {
+    "file": "game-session-C_dZd24N.js",
     "name": "session",
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "_game-dist-CMedSjkm.js"
     ]
   },
   "index.html": {
-    "file": "game-2d7G7-GD.js",
+    "file": "game-HknPCZ_H.js",
     "name": "index",
     "src": "index.html",
     "isEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "_game-dist-CMedSjkm.js",
-      "_game-session-I3O-FSnT.js"
+      "_game-session-C_dZd24N.js"
     ],
     "dynamicImports": [
       "node_modules/@capacitor-community/admob/dist/esm/web.js",
@@ -135,7 +142,7 @@
       "src/views/StartView.vue"
     ],
     "css": [
-      "game-DAOmWqt3.css"
+      "game-CbjAW2zb.css"
     ],
     "assets": [
       "assets/BGRallyHD.png",
@@ -144,7 +151,7 @@
     ]
   },
   "node_modules/@capacitor-community/admob/dist/esm/web.js": {
-    "file": "game-web-BqX074-i.js",
+    "file": "game-web-CowleIbi.js",
     "name": "web",
     "src": "node_modules/@capacitor-community/admob/dist/esm/web.js",
     "isDynamicEntry": true,
@@ -154,13 +161,13 @@
     ]
   },
   "node_modules/@capgo/capacitor-social-login/dist/esm/web.js": {
-    "file": "game-web-B060l5ZI.js",
+    "file": "game-web-DdxOynsD.js",
     "name": "web",
     "src": "node_modules/@capgo/capacitor-social-login/dist/esm/web.js",
     "isDynamicEntry": true,
     "imports": [
       "_game-dist-CMedSjkm.js",
-      "_game-SocialButtons-Cpe7uRWn.js"
+      "_game-SocialButtons-BTTUljf6.js"
     ]
   },
   "node_modules/firebase/app/dist/esm/index.esm.js": {
@@ -194,81 +201,81 @@
     "src": "src/assets/error.jpg"
   },
   "src/city.ts": {
-    "file": "game-city-CX1X2G3t.js",
+    "file": "game-city-B1gZh2fB.js",
     "name": "city",
     "src": "src/city.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "_game-effects-mIwpQDlh.js"
     ]
   },
   "src/race.ts": {
-    "file": "game-race-DLCqbJRD.js",
+    "file": "game-race-DMtdp7Sm.js",
     "name": "race",
     "src": "src/race.ts",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "_game-effects-mIwpQDlh.js"
     ]
   },
   "src/views/BankView.vue": {
-    "file": "game-BankView-jJeETtGD.js",
+    "file": "game-BankView-DYfnw9sS.js",
     "name": "BankView",
     "src": "src/views/BankView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/BarView.vue": {
-    "file": "game-BarView-BFjLGkOl.js",
+    "file": "game-BarView-CWoPW1Bq.js",
     "name": "BarView",
     "src": "src/views/BarView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-HealthBar-Kc1yLPLS.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-HealthBar-k5uzWHfA.js"
     ]
   },
   "src/views/BlackTrackView.vue": {
-    "file": "game-BlackTrackView-DUPgKQWP.js",
+    "file": "game-BlackTrackView-Z2GEr0mg.js",
     "name": "BlackTrackView",
     "src": "src/views/BlackTrackView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/CityHallView.vue": {
-    "file": "game-CityHallView-DKJc1Df0.js",
+    "file": "game-CityHallView-BLNVQ6fG.js",
     "name": "CityHallView",
     "src": "src/views/CityHallView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-BribeCard-DqOq72qs.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-BribeCard-GNS6Klvj.js"
     ]
   },
   "src/views/CityView.vue": {
-    "file": "game-CityView-C-JgaDo1.js",
+    "file": "game-CityView-D1L1uoQU.js",
     "name": "CityView",
     "src": "src/views/CityView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html"
     ],
     "dynamicImports": [
@@ -276,287 +283,289 @@
     ]
   },
   "src/views/ConfirmView.vue": {
-    "file": "game-ConfirmView-_GcdeMQY.js",
+    "file": "game-ConfirmView-BGe1KHNp.js",
     "name": "ConfirmView",
     "src": "src/views/ConfirmView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/ForgotView.vue": {
-    "file": "game-ForgotView-Cfojj20r.js",
+    "file": "game-ForgotView-BdJGCrHR.js",
     "name": "ForgotView",
     "src": "src/views/ForgotView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-LangSwitch-BDMUQn-e.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-LangSwitch-BUlHAuJq.js"
     ]
   },
   "src/views/ForumTopicView.vue": {
-    "file": "game-ForumTopicView-BZlONkzw.js",
+    "file": "game-ForumTopicView-C3gEeuRA.js",
     "name": "ForumTopicView",
     "src": "src/views/ForumTopicView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/ForumView.vue": {
-    "file": "game-ForumView-Dr8GZL9B.js",
+    "file": "game-ForumView-C3CFvPns.js",
     "name": "ForumView",
     "src": "src/views/ForumView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/GarageStaffView.vue": {
-    "file": "game-GarageStaffView-B4zQuO_R.js",
+    "file": "game-GarageStaffView-UYBLdIae.js",
     "name": "GarageStaffView",
     "src": "src/views/GarageStaffView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-HealthBar-Kc1yLPLS.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-HealthBar-k5uzWHfA.js"
     ]
   },
   "src/views/GarageView.vue": {
-    "file": "game-GarageView-BfuiMB5G.js",
+    "file": "game-GarageView-DQZsbWtn.js",
     "name": "GarageView",
     "src": "src/views/GarageView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-PartIcon-Dn-zjuGg.js"
     ]
   },
   "src/views/HomeView.vue": {
-    "file": "game-HomeView-wAgDLE3z.js",
+    "file": "game-HomeView-BckKcGps.js",
     "name": "HomeView",
     "src": "src/views/HomeView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-HealthBar-Kc1yLPLS.js",
-      "_game-rallyStatus-DZxXHo2B.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-HealthBar-k5uzWHfA.js",
+      "_game-rallyStatus-eQxbdNeJ.js"
     ]
   },
   "src/views/JobsView.vue": {
-    "file": "game-JobsView-6S6s4xTf.js",
+    "file": "game-JobsView-CLyuW7Ns.js",
     "name": "JobsView",
     "src": "src/views/JobsView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/LoginView.vue": {
-    "file": "game-LoginView-GwHGcEfe.js",
+    "file": "game-LoginView-vxjZcQii.js",
     "name": "LoginView",
     "src": "src/views/LoginView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-SocialButtons-Cpe7uRWn.js",
-      "_game-LangSwitch-BDMUQn-e.js",
-      "_game-PrivacyLinks-B9ZdNMS2.js"
+      "_game-SocialButtons-BTTUljf6.js",
+      "_game-LangSwitch-BUlHAuJq.js",
+      "_game-PrivacyLinks-ISCtTMs-.js"
     ]
   },
   "src/views/MallView.vue": {
-    "file": "game-MallView-DH7Z2UBi.js",
+    "file": "game-MallView-qKLr-RhN.js",
     "name": "MallView",
     "src": "src/views/MallView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-HealthBar-Kc1yLPLS.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-HealthBar-k5uzWHfA.js"
     ]
   },
   "src/views/MarketView.vue": {
-    "file": "game-MarketView-B0Rp7Zc-.js",
+    "file": "game-MarketView-6EoDGSC-.js",
     "name": "MarketView",
     "src": "src/views/MarketView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-HealthBar-Kc1yLPLS.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-HealthBar-k5uzWHfA.js"
     ]
   },
   "src/views/PoliceView.vue": {
-    "file": "game-PoliceView-DQFviNtH.js",
+    "file": "game-PoliceView-BI4Mmvfn.js",
     "name": "PoliceView",
     "src": "src/views/PoliceView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-BribeCard-DqOq72qs.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-BribeCard-GNS6Klvj.js"
     ]
   },
   "src/views/ProfileView.vue": {
-    "file": "game-ProfileView-DoKM5IX0.js",
+    "file": "game-ProfileView-DmL1vrDx.js",
     "name": "ProfileView",
     "src": "src/views/ProfileView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-PrivacyLinks-B9ZdNMS2.js"
+      "_game-PrivacyLinks-ISCtTMs-.js"
     ]
   },
   "src/views/RalliesView.vue": {
-    "file": "game-RalliesView-C3dCWZFj.js",
+    "file": "game-RalliesView-BV672aUY.js",
     "name": "RalliesView",
     "src": "src/views/RalliesView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-rallyStatus-DZxXHo2B.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-rallyStatus-eQxbdNeJ.js"
     ]
   },
   "src/views/RallyView.vue": {
-    "file": "game-RallyView-Czl-Zsb8.js",
+    "file": "game-RallyView-BkbesfmU.js",
     "name": "RallyView",
     "src": "src/views/RallyView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-rallyStatus-DZxXHo2B.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-rallyStatus-eQxbdNeJ.js"
     ],
     "dynamicImports": [
       "src/race.ts"
     ]
   },
   "src/views/RegisterView.vue": {
-    "file": "game-RegisterView-9OUOUaoG.js",
+    "file": "game-RegisterView-DcBxErWM.js",
     "name": "RegisterView",
     "src": "src/views/RegisterView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-SocialButtons-Cpe7uRWn.js",
-      "_game-LangSwitch-BDMUQn-e.js",
-      "_game-PrivacyLinks-B9ZdNMS2.js",
-      "_game-CitySelect-Dnc8sVak.js"
+      "_game-SocialButtons-BTTUljf6.js",
+      "_game-LangSwitch-BUlHAuJq.js",
+      "_game-PrivacyLinks-ISCtTMs-.js",
+      "_game-CitySelect-pvUh2sXC.js"
     ]
   },
   "src/views/ResetView.vue": {
-    "file": "game-ResetView-DjFFUg72.js",
+    "file": "game-ResetView-n-6-wNRJ.js",
     "name": "ResetView",
     "src": "src/views/ResetView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/SettingsView.vue": {
-    "file": "game-SettingsView-Cf9yiR1z.js",
+    "file": "game-SettingsView-UxJjQ41T.js",
     "name": "SettingsView",
     "src": "src/views/SettingsView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-LangSwitch-BDMUQn-e.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-LangSwitch-BUlHAuJq.js"
     ]
   },
   "src/views/ShopView.vue": {
-    "file": "game-ShopView-DjjUvt6O.js",
+    "file": "game-ShopView-yVgLE9nU.js",
     "name": "ShopView",
     "src": "src/views/ShopView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-PartIcon-Dn-zjuGg.js"
     ]
   },
   "src/views/SponsorsView.vue": {
-    "file": "game-SponsorsView-C-j4SjPC.js",
+    "file": "game-SponsorsView-mRS5xpeB.js",
     "name": "SponsorsView",
     "src": "src/views/SponsorsView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js",
-      "_game-HealthBar-Kc1yLPLS.js"
+      "_game-Feedback-2xwunRRW.js",
+      "_game-HealthBar-k5uzWHfA.js"
     ]
   },
   "src/views/StandingsView.vue": {
-    "file": "game-StandingsView-CoirC-lF.js",
+    "file": "game-StandingsView-y38ChAFR.js",
     "name": "StandingsView",
     "src": "src/views/StandingsView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   },
   "src/views/StartView.vue": {
-    "file": "game-StartView-vmpdfqmN.js",
+    "file": "game-StartView-DcbOuqrH.js",
     "name": "StartView",
     "src": "src/views/StartView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
-      "_game-session-I3O-FSnT.js",
+      "_game-i18n-n63MlQBZ.js",
+      "_game-session-C_dZd24N.js",
       "index.html",
-      "_game-LangSwitch-BDMUQn-e.js",
-      "_game-CitySelect-Dnc8sVak.js"
+      "_game-LangSwitch-BUlHAuJq.js",
+      "_game-CitySelect-pvUh2sXC.js"
     ]
   },
   "src/views/TrackView.vue": {
-    "file": "game-TrackView-D6IzvHrI.js",
+    "file": "game-TrackView-CpeazeYv.js",
     "name": "TrackView",
     "src": "src/views/TrackView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_game-i18n-Dgu4k3C6.js",
+      "_game-i18n-n63MlQBZ.js",
       "index.html",
-      "_game-Feedback-B4Z8CfhX.js"
+      "_game-Feedback-2xwunRRW.js"
     ]
   }
 }
