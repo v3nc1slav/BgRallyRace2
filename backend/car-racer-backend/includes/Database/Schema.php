@@ -11,8 +11,22 @@ final class Schema
 
     public static function maybeUpgrade(): void
     {
-        if (get_option(self::OPTION) !== self::VERSION) {
-            self::install();
+        global $wpdb;
+        if (get_option(self::OPTION) === self::VERSION) {
+            return;
+        }
+
+        $lock = $wpdb->prefix . 'bgr_upgrade';
+        if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $lock)) !== 1) {
+            return;
+        }
+        try {
+            $stored = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OPTION));
+            if ($stored !== self::VERSION) {
+                self::install();
+            }
+        } finally {
+            $wpdb->query($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock));
         }
     }
 

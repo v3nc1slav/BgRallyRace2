@@ -40,7 +40,7 @@ final class Guard
         };
         if ($header !== '' && !empty($_SERVER[$header])) {
             $values = explode(',', (string) $_SERVER[$header]);
-            $candidate = trim((string) end($values));
+            $candidate = trim($values[max(0, count($values) - max(1, Settings::int('guard_proxy_hops')))]);
             if (filter_var($candidate, FILTER_VALIDATE_IP)) {
                 return $candidate;
             }
