@@ -72,6 +72,7 @@ const hallPoint = (page) => screenPoint(page, 20.8, 236.6);
 try {
   const desk = await open(1280, 1000, 1, false);
   check('map is shown by default', !!(await desk.$('.bgr-city-canvas canvas')));
+  check('the city name is not repeated above the map', !(await desk.$('.bgr-card h1')));
   let point = await hallPoint(desk);
   await desk.mouse.move(point.x, point.y);
   await sleep(250);
@@ -109,6 +110,23 @@ try {
   await desk.mouse.move(zoomed.x, zoomed.y);
   await sleep(250);
   check('the zoom button zooms in and keeps the zoom', (await desk.$eval('.bgr-city-canvas canvas', (el) => el.style.cursor)) === 'pointer');
+
+  await desk.goto(`${SITE}/#/city`, { waitUntil: 'networkidle0' });
+  await desk.waitForSelector('.bgr-city-canvas canvas');
+  await sleep(800);
+  const under = await hallPoint(desk);
+  await desk.mouse.move(under.x, under.y);
+  await sleep(250);
+  await desk.evaluate(({ x, y }) => {
+    const button = document.querySelector('.bgr-city-tools button');
+    for (const type of ['mousedown', 'mouseup']) {
+      button.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y }));
+    }
+  }, under);
+  await sleep(500);
+  check('a click on a map button does not open the building under it', (await desk.evaluate(() => location.hash)) === '#/city', await desk.evaluate(() => location.hash));
+  await desk.goto(`${SITE}/#/city`, { waitUntil: 'networkidle0' });
+  await desk.waitForSelector('.bgr-city-canvas canvas');
 
   const [list] = await desk.$$('xpath/.//button[normalize-space()="Списък"]');
   await list.click();

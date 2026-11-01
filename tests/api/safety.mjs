@@ -45,6 +45,11 @@ function rally(label, season, status, extra = '') {
   return id;
 }
 
+function hold(season) {
+  sql(`INSERT INTO wp_bgr_rallies (name, city_id, start_at, season, weather, stage_ids, entry_fee, prizes, status) VALUES ('Hold${season} ${stamp}', 1, DATE_ADD(NOW(), INTERVAL 30 DAY), ${season}, 'dry', '1', 0, '0', 'scheduled')`);
+  rallies.push(Number(sql(`SELECT id FROM wp_bgr_rallies WHERE name = 'Hold${season} ${stamp}'`)));
+}
+
 function entry(rallyId, managerId, place, prize, points, pending) {
   sql(`INSERT INTO wp_bgr_entries (rally_id, manager_id, class, start_number, status, place, points, prize, reward_pending, created_at) VALUES (${rallyId}, ${managerId}, '3', ${place}, 'finished', ${place}, ${points}, ${prize}, ${pending}, NOW())`);
 }
@@ -65,6 +70,12 @@ try {
   const c = await player('sc');
   const d = await player('sd');
   const e = await player('se');
+
+  hold(93);
+  hold(94);
+  let r = JSON.parse(php('upgrade.php'));
+  check('a second request does not run the database upgrade', r.while_locked === 'old', JSON.stringify(r));
+  check('the upgrade runs when nothing else is upgrading', r.after_release === r.current, JSON.stringify(r));
 
   const stuck = rally('Stuck', 93, 'computing', 'DATE_SUB(NOW(), INTERVAL 1 DAY)');
   sql(`INSERT INTO wp_bgr_entries (rally_id, manager_id, class, start_number, created_at) VALUES (${stuck}, ${a.id}, '3', 1, NOW())`);
@@ -113,7 +124,7 @@ try {
   check('a closed season pays nothing more', prizes(b.id) === 1);
 
   sql(`UPDATE wp_bgr_managers SET energy = 500, level = 10 WHERE id = ${c.id}`);
-  let r = await call('GET', 'bank', { token: c.token });
+  r = await call('GET', 'bank', { token: c.token });
   const terms = r.data.bank.terms[0].weeks;
   const loans = await Promise.all(Array.from({ length: 5 }, () => call('POST', 'bank/loan', { token: c.token, body: { amount: r.data.bank.min, weeks: terms } })));
   check('parallel requests give only one loan', count('loans', `manager_id = ${c.id} AND status = 'active'`) === 1, loans.map((x) => x.status).join(','));
@@ -133,14 +144,17 @@ try {
   r = await call('POST', 'staff/fire', { token: d.token, body: { staff_id: staff } });
   check('firing an unknown member is refused', r.status === 404);
 
-  restore = settings({ guard_local: 0, guard_proxy: 2, guard_mail_limit: 2 });
-  await call('POST', 'auth/login', { headers: { 'X-Forwarded-For': '203.0.113.5, 198.51.100.7' }, body: { login: `nobody${stamp}`, password: 'x', mode: 'token' } });
-  check('the proxy address is the last in the header', count('guard', "ip = '198.51.100.7'") === 1 && count('guard', "ip = '203.0.113.5'") === 0);
+  restore = settings({ guard_local: 0, guard_proxy: 2, guard_proxy_hops: 1, guard_mail_limit: 2 });
+  r = php('guard.php', 'ip', '203.0.113.5, 198.51.100.7');
+  check('the proxy address is the last in the header', r === '198.51.100.7', r);
+  settings({ guard_proxy_hops: 2 });
+  r = php('guard.php', 'ip', '192.0.2.1, 203.0.113.5, 198.51.100.7');
+  check('with two proxies the address before the last is taken', r === '203.0.113.5', r);
   settings({ guard_proxy: 0 });
   const unknown = await call('POST', 'auth/forgot', { body: { login: `nobody${stamp}` } });
-  const known = await call('POST', 'auth/forgot', { body: { login: a.name } });
+  const known = await call('POST', 'auth/forgot', { body: { login: e.name } });
   check('forgot password does not reveal accounts', unknown.status === 200 && known.status === 200 && unknown.data.message === known.data.message, known.data.message);
-  r = await call('POST', 'auth/forgot', { body: { login: a.name } });
+  r = await call('POST', 'auth/forgot', { body: { login: e.name } });
   check('email requests are limited', r.status === 429, r.data.message);
   settings(restore);
   restore = null;

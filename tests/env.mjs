@@ -4,6 +4,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const env = process.env;
+
+// php() и sql() блокират Node, докато nginx затваря празните връзки след 3 секунди.
+const plainFetch = globalThis.fetch;
+globalThis.fetch = (url, options = {}) => plainFetch(url, { ...options, headers: { Connection: 'close', ...options.headers } });
 const root = dirname(fileURLToPath(import.meta.url));
 const services = join(env.APPDATA ?? '', 'Local', 'lightning-services');
 

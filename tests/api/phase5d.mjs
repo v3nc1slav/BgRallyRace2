@@ -107,12 +107,12 @@ add_filter('bgrally_push_send', function ($result, $message, $device) {
   await call('POST', `rallies/${rally}/register`, { token: a, body: { styles: {}, spares: { tyres: [], parts: [] } } });
   await call('POST', `rallies/${rally}/register`, { token: b, body: { styles: {}, spares: { tyres: [], parts: [] } } });
   sql(`UPDATE wp_bgr_rallies SET start_at = DATE_ADD(NOW(), INTERVAL 20 MINUTE) WHERE id = ${rally}`);
-  await call('GET', 'rallies', { token: b });
+  php('run_job.php', 'tick');
   await sleep(300);
   entries = log();
   const reminders = entries.filter((m) => m.data?.type === 'rally_start' && m.data.url.endsWith(`#/rallies/${rally}`));
   check('rally reminder sent 30 minutes before', reminders.length === 1 && reminders[0].token === deviceA, reminders[0]?.notification.title);
-  await call('GET', 'rallies', { token: b });
+  php('run_job.php', 'tick');
   await sleep(300);
   check('reminder sent only once', log().filter((m) => m.data?.type === 'rally_start').length === 1);
   check('player without devices gets nothing', !log().some((m) => m.token?.includes('pb')));
@@ -121,7 +121,7 @@ add_filter('bgrally_push_send', function ($result, $message, $device) {
   const second = createRally('Push2', 4320);
   await call('POST', `rallies/${second}/register`, { token: a, body: { styles: {}, spares: { tyres: [], parts: [] } } });
   sql(`UPDATE wp_bgr_rallies SET start_at = DATE_ADD(NOW(), INTERVAL 25 MINUTE) WHERE id = ${second}`);
-  await call('GET', 'rallies', { token: a });
+  php('run_job.php', 'tick');
   await sleep(300);
   check('invalid device removed after FCM says unregistered', sql(`SELECT COUNT(*) FROM wp_bgr_push_devices WHERE token LIKE 'dead-${stamp}%'`) === '0' && sql(`SELECT COUNT(*) FROM wp_bgr_push_devices WHERE token = '${deviceA}'`) === '1');
 
