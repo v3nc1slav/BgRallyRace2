@@ -81,9 +81,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="bgr-card">
-    <h1>{{ session.player?.city }}</h1>
-
+  <section class="bgr-card bgr-solid">
     <div class="bgr-tabs">
       <button :class="{ active: mode === 'map' }" @click="mode = 'map'">{{ $t('city.map') }}</button>
       <button :class="{ active: mode === 'list' }" @click="mode = 'list'">{{ $t('city.list') }}</button>

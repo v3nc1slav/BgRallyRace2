@@ -2,6 +2,8 @@ import { apiGet, apiPost } from './api';
 import { platform as device } from './platform';
 import { NS, session, type Player } from './session';
 
+export type ShopSection = 'cars' | 'parts' | 'tyres';
+
 export interface Stats {
   power: number;
   handling: number;

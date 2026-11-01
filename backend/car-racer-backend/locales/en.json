@@ -10,7 +10,6 @@
   "nav": {
     "manager": "Manager",
     "city": "City",
-    "shop": "Shop",
     "rallies": "Rallies",
     "standings": "Standings",
     "forum": "Forum",
@@ -364,7 +363,7 @@
     "buyCarConfirm": "Buy {name} for {price}?",
     "title": "Car parts shop",
     "cars": "Cars",
-    "parts": "Parts",
+    "parts": "Car parts",
     "tyres": "Tyres",
     "prices": "Shop prices in {city}: {pct}%.",
     "privileges": "City privileges: {list}.",
@@ -396,7 +395,9 @@
     "single": "Single",
     "compound": "{name} compound",
     "buySet": "Set",
-    "buySpare": "1 spare"
+    "buySpare": "1 spare",
+    "welcome": "Welcome to our shop! How can I help you? Feel free to browse our offers.",
+    "close": "Close"
   },
   "common": {
     "backCity": "City",
@@ -749,14 +750,7 @@
       "blackText": "Illegal races and training"
     },
     "sign": {
-      "bank": "BANK",
-      "police": "POLICE",
-      "jobs": "JOBS",
       "mall": "MALL",
-      "bar": "BAR",
-      "shop": "AUTO PARTS",
-      "market": "MARKET",
-      "garage": "GARAGE",
       "official": "Official track",
       "building": "BUILDING {pct}%",
       "open": "YOUR TRACK",

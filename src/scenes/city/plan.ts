@@ -29,7 +29,7 @@ export interface Item {
 }
 
 type BlockKind =
-  | 'square' | 'park' | 'bank' | 'mall' | 'homes' | 'police' | 'sponsors' | 'barshop' | 'market' | 'garage'
+  | 'square' | 'park' | 'bank' | 'jobs' | 'mall' | 'homes' | 'police' | 'sponsors' | 'shop' | 'market' | 'garage' | 'bar'
   | 'houses' | 'workshops' | 'playground' | 'river';
 
 export interface Block extends Foot {
@@ -38,9 +38,9 @@ export interface Block extends Foot {
 
 const KINDS: BlockKind[][] = [
   ['houses', 'workshops', 'houses', 'playground', 'houses', 'workshops'],
-  ['houses', 'police', 'bank', 'sponsors', 'homes', 'houses'],
+  ['houses', 'police', 'jobs', 'sponsors', 'bank', 'houses'],
   ['river', 'park', 'square', 'mall', 'homes', 'workshops'],
-  ['houses', 'barshop', 'market', 'garage', 'homes', 'playground'],
+  ['houses', 'shop', 'market', 'garage', 'bar', 'playground'],
   ['workshops', 'houses', 'playground', 'workshops', 'houses', 'houses'],
 ];
 
@@ -52,11 +52,13 @@ const SURFACE: Record<BlockKind, number> = {
   square: 0xd6ccb6,
   park: 0x6fa04a,
   bank: 0x74a24c,
+  jobs: 0x74a24c,
+  bar: 0x74a24c,
   mall: 0xc5bfb3,
   homes: 0x74a24c,
   police: 0x74a24c,
   sponsors: 0x74a24c,
-  barshop: 0x74a24c,
+  shop: 0x74a24c,
   market: 0x74a24c,
   garage: 0x74a24c,
   houses: 0x7fae55,
@@ -118,6 +120,12 @@ export function drawGround(p: Painter) {
       p.disc(LAKE.x, LAKE.y, LAKE.r + 0.1, 0x9c9486);
       p.disc(LAKE.x, LAKE.y, LAKE.r, 0x3f8fc4);
       p.disc(LAKE.x - 0.15, LAKE.y - 0.15, 0.35, 0x6fb3e0, 0, 0.6);
+    }
+    if (block.kind === 'shop') {
+      p.tile(inner.x0 + 0.2, block.y0 + 3.05, block.x0 + 3.1, inner.y1 - 0.15, 0x6b7078);
+    }
+    if (block.kind === 'bank') {
+      p.tile(block.x0 + 3.5, inner.y0 + 0.2, inner.x1 - 0.1, inner.y1 - 0.2, 0x6b7078);
     }
     if (block.kind === 'mall') {
       for (let t = inner.x0 + 0.3; t < inner.x1; t += 0.45) {
@@ -243,14 +251,32 @@ export function items(): Item[] {
         homeRow(x0, y0, ['a', 'b', 'c']);
         [0xe63946, 0xf4d35e, 0x2a6fdb].forEach((color, i) => stamp(point(x0 + 2.55 + i * 0.75, y0 + 4.78, 0.08), `banner:${color}`, x0 + 2.55 + i * 0.75, y0 + 4.78, (p) => banner(p, 0, 0, color)));
         break;
-      case 'bank':
-        addTree(x0 + 3.6, y0 + 0.9);
+      case 'jobs':
+        addHome({ x: x0 + 0.5, y: y0 + 0.45, w: 2.9, d: 1.55, h: Math.round(50 + rnd() * 16) });
+        addTree(x0 + 3.8, y0 + 0.9);
         addTree(x0 + 4.4, y0 + 1.6);
         break;
-      case 'barshop':
-        addHome({ x: x0 + 0.45, y: y0 + 3.25, w: 1.9, d: 1.4, h: Math.round(30 + rnd() * 16) });
-        for (const [x, color] of [[0.9, 0xe63946], [1.85, 0x2a9d8f]] as const) {
-          stamp(point(x0 + x, y0 + 2.75, 0.3), `umbrella:${color}`, x0 + x, y0 + 2.75, (p) => umbrella(p, 0, 0, color));
+      case 'bank':
+        for (const [y, color] of [[0.95, 0xf4f4f4], [1.75, 0x2a6fdb], [2.55, 0x30343b], [3.35, 0xb0b7bf]] as const) {
+          addCar(x0 + 4.05, y0 + y, 'x', color);
+        }
+        addTree(x0 + 0.6, y0 + 4.3);
+        addTree(x0 + 1.65, y0 + 4.4, 0.85);
+        addTree(x0 + 2.8, y0 + 4.3);
+        break;
+      case 'bar':
+        homeRow(x0, y0, ['b']);
+        for (const [y, color] of [[2.6, 0xe63946], [3.5, 0x2a9d8f]] as const) {
+          stamp(point(x0 + 2.85, y0 + y, 0.3), `umbrella:${color}`, x0 + 2.85, y0 + y, (p) => umbrella(p, 0, 0, color));
+        }
+        addTree(x0 + 4.1, y0 + 2.75);
+        addTree(x0 + 4.3, y0 + 3.6);
+        addTree(x0 + 3.1, y0 + 4.4);
+        addTree(x0 + 4.25, y0 + 4.4, 0.8);
+        break;
+      case 'shop':
+        for (const [x, color] of [[0.95, 0x2a6fdb], [1.75, 0xf4f4f4], [2.55, 0xe63946]] as const) {
+          addCar(x0 + x, y0 + 3.75, 'y', color);
         }
         for (const [x, y, n] of [[3.1, 2.95, 3], [3.45, 3.0, 2], [4.35, 2.9, 4]] as const) {
           addTyres(x0 + x, y0 + y, n);

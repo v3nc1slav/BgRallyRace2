@@ -671,6 +671,10 @@ export class CityScene extends Phaser.Scene {
     }
   }
 
+  private onMap(pointer: Phaser.Input.Pointer) {
+    return pointer.upElement === this.game.canvas;
+  }
+
   private isMouse(pointer: Phaser.Input.Pointer) {
     if (pointer.wasTouch) {
       this.touchedAt = performance.now();
@@ -682,19 +686,19 @@ export class CityScene extends Phaser.Scene {
   private addEntrance(depth: number) {
     const foot = iso(ENTRANCE.gx, ENTRANCE.gy);
     const sign = this.add
-      .text(foot.x, foot.y - 34, this.cityName, { fontFamily: FONT, fontSize: '15px', fontStyle: 'bold', color: '#15171c', backgroundColor: '#ffffff', padding: { x: 9, y: 4 }, resolution: 2 })
+      .text(foot.x, foot.y - 34, this.cityName, { fontFamily: FONT, fontSize: '30px', fontStyle: 'bold', color: '#15171c', backgroundColor: '#ffffff', padding: { x: 16, y: 8 }, resolution: 2 })
       .setOrigin(0.5, 1)
       .setDepth(depth + 0.1)
       .setInteractive({ useHandCursor: true });
     const frame = this.add.graphics().setDepth(depth + 0.2);
-    frame.lineStyle(2, 0x15171c, 1);
-    frame.strokeRect(sign.x - sign.width / 2 + 2, sign.y - sign.height + 2, sign.width - 4, sign.height - 4);
+    frame.lineStyle(3, 0x15171c, 1);
+    frame.strokeRect(sign.x - sign.width / 2 + 3, sign.y - sign.height + 3, sign.width - 6, sign.height - 6);
 
     sign.on('pointerover', (pointer: Phaser.Input.Pointer) => this.isMouse(pointer) && this.showSign(true));
     sign.on('pointerout', (pointer: Phaser.Input.Pointer) => this.isMouse(pointer) && this.showSign(false));
     sign.on('pointerup', (pointer: Phaser.Input.Pointer) => {
       const mouse = this.isMouse(pointer);
-      if (!this.press?.moved && (mouse || pointer.wasTouch)) {
+      if (this.onMap(pointer) && !this.press?.moved && (mouse || pointer.wasTouch)) {
         this.showSign(mouse || !this.signOpen);
       }
     });
@@ -721,7 +725,7 @@ export class CityScene extends Phaser.Scene {
 
   private tap(spot: Spot, pointer: Phaser.Input.Pointer) {
     const mouse = this.isMouse(pointer);
-    if (this.press?.moved || this.pinch || (!mouse && !pointer.wasTouch)) {
+    if (!this.onMap(pointer) || this.press?.moved || this.pinch || (!mouse && !pointer.wasTouch)) {
       return;
     }
     if (pointer.wasTouch && this.active !== spot) {

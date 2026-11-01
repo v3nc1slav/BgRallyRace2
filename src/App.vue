@@ -45,7 +45,6 @@ onBeforeUnmount(() => stopLabels?.());
       <nav class="bgr-nav">
         <RouterLink to="/">{{ $t('nav.manager') }}</RouterLink>
         <RouterLink to="/city">{{ $t('nav.city') }}</RouterLink>
-        <RouterLink to="/shop">{{ $t('nav.shop') }}</RouterLink>
         <RouterLink to="/rallies">{{ $t('nav.rallies') }}</RouterLink>
         <RouterLink to="/standings">{{ $t('nav.standings') }}</RouterLink>
         <RouterLink to="/forum">{{ $t('nav.forum') }}</RouterLink>

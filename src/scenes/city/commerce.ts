@@ -1,4 +1,3 @@
-import Phaser from 'phaser';
 import { t } from '../../i18n';
 import { billboard, type Painter } from './draw';
 import { iso, type Box } from './iso';
@@ -80,13 +79,13 @@ export const sponsors: BuildingDef = {
   signs: () => [],
 };
 
-const barBox: Box = { x: 0.45, y: 12.45, w: 2.0, d: 1.7, h: 30 };
+const barBox: Box = { x: 18.45, y: 12.6, w: 1.9, d: 3.9, h: 30 };
 
 export const bar: BuildingDef = {
   key: 'bar',
   box: barBox,
   foot: footOf(barBox, 0.3),
-  top: 74,
+  top: 52,
   draw(p) {
     const b = barBox;
     p.box(b, 0x9b4a3a, 0x6f3a30);
@@ -99,43 +98,35 @@ export const bar: BuildingDef = {
     p.glow(p.right(b, 0.2, b.d - 0.2, 2, 9, 0xf2c46d), 0.8, true);
     p.left(b, 1.05, 1.45, 0, 10, 0x3a2418);
     p.box({ x: b.x + 0.08, y: b.y + b.d, w: b.w - 0.16, d: 0.3, z: 10, h: 1.5 }, 0x1f5b3e);
-    const neon = iso(b.x + b.w * 0.5, b.y + b.d, 24);
-    p.rect(neon.x - 19, neon.y - 8, 38, 16, 0x15171c);
-    p.edge([
-      new Phaser.Math.Vector2(neon.x - 19, neon.y - 8),
-      new Phaser.Math.Vector2(neon.x + 19, neon.y - 8),
-      new Phaser.Math.Vector2(neon.x + 19, neon.y + 8),
-      new Phaser.Math.Vector2(neon.x - 19, neon.y + 8),
-    ], 1, 1);
   },
-  signs: () => [{ text: t('city.sign.bar'), at: iso(barBox.x + barBox.w * 0.5, barBox.y + barBox.d, 24), size: 12, color: '#ff4fd8' }],
+  signs: () => [],
 };
 
-const shopBox: Box = { x: 2.75, y: 12.45, w: 1.95, d: 2.2, h: 26 };
+const shopBox: Box = { x: 0.45, y: 12.45, w: 4.25, d: 2.2, h: 30 };
 
 export const shop: BuildingDef = {
   key: 'shop',
   box: shopBox,
   foot: footOf(shopBox),
-  top: 82,
+  top: 100,
   draw(p) {
     const b = shopBox;
     const orange = 0xf28c28;
     p.box(b, 0xc9cdd2, 0xaeb3ba);
-    p.glow(p.left(b, 0.12, b.w - 0.12, 2, 14, 0x4a6a85), 1, true);
-    p.glow(p.right(b, 0.12, b.d - 0.12, 2, 14, 0x4a6a85), 0.8, true);
+    p.glow(p.left(b, 0.12, b.w - 0.12, 2, 17, 0x4a6a85), 1, true);
+    p.glow(p.right(b, 0.12, b.d - 0.12, 2, 17, 0x4a6a85), 0.8, true);
     for (let u = 0.5; u < b.w - 0.2; u += 0.5) {
-      p.left(b, u, u + 0.04, 2, 14, 0xd9dde2);
+      p.left(b, u, u + 0.04, 2, 17, 0xd9dde2);
     }
-    p.left(b, 0.8, 1.2, 0, 12, 0x1d2a35);
-    p.left(b, 0, b.w, 16.5, 22, orange);
-    p.right(b, 0, b.d, 16.5, 22, orange);
+    p.left(b, 1.9, 2.35, 0, 14, 0x1d2a35);
+    p.left(b, 0, b.w, 19.5, 26, orange);
+    p.right(b, 0, b.d, 19.5, 26, orange);
     const board = iso(b.x + b.w / 2, b.y + b.d / 2, b.h + 22);
-    billboard(p, board, 58, 26, orange);
-    p.circle(board.x, board.y, 9, 0x1c1d20);
-    p.circle(board.x, board.y, 4, 0x9aa1ad);
+    billboard(p, board, 84, 36, orange);
+    p.circle(board.x, board.y, 13, 0x1c1d20);
+    p.circle(board.x, board.y, 6, 0x9aa1ad);
   },
-  signs: () => [{ text: t('city.sign.shop'), at: iso(shopBox.x + shopBox.w / 2, shopBox.y + shopBox.d, 19.3), size: 7, color: '#ffffff' }],
+  signs: () => [],
 };
 
 const marketBox: Box = { x: 6.4, y: 12.4, w: 4.2, d: 2.6, h: 20 };
@@ -175,16 +166,6 @@ export const market: BuildingDef = {
       p.box({ x, y, w: 0.3, d: 0.22, h: 5 }, 0xb07a48);
       p.box({ x: x + 0.04, y: y + 0.02, w: 0.22, d: 0.18, z: 5, h: 4 }, 0xc48c58);
     }
-    const left = iso(b.x + 1.6, b.y + b.d);
-    const right = iso(b.x + 2.6, b.y + b.d);
-    p.line(left, new Phaser.Math.Vector2(left.x, left.y - 30), 0x6b4a2f, 2.5);
-    p.line(right, new Phaser.Math.Vector2(right.x, right.y - 30), 0x6b4a2f, 2.5);
-    const mid = new Phaser.Math.Vector2((left.x + right.x) / 2, (left.y + right.y) / 2 - 32);
-    billboard(p, mid, 58, 16, 0x2a9d8f);
   },
-  signs: () => {
-    const left = iso(marketBox.x + 1.6, marketBox.y + marketBox.d);
-    const right = iso(marketBox.x + 2.6, marketBox.y + marketBox.d);
-    return [{ text: t('city.sign.market'), at: new Phaser.Math.Vector2((left.x + right.x) / 2, (left.y + right.y) / 2 - 32), size: 10, color: '#ffffff' }];
-  },
+  signs: () => [],
 };

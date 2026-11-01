@@ -20,13 +20,12 @@ export const garage: BuildingDef = {
       p.left(b, 0.3, 1.65, z, z + 0.4, 0x7f8a96);
     }
     p.left(b, 1.85, 2.15, 0, 11, 0x2d3a48);
-    p.left(b, 0.3, 1.65, 21.5, 26, 0x15171c);
     p.right(b, 0.4, 1.7, 14, 20, 0x9cc3db);
     for (const x of [0.5, 1.4]) {
       p.box({ x: b.x + x, y: b.y + 0.6, w: 0.5, d: 0.7, z: b.h, h: 1.5 }, 0x9cc3db);
     }
   },
-  signs: () => [{ text: t('city.sign.garage'), at: iso(garageBox.x + 0.975, garageBox.y + garageBox.d, 23.8), size: 8, color: '#f4d35e' }],
+  signs: () => [],
 };
 
 // Официалната писта временно не е на картата, докато се тества изгледът на града: вместо нея има пътна табела (officialSign).
