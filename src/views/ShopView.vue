@@ -83,10 +83,10 @@ function affordable(price: number) {
 <template>
   <section class="bgr-card">
     <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
-    <div class="bgr-shop-stage">
+    <div class="bgr-scene-stage" style="--ratio: 1.613">
       <ShopScene :inert="!!tab" @open="open" />
-      <div v-if="tab" class="bgr-shop-list">
-        <button ref="closer" class="bgr-shop-close" :aria-label="$t('shop.close')" @click="tab = null">&times;</button>
+      <div v-if="tab" class="bgr-scene-list">
+        <button ref="closer" class="bgr-scene-close" :aria-label="$t('shop.close')" @click="tab = null">&times;</button>
         <h2>{{ $t(`shop.${tab}`) }}</h2>
         <Feedback :message="message" :error="error" />
 

@@ -675,7 +675,22 @@
     "unlock": "Unlocks with garage level {level}.",
     "current": "Now: {name}, skill {skill}, {pay}/wk.",
     "none": "No candidates this week.",
-    "hire": "Hire"
+    "hire": "Hire",
+    "bartender": "Come, sit down, I'll pour you one and tell you the rumours!",
+    "chatTalk": "Come join us for a chat!",
+    "reserved": "Reserved · garage {level}",
+    "hired": "hired",
+    "close": "Close",
+    "table": {
+      "pilot": "Drivers",
+      "navigator": "Co-drivers",
+      "mechanic": "Mechanics",
+      "engineer": "Engineers",
+      "psychologist": "Psychologists",
+      "chemist": "Chemists",
+      "informant": "Informants",
+      "saboteur": "Saboteurs"
+    }
   },
   "forum": {
     "title": "Forum",

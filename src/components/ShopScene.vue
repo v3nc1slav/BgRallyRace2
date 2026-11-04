@@ -28,7 +28,7 @@ const SPOKES = [0, 60, 120];
 </script>
 
 <template>
-  <div class="bgr-shop-scene">
+  <div class="bgr-scene bgr-shop-scene">
     <svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg">
       <rect width="1000" height="440" fill="#3f4653" />
       <rect width="1000" height="40" fill="#23272f" />
@@ -137,6 +137,6 @@ const SPOKES = [0, 60, 120];
         <rect v-for="x in [342, 354, 366, 378]" :key="x" :x="x" y="499" width="8" height="8" rx="1" />
       </g>
     </svg>
-    <p class="bgr-shop-talk">{{ $t('shop.welcome') }}</p>
+    <p class="bgr-scene-talk bgr-shop-talk" data-tail="left" style="--x: 64%; --y: 71%; --w: 33%">{{ $t('shop.welcome') }}</p>
   </div>
 </template>
