@@ -23,7 +23,7 @@ const section = (page, key) => page.$eval(`.bgr-shop-section[data-section="${key
 
 async function answer(page, accept) {
   await page.waitForSelector('.bgr-dialog', { timeout: 5000 });
-  await page.$$eval('.bgr-dialog button', (buttons, yes) => buttons[yes ? buttons.length - 1 : 0].click(), accept);
+  await page.$$eval('.bgr-dialog button', (buttons, yes) => buttons[yes ? 0 : buttons.length - 1].click(), accept);
   await sleep(300);
 }
 
@@ -52,14 +52,14 @@ try {
   const scene = await page.$eval('.bgr-shop-scene', (el) => el.getBoundingClientRect().toJSON());
   const info = await page.$eval('.bgr-shop-info', (el) => ({ top: el.getBoundingClientRect().top, text: el.textContent }));
   check('the prices are below the picture', info.top >= scene.bottom - 1 && info.text.includes('Цени в магазина'), `${info.top} / ${scene.bottom}`);
-  check('no list is open at first', !(await page.$('.bgr-shop-list')));
+  check('no list is open at first', !(await page.$('.bgr-scene-list')));
   await page.screenshot({ path: `${OUTPUT}/shop-scene.png` });
 
   await section(page, 'parts');
-  await page.waitForSelector('.bgr-shop-list tbody tr');
-  const list = await page.$eval('.bgr-shop-list', (el) => {
+  await page.waitForSelector('.bgr-scene-list tbody tr');
+  const list = await page.$eval('.bgr-scene-list', (el) => {
     const box = el.getBoundingClientRect();
-    const close = el.querySelector('.bgr-shop-close').getBoundingClientRect();
+    const close = el.querySelector('.bgr-scene-close').getBoundingClientRect();
     return { top: box.top, right: box.right, closeTop: close.top, closeRight: close.right, color: getComputedStyle(el).backgroundColor, title: el.querySelector('h2').textContent };
   });
   check('the list opens over the picture', Math.abs(list.top - scene.top) <= 2, `${list.top} / ${scene.top}`);
@@ -67,33 +67,33 @@ try {
   check('the close button is in the top right corner', list.right - list.closeRight < 30 && list.closeTop - list.top < 30, JSON.stringify(list));
   check('the list has the section title', list.title === 'Авто части', list.title);
   check('the balloon hides behind the open list', (await page.$eval('.bgr-shop-talk', (el) => getComputedStyle(el).visibility)) === 'hidden');
-  check('the close button takes the keyboard focus', await page.$eval('.bgr-shop-close', (el) => document.activeElement === el));
+  check('the close button takes the keyboard focus', await page.$eval('.bgr-scene-close', (el) => document.activeElement === el));
   await page.screenshot({ path: `${OUTPUT}/shop-parts.png` });
-  await page.click('.bgr-shop-close');
+  await page.click('.bgr-scene-close');
   await sleep(200);
-  check('the close button closes the list', !(await page.$('.bgr-shop-list')));
+  check('the close button closes the list', !(await page.$('.bgr-scene-list')));
 
   await section(page, 'tyres');
-  await page.waitForSelector('.bgr-shop-list tbody tr');
+  await page.waitForSelector('.bgr-scene-list tbody tr');
   const before = Number(sql(`SELECT money FROM wp_bgr_managers WHERE id = ${managerId}`));
-  await page.$eval('.bgr-shop-list tbody tr:not(.bgr-locked) button:not(:disabled)', (el) => el.click());
-  await page.waitForSelector('.bgr-shop-list .bgr-ok', { timeout: 8000 });
+  await page.$eval('.bgr-scene-list tbody tr:not(.bgr-locked) button:not(:disabled)', (el) => el.click());
+  await page.waitForSelector('.bgr-scene-list .bgr-ok', { timeout: 8000 });
   check('tyres can be bought from the list', Number(sql(`SELECT money FROM wp_bgr_managers WHERE id = ${managerId}`)) < before);
-  check('the list stays open after a purchase', Boolean(await page.$('.bgr-shop-list tbody tr')));
-  await page.click('.bgr-shop-close');
+  check('the list stays open after a purchase', Boolean(await page.$('.bgr-scene-list tbody tr')));
+  await page.click('.bgr-scene-close');
 
   await section(page, 'cars');
-  await page.waitForSelector('.bgr-shop-list tbody tr');
-  check('the cars list opens', (await page.$eval('.bgr-shop-list h2', (el) => el.textContent)) === 'Коли');
-  await page.$eval('.bgr-shop-list tbody tr:not(.bgr-locked) button:not(:disabled)', (el) => el.click()).catch(() => undefined);
+  await page.waitForSelector('.bgr-scene-list tbody tr');
+  check('the cars list opens', (await page.$eval('.bgr-scene-list h2', (el) => el.textContent)) === 'Коли');
+  await page.$eval('.bgr-scene-list tbody tr:not(.bgr-locked) button:not(:disabled)', (el) => el.click()).catch(() => undefined);
   if (await page.$('.bgr-dialog')) {
     await answer(page, false);
   }
-  await page.click('.bgr-shop-close');
+  await page.click('.bgr-scene-close');
   await page.$eval('.bgr-shop-section[data-section="parts"]', (el) => el.focus());
   await page.keyboard.press('Space');
   await sleep(200);
-  check('the keyboard opens a section', Boolean(await page.$('.bgr-shop-list')));
+  check('the keyboard opens a section', Boolean(await page.$('.bgr-scene-list')));
 
   const phone = await browser.newPage();
   await phone.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
@@ -103,8 +103,8 @@ try {
   const talk = await phone.$eval('.bgr-shop-talk', (el) => ({ position: getComputedStyle(el).position, top: el.getBoundingClientRect().top, svg: el.previousElementSibling.getBoundingClientRect().bottom }));
   check('on a phone the balloon sits under the picture', talk.position === 'relative' && talk.top >= talk.svg, JSON.stringify(talk));
   await section(phone, 'parts');
-  await phone.waitForSelector('.bgr-shop-list tbody tr');
-  check('on a phone the list is not squeezed into the picture', (await phone.$eval('.bgr-shop-list', (el) => el.getBoundingClientRect().height)) > 400);
+  await phone.waitForSelector('.bgr-scene-list tbody tr');
+  check('on a phone the list is not squeezed into the picture', (await phone.$eval('.bgr-scene-list', (el) => el.getBoundingClientRect().height)) > 400);
   check('no sideways scrolling on a phone', (await phone.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)) <= 0);
   await phone.screenshot({ path: `${OUTPUT}/shop-phone.png` });
 } catch (error) {
