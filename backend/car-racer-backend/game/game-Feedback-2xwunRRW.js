@@ -1,1 +1,0 @@
-import{D as e,at as t,b as n,h as r,m as i}from"./game-i18n-n63MlQBZ.js";var a={key:0,class:`bgr-error bgr-feedback`},o={key:1,class:`bgr-ok bgr-feedback`},s=n({__name:`Feedback`,props:{message:{},error:{}},setup(n){return(s,c)=>n.error?(e(),r(`p`,a,t(n.error),1)):n.message?(e(),r(`p`,o,t(n.message),1)):i(``,!0)}});export{s as t};
