@@ -712,6 +712,7 @@ export interface BarInfo {
   roles: BarRole[];
   rumors: Rumor[];
   rumors_named: boolean;
+  chat_unread?: number;
 }
 
 export const getBar = () => get<{ bar: BarInfo }>('bar');

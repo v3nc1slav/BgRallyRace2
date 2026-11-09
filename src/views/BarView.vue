@@ -14,6 +14,7 @@ const roles = ref<BarRole[]>([]);
 const rumors = ref<Rumor[]>([]);
 const rumorsNamed = ref(false);
 const open = ref<string | null>(null);
+const unread = ref(0);
 const closer = ref<HTMLButtonElement>();
 const { busy, message, error, run } = useAction();
 
@@ -25,6 +26,7 @@ onMounted(() =>
     roles.value = data.bar.roles;
     rumors.value = data.bar.rumors;
     rumorsNamed.value = data.bar.rumors_named;
+    unread.value = data.bar.chat_unread ?? 0;
   }),
 );
 
@@ -32,6 +34,9 @@ async function show(list: string) {
   message.value = '';
   error.value = '';
   open.value = list;
+  if (list === 'chat') {
+    unread.value = 0;
+  }
   await nextTick();
   closer.value?.focus();
 }
@@ -59,8 +64,8 @@ async function hireCandidate(role: BarRole, id: number, name: string) {
 <template>
   <section class="bgr-card">
     <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
-    <div class="bgr-scene-stage" style="--ratio: 1.47">
-      <BarScene :roles="roles" :inert="!!open" @rumors="show('rumors')" @chat="show('chat')" @role="pick" />
+    <div class="bgr-scene-stage" style="--ratio: 1.4286">
+      <BarScene :roles="roles" :unread="unread" :inert="!!open" @rumors="show('rumors')" @chat="show('chat')" @role="pick" />
       <div v-if="open" class="bgr-scene-list">
         <button ref="closer" class="bgr-scene-close" :aria-label="$t('bar.close')" @click="open = null">&times;</button>
 

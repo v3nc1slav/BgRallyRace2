@@ -636,20 +636,29 @@
   },
   "mall": {
     "title": "Mall",
-    "gym": "Gym",
     "gymIntro": "Physical skills reduce fatigue in long rallies, so the crew makes fewer mistakes on the last stages.",
     "session": "One session: {energy} energy and {price} for +{gain}, once a day for each.",
     "noCrew": "You have no driver and co-driver.",
     "trainedToday": "Trained today",
     "train": "Train",
-    "clothes": "Clothes",
     "clothesIntro": "The clothes you wear give a bonus in negotiations with sponsors and the mayor. Now:",
     "item": "Item",
     "bonus": "Bonus",
     "price": "Price",
     "worn": "worn",
     "wear": "Wear",
-    "buy": "Buy"
+    "buy": "Buy",
+    "close": "Close",
+    "shops": {
+      "fitness": "Gym",
+      "clothes": "Clothes",
+      "shoes": "Shoes",
+      "accessories": "Accessories",
+      "restaurant": "Restaurant",
+      "food": "Fast food",
+      "zoo": "Pet shop",
+      "electronics": "Electronics"
+    }
   },
   "jobs": {
     "quitConfirm": "If you quit, you can only start a new job next season. Quit?",
@@ -690,7 +699,8 @@
       "chemist": "Chemists",
       "informant": "Informants",
       "saboteur": "Saboteurs"
-    }
+    },
+    "unread": "Unread messages: {count}"
   },
   "forum": {
     "title": "Forum",

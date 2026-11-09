@@ -1926,8 +1926,33 @@ body.bgr-game .bgr {
   }
 }
 
+.bgr-bar-unread-mark {
+  font-family: system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  text-anchor: middle;
+  fill: #fff;
+}
+
+.bgr-bar-unread circle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bgr-bar-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes bgr-bar-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .bgr-bar-smoke {
+  .bgr-bar-smoke,
+  .bgr-bar-unread circle {
     animation: none;
   }
 }
@@ -1938,4 +1963,102 @@ body.bgr-game .bgr {
   left: 0;
   width: 100%;
   pointer-events: none;
+}
+
+.bgr-mall-sign {
+  font-family: system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-anchor: middle;
+  text-transform: uppercase;
+  fill: #fff;
+}
+
+.bgr-mall-sign.small {
+  font-size: 17px;
+}
+
+.bgr-mall-walker {
+  pointer-events: none;
+}
+
+.bgr-mall-path {
+  animation-name: bgr-mall-walk;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes bgr-mall-walk {
+  from {
+    transform: translateX(var(--from));
+  }
+  to {
+    transform: translateX(var(--to));
+  }
+}
+
+.bgr-mall-leg {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  animation: bgr-mall-step 0.9s ease-in-out infinite alternate;
+}
+
+.bgr-mall-leg-b {
+  animation-delay: -0.9s;
+}
+
+.bgr-mall-walker.run .bgr-mall-leg {
+  animation-duration: 0.35s;
+}
+
+.bgr-mall-walker.run .bgr-mall-leg-b {
+  animation-delay: -0.35s;
+}
+
+.bgr-mall-walker.still .bgr-mall-leg {
+  animation: none;
+}
+
+@keyframes bgr-mall-step {
+  from {
+    transform: rotate(-12deg);
+  }
+  to {
+    transform: rotate(12deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgr-mall-path,
+  .bgr-mall-leg {
+    animation: none;
+  }
+}
+
+.bgr-mall-rider {
+  animation-name: bgr-mall-ride;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes bgr-mall-ride {
+  0% {
+    transform: translate(-80px, 688px) scale(0.46);
+  }
+  30% {
+    transform: translate(469px, 690px) scale(0.44);
+  }
+  62% {
+    transform: translate(589px, 300px) scale(0.36);
+  }
+  100% {
+    transform: translate(1080px, 300px) scale(0.34);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgr-mall-rider {
+    animation: none;
+  }
 }

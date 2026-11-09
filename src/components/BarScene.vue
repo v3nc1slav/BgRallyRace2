@@ -3,26 +3,28 @@ import { computed } from 'vue';
 import type { BarRole } from '../game';
 import BarPerson, { type PersonLook } from './BarPerson.vue';
 
-const props = defineProps<{ roles: BarRole[] }>();
+const props = defineProps<{ roles: BarRole[]; unread?: number }>();
 const emit = defineEmits<{ rumors: []; chat: []; role: [role: BarRole] }>();
 
 const W = 1000;
-const H = 680;
+const H = 700;
 const SEAT = 40;
 const BASE = 0.45;
 const HEAD = 138;
 const TABLES = [
-  { role: 'pilot', x: 125, y: 450, s: 0.46 },
-  { role: 'navigator', x: 375, y: 450, s: 0.46 },
-  { role: 'mechanic', x: 625, y: 450, s: 0.46 },
-  { role: 'engineer', x: 875, y: 450, s: 0.46 },
-  { role: 'psychologist', x: 125, y: 595, s: 0.5 },
-  { role: 'chemist', x: 375, y: 595, s: 0.5 },
-  { role: 'informant', x: 625, y: 595, s: 0.5 },
-  { role: 'saboteur', x: 875, y: 595, s: 0.5 },
+  { role: 'pilot', x: 125, y: 470, s: 0.46 },
+  { role: 'navigator', x: 375, y: 470, s: 0.46 },
+  { role: 'mechanic', x: 625, y: 470, s: 0.46 },
+  { role: 'engineer', x: 875, y: 470, s: 0.46 },
+  { role: 'psychologist', x: 125, y: 612, s: 0.5 },
+  { role: 'chemist', x: 375, y: 612, s: 0.5 },
+  { role: 'informant', x: 625, y: 612, s: 0.5 },
+  { role: 'saboteur', x: 875, y: 612, s: 0.5 },
 ];
 const BOOTH_SCALE = 0.42;
 const BARTENDER_SCALE = 0.42;
+const GUEST_SCALE = 0.44;
+const STOOLS = [85, 170, 300, 385];
 const CREW: Record<string, PersonLook[]> = {
   pilot: [
     { pose: 'beer', shirt: '#c62828', hair: '#2b1d14' },
@@ -67,7 +69,7 @@ const BOTTLES = [110, 170].flatMap((base, row) =>
   Array.from({ length: 12 }, (_, index) => ({ x: 62 + index * 30 + row * 6, base, color: BOTTLE_COLORS[(index + row * 3) % BOTTLE_COLORS.length], tall: 28 + ((index * 7 + row * 5) % 4) * 4 })),
 );
 const GLASSES = Array.from({ length: 13 }, (_, index) => 60 + index * 28);
-const PLANKS = [362, 396, 434, 476, 522, 572, 626];
+const PLANKS = [362, 398, 438, 482, 532, 586, 644];
 
 const tables = computed(() =>
   TABLES.flatMap((table) => {
@@ -105,7 +107,7 @@ const place = (x: number, y: number) => ({ '--x': `${(x / W) * 100}%`, '--y': `$
       </g>
       <rect y="326" :width="W" height="6" fill="#2a1a15" />
 
-      <g class="bgr-gs-hot" data-spot="rumors" role="button" tabindex="0" :aria-label="$t('bar.rumors')" @click="emit('rumors')" @keydown.enter="emit('rumors')" @keydown.space.prevent="emit('rumors')">
+      <g class="bgr-gs-hot" data-spot="rumors" role="button" tabindex="0" :aria-label="$t('bar.rumors')" @click="emit('rumors')" @keydown.enter.prevent="emit('rumors')" @keydown.space.prevent="emit('rumors')">
         <text class="bgr-bar-neon" x="235" y="44" filter="url(#bgr-bar-glow)">{{ $t('bar.title') }}</text>
         <rect x="40" y="54" width="390" height="196" rx="4" fill="#2a1a15" stroke="#6b4231" stroke-width="4" />
         <rect v-for="y in [110, 170, 230]" :key="y" x="44" :y="y" width="382" height="8" fill="#8b5a36" />
@@ -126,6 +128,19 @@ const place = (x: number, y: number) => ({ '--x': `${(x / W) * 100}%`, '--y': `$
         <rect v-for="(color, index) in ['#c62828', '#f4d35e', '#2e7d32']" :key="color" :x="371 + index * 7" y="250" width="4" height="11" rx="1.5" :fill="color" />
         <path d="M90 288 L91 272 H101 L102 288 Z" fill="#f2a93b" opacity="0.9" />
         <rect x="89" y="268" width="14" height="6" rx="3" fill="#fff8e6" />
+
+        <g v-for="(x, index) in STOOLS" :key="x" class="bgr-bar-stool">
+          <ellipse :cx="x" cy="385" rx="17" ry="4.5" fill="#5b6270" />
+          <rect :x="x - 2.5" y="350" width="5" height="35" fill="#b7bec7" />
+          <ellipse :cx="x" cy="369" rx="12" ry="3" fill="none" stroke="#9aa1ad" stroke-width="2.5" />
+          <g v-if="index === 1" class="bgr-bar-guest">
+            <rect :x="x - 12" y="348" width="10" height="21" rx="2" fill="#2b2f37" />
+            <rect :x="x + 2" y="348" width="10" height="21" rx="2" fill="#2b2f37" />
+            <ellipse v-for="dx in [-7, 7]" :key="dx" :cx="x + dx" cy="370" rx="6.5" ry="3" fill="#15171c" />
+            <BarPerson back :x="x" :y="347 - 140 * GUEST_SCALE" :scale="GUEST_SCALE" shirt="#6a1b9a" hair="#4e342e" />
+          </g>
+          <ellipse :cx="x" cy="347" rx="22" ry="6" fill="#b71c1c" stroke="#7f1212" stroke-width="2" />
+        </g>
       </g>
 
       <rect x="514" y="196" width="62" height="52" rx="3" fill="#1f1512" stroke="#c9a14a" stroke-width="3" />
@@ -135,7 +150,7 @@ const place = (x: number, y: number) => ({ '--x': `${(x / W) * 100}%`, '--y': `$
       <circle cx="620" cy="222" r="13" fill="#c62828" />
       <circle cx="620" cy="222" r="5" fill="#2e7d32" />
 
-      <g class="bgr-gs-hot" data-spot="chat" role="button" tabindex="0" :aria-label="$t('chat.title')" @click="emit('chat')" @keydown.enter="emit('chat')" @keydown.space.prevent="emit('chat')">
+      <g class="bgr-gs-hot" data-spot="chat" role="button" tabindex="0" :aria-label="$t('chat.title')" @click="emit('chat')" @keydown.enter.prevent="emit('chat')" @keydown.space.prevent="emit('chat')">
         <rect x="664" y="226" width="312" height="126" rx="20" fill="#7a1f2b" stroke="#4a1018" stroke-width="3" />
         <path v-for="x in [716, 768, 820, 872, 924]" :key="x" :d="`M${x} 236 V340`" stroke="#5e1621" stroke-width="3" />
         <BarPerson v-for="(person, index) in BOOTH" :key="index" v-bind="person" :x="755 + index * 65" :y="345 - HEAD * BOOTH_SCALE" :scale="BOOTH_SCALE" />
@@ -148,6 +163,11 @@ const place = (x: number, y: number) => ({ '--x': `${(x / W) * 100}%`, '--y': `$
           <rect :x="x - 8" y="322" width="16" height="6" rx="3" fill="#fff8e6" />
         </g>
         <ellipse cx="820" cy="338" rx="16" ry="6" fill="#c9a14a" />
+        <g v-if="unread" class="bgr-bar-unread" transform="translate(930 284)">
+          <title>{{ $t('bar.unread', { count: unread }) }}</title>
+          <circle r="15" fill="#e63946" stroke="#fff" stroke-width="3" />
+          <text y="7" class="bgr-bar-unread-mark">!</text>
+        </g>
       </g>
 
       <g
@@ -160,7 +180,7 @@ const place = (x: number, y: number) => ({ '--x': `${(x / W) * 100}%`, '--y': `$
         tabindex="0"
         :aria-label="table.data.label"
         @click="emit('role', table.data)"
-        @keydown.enter="emit('role', table.data)"
+        @keydown.enter.prevent="emit('role', table.data)"
         @keydown.space.prevent="emit('role', table.data)"
       >
         <template v-if="table.data.unlocked">
@@ -216,8 +236,8 @@ const place = (x: number, y: number) => ({ '--x': `${(x / W) * 100}%`, '--y': `$
       </g>
     </svg>
 
-    <button class="bgr-scene-talk" data-tail="left" style="--x: 27%; --y: 29.5%; --w: 22%" @click="emit('rumors')">{{ $t('bar.bartender') }}</button>
-    <button class="bgr-scene-talk" data-tail="down" style="--x: 70%; --y: 31%; --w: 27%; --tail: 40%" @click="emit('chat')">{{ $t('bar.chatTalk') }}</button>
+    <button class="bgr-scene-talk" data-tail="left" style="--x: 27%; --y: 28.6%; --w: 22%" @click="emit('rumors')">{{ $t('bar.bartender') }}</button>
+    <button class="bgr-scene-talk" data-tail="down" style="--x: 70%; --y: 30.1%; --w: 27%; --tail: 40%" @click="emit('chat')">{{ $t('bar.chatTalk') }}</button>
     <div class="bgr-scene-layer" :style="{ aspectRatio: `${W} / ${H}` }">
       <div v-for="table in tables" :key="table.role" class="bgr-bar-plate" :class="{ locked: !table.data.unlocked }" :style="place(table.x, table.y + 34)">
         {{ $t(`bar.table.${table.role}`) }}<span v-if="table.data.current" class="bgr-bar-hired" :aria-label="$t('bar.hired')"> ✓</span>

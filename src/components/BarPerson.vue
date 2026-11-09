@@ -7,13 +7,15 @@ export interface PersonLook {
   hair?: string;
   hat?: string;
   cut?: 'short' | 'long' | 'bald' | 'cap' | 'hat' | 'hood';
-  pose?: 'rest' | 'beer' | 'coffee' | 'cocktail' | 'cards' | 'paper' | 'talk' | 'whisper' | 'smoke' | 'polish';
+  pose?: 'rest' | 'beer' | 'coffee' | 'cocktail' | 'cards' | 'paper' | 'talk' | 'whisper' | 'smoke' | 'polish' | 'walk' | 'bag';
+  bagColor?: string;
   mirror?: boolean;
   glasses?: boolean;
   beard?: boolean;
   laugh?: boolean;
   apron?: string;
   bow?: boolean;
+  back?: boolean;
 }
 
 const props = withDefaults(defineProps<PersonLook & { x: number; y: number; scale?: number }>(), {
@@ -43,6 +45,8 @@ const ARMS: Record<NonNullable<PersonLook['pose']>, [number, number, number, num
   whisper: [[-62, 104, -34, 128], [58, 96, 26, 28]],
   smoke: [[-62, 104, -34, 128], [60, 96, 24, 26]],
   polish: [[-56, 100, -14, 82], [56, 100, 14, 90]],
+  walk: [[-64, 98, -68, 138], [64, 98, 68, 138]],
+  bag: [[-64, 98, -68, 138], [64, 98, 70, 136]],
 };
 
 const transform = computed(() => `translate(${props.x} ${props.y}) scale(${props.mirror ? -props.scale : props.scale} ${props.scale})`);
@@ -54,6 +58,25 @@ const collar = computed(() => shade(props.shirt, 1.18));
 
 <template>
   <g :transform="transform">
+    <template v-if="back">
+      <path v-if="cut === 'long'" d="M-31 -6 C-35 -34 -13 -47 2 -46 C22 -46 35 -33 31 -6 L33 50 Q0 58 -33 50 Z" :fill="hair" />
+      <path d="M-64 140 L-59 80 C-57 62 -44 53 -24 48 L-11 44 H11 L24 48 C44 53 57 62 59 80 L64 140 Z" :fill="shirt" />
+      <path d="M59 80 C57 62 44 53 24 48 L30 140 H64 Z" :fill="shirtShade" />
+      <path d="M0 50 V140" :stroke="shirtShade" stroke-width="3" />
+      <path d="M-11 26 V46 Q0 52 11 46 V26 Z" :fill="skinShade" />
+      <path d="M-13 44 Q0 52 13 44 L16 51 Q0 60 -16 51 Z" :fill="collar" />
+      <path d="M-48 62 Q-62 84 -60 106 M48 62 Q62 84 60 106" fill="none" :stroke="shirt" stroke-width="21" stroke-linecap="round" />
+      <ellipse cx="-25" cy="0" rx="4" ry="8" :fill="skinShade" />
+      <ellipse cx="25" cy="0" rx="4" ry="8" :fill="skinShade" />
+      <path d="M-24 -6 C-24 -26 -12 -32 0 -32 C12 -32 24 -26 24 -6 C24 12 18 26 8 32 C3 35 -3 35 -8 32 C-18 26 -24 12 -24 -6 Z" :fill="cut === 'bald' ? skin : hair" />
+      <path v-if="cut === 'bald'" d="M-24 4 C-22 18 -12 28 0 30 C12 28 22 18 24 4 C18 12 10 16 0 16 C-10 16 -18 12 -24 4 Z" :fill="hair" />
+      <path v-else d="M-22 -14 C-12 -24 12 -24 22 -14" fill="none" :stroke="shade(hair, 0.75)" stroke-width="3" opacity="0.6" />
+      <template v-if="cut === 'cap'">
+        <path d="M-25 -8 C-25 -32 -12 -40 0 -40 C14 -40 25 -32 25 -8 Z" :fill="hat" />
+        <path d="M-10 -9 H10" stroke="#f4f1ea" stroke-width="3" />
+      </template>
+    </template>
+    <template v-else>
     <path v-if="cut === 'long'" d="M-31 -6 C-35 -34 -13 -47 2 -46 C22 -46 35 -33 31 -6 L33 46 Q24 54 14 46 L-14 46 Q-24 54 -33 46 Z" :fill="hair" />
     <path d="M-64 140 L-59 80 C-57 62 -44 53 -24 48 L-11 44 H11 L24 48 C44 53 57 62 59 80 L64 140 Z" :fill="shirt" />
     <path d="M-59 80 C-57 62 -44 53 -24 48 L-30 140 H-64 Z" :fill="shirtShade" />
@@ -134,9 +157,14 @@ const collar = computed(() => shade(props.shirt, 1.18));
       <circle cx="45" cy="11" r="2.4" fill="#ff7043" />
       <path class="bgr-bar-smoke" d="M48 4 C42 -6 54 -12 48 -22 C42 -30 52 -36 48 -46" fill="none" stroke="#cfd8dc" stroke-width="3" stroke-linecap="round" opacity="0.6" />
     </template>
+    <template v-if="pose === 'bag'">
+      <path d="M60 140 Q70 124 80 140" fill="none" stroke="#2b2f37" stroke-width="3" />
+      <rect x="54" y="138" width="34" height="40" rx="3" :fill="bagColor ?? '#e63946'" />
+    </template>
     <template v-if="pose === 'polish'">
       <path d="M-28 48 H-2 L-6 86 H-24 Z" fill="#dff3fb" opacity="0.85" stroke="#fff" stroke-width="2" />
       <path d="M2 76 Q16 70 28 78 L24 104 Q12 98 0 104 Z" fill="#f4f1ea" />
+    </template>
     </template>
   </g>
 </template>
