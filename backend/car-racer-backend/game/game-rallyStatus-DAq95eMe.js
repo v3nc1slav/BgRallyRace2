@@ -1,0 +1,1 @@
+import{s as e}from"./game-i18n-PIAnFVyt.js";function t(t){return e(`rally.status.${t}`)}export{t};

@@ -1,0 +1,1 @@
+import{O as e,b as t,h as n,m as r,ot as i}from"./game-i18n-PIAnFVyt.js";var a={key:0,class:`bgr-error bgr-feedback`},o={key:1,class:`bgr-ok bgr-feedback`},s=t({__name:`Feedback`,props:{message:{},error:{}},setup(t){return(s,c)=>t.error?(e(),n(`p`,a,i(t.error),1)):t.message?(e(),n(`p`,o,i(t.message),1)):r(``,!0)}});export{s as t};
