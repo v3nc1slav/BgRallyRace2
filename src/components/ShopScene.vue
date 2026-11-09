@@ -53,7 +53,7 @@ const SPOKES = [0, 60, 120];
         tabindex="0"
         :aria-label="$t(`shop.${section.key}`)"
         @click="emit('open', section.key)"
-        @keydown.enter="emit('open', section.key)"
+        @keydown.enter.prevent="emit('open', section.key)"
         @keydown.space.prevent="emit('open', section.key)"
       >
         <g :transform="`translate(${section.x} 0)`">

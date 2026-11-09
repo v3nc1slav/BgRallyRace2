@@ -108,7 +108,7 @@ const shelves = computed(() => (props.trophies.length > 6 ? SHELF_Y : SHELF_Y.sl
       <rect x="240" y="391" width="18" height="8" fill="#d62828" />
     </g>
 
-    <g class="bgr-gs-hot bgr-gs-trophies" role="button" tabindex="0" @click="emit('trophies')" @keydown.enter="emit('trophies')" @keydown.space.prevent="emit('trophies')">
+    <g class="bgr-gs-hot bgr-gs-trophies" role="button" tabindex="0" @click="emit('trophies')" @keydown.enter.prevent="emit('trophies')" @keydown.space.prevent="emit('trophies')">
       <title>{{ trophies.length ? $t('garage.scene.trophies') : $t('garage.scene.trophiesEmpty') }}</title>
       <g v-for="y in shelves" :key="`trophy-shelf-${y}`">
         <rect x="30" :y="y" width="170" height="6" fill="#6b543b" />
