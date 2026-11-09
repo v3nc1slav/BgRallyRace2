@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core';
-import { CHROME, OUTPUT, SITE, sql } from '../env.mjs';
+import { BASE, CHROME, OUTPUT, SITE, sql } from '../env.mjs';
 
 function check(label, cond, extra = '') {
   console.log(`${cond ? 'OK  ' : 'FAIL'} ${label}${extra ? ' — ' + extra : ''}`);
@@ -10,6 +10,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const stamp = Date.now();
 let userId = 0;
 let managerId = 0;
+let friend = null;
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--no-sandbox'] });
 
 async function openBar(page) {
@@ -59,6 +60,23 @@ try {
   const locked = (await page.$$('.bgr-bar-table[data-locked]')).length;
   check('locked roles are reserved tables', locked > 0 && (await page.$$('.bgr-bar-plate.locked')).length === locked && (await page.$$eval('.bgr-bar-plate.locked', (list) => list.every((el) => el.textContent.includes('Резервирано')))), `${locked}`);
   check('a hired role has a check mark', Boolean(await page.$('.bgr-bar-hired')));
+  check('there are 4 bar stools with a guest on the second', (await page.$$eval('.bgr-bar-stool', (list) => list.map((el) => (el.querySelector('.bgr-bar-guest') ? 1 : 0)).join(''))) === '0100');
+
+  sql(`UPDATE wp_bgr_managers SET chat_seen = (SELECT IFNULL(MAX(id), 0) FROM wp_bgr_messages) WHERE id = ${managerId}`);
+  await openBar(page);
+  check('no unread mark without new messages', !(await page.$('.bgr-bar-unread')));
+  const reg = await (await fetch(`${BASE}auth/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: `fr${stamp}`, email: `fr${stamp}@example.com`, password: 'testtest123', city_id: 1, mode: 'token', device: 'test' }) })).json();
+  friend = { user: reg.user.id, id: reg.player.id };
+  await fetch(`${BASE}chat`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${reg.token}` }, body: JSON.stringify({ text: `hello ${stamp}` }) });
+  await openBar(page);
+  check('a red mark shows unread chat messages', Boolean(await page.$('.bgr-bar-unread')));
+  const [, chatBalloon] = await page.$$('.bgr-scene-talk');
+  await chatBalloon.click();
+  await page.waitForSelector('.bgr-scene-list .bgr-chat-form', { timeout: 8000 });
+  await close(page);
+  check('reading the chat clears the mark', !(await page.$('.bgr-bar-unread')));
+  await openBar(page);
+  check('the mark stays cleared after a reload', !(await page.$('.bgr-bar-unread')));
   check('the text about new candidates is below the picture', (await page.$eval('.bgr-bar-info', (el) => el.getBoundingClientRect().top)) >= (await page.$eval('.bgr-bar-scene svg', (el) => el.getBoundingClientRect().bottom)) - 1);
   check('no list is open at first', !(await page.$('.bgr-scene-list')));
   await page.screenshot({ path: `${OUTPUT}/bar-scene.png` });
@@ -122,6 +140,15 @@ try {
   process.exitCode = 1;
 } finally {
   await browser.close();
+  if (friend) {
+    sql(`DELETE FROM wp_bgr_messages WHERE manager_id = ${friend.id}`);
+    sql(`DELETE FROM wp_bgr_items WHERE player_car_id IN (SELECT pc.id FROM wp_bgr_player_cars pc WHERE pc.manager_id = ${friend.id})`);
+    for (const t of ['items', 'staff', 'player_cars', 'ledger', 'inbox']) sql(`DELETE FROM wp_bgr_${t} WHERE manager_id = ${friend.id}`);
+    sql(`DELETE FROM wp_bgr_managers WHERE id = ${friend.id}`);
+    sql(`DELETE FROM wp_bgr_app_tokens WHERE user_id = ${friend.user}`);
+    sql(`DELETE FROM wp_usermeta WHERE user_id = ${friend.user}`);
+    sql(`DELETE FROM wp_users WHERE ID = ${friend.user}`);
+  }
   if (managerId) {
     sql(`DELETE FROM wp_bgr_items WHERE player_car_id IN (SELECT pc.id FROM wp_bgr_player_cars pc WHERE pc.manager_id = ${managerId})`);
     for (const t of ['items', 'staff', 'player_cars', 'ledger', 'contracts', 'inbox']) sql(`DELETE FROM wp_bgr_${t} WHERE manager_id = ${managerId}`);

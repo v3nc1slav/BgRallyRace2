@@ -135,7 +135,10 @@ try {
   check('the trophy shelf sums up the results', text.includes('Победи: 1') && text.includes('Втори места: 1'), text);
   await page.screenshot({ path: `${OUTPUT}/garage-level5.png` });
 
-  await tap('.bgr-gs-box:not(.bgr-gs-dim)');
+  await page.$eval('.bgr-gs-box:not(.bgr-gs-dim)', (el) => el.focus());
+  await page.keyboard.press('Enter');
+  await sleep(400);
+  check('Enter on a shelf part only asks and does not confirm by itself', Boolean(await page.$('.bgr-dialog')));
   text = await answer();
   check('a shelf part asks before it replaces the fitted one', text.includes('смениш') && text.includes('енергия'), text);
   check('the confirmed part is fitted', /монтира|Монтирано/.test(await feedback()), await feedback());
