@@ -4,6 +4,7 @@ namespace BgRally\Rest;
 
 use BgRally\Game\Badges;
 use BgRally\Game\Bar;
+use BgRally\Game\Chat;
 use BgRally\Game\Inbox;
 use BgRally\Game\Mayor;
 use BgRally\Game\Privileges;
@@ -18,7 +19,7 @@ final class CityController
     {
         $manager = Auth::manager();
         Badges::seenBar($manager);
-        return Auth::respond(['bar' => Bar::view($manager)]);
+        return Auth::respond(['bar' => Bar::view($manager) + ['chat_unread' => Chat::unread($manager)]]);
     }
 
     public static function hire(WP_REST_Request $request)

@@ -6,7 +6,7 @@ use BgRally\Catalog\Registry;
 
 final class Schema
 {
-    private const VERSION = '22';
+    private const VERSION = '23';
     private const OPTION = 'bgr_db_version';
 
     public static function maybeUpgrade(): void
@@ -106,6 +106,7 @@ final class Schema
   comeback text NULL,
   fresh_at datetime DEFAULT NULL,
   lang varchar(5) NOT NULL DEFAULT 'bg',
+  chat_seen bigint(20) unsigned NOT NULL DEFAULT 0,
   created_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY user_id (user_id),

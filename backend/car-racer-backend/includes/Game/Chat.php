@@ -105,14 +105,34 @@ final class Chat
 
     public static function view(array $manager, int $after = 0): array
     {
+        global $wpdb;
         $channel = self::channel($manager);
         $rows = $after ? self::rows($channel, $after, 100) : self::rows($channel, 0, Settings::int('chat_keep'), 0, true);
+        if ($rows) {
+            $wpdb->query($wpdb->prepare(
+                'UPDATE ' . Tables::name('managers') . ' SET chat_seen = GREATEST(chat_seen, %d) WHERE id = %d',
+                max(array_map(fn($row) => (int) $row['id'], $rows)),
+                $manager['id']
+            ));
+        }
 
         return [
             'messages' => self::present($rows, (int) $manager['id']),
             'muted_until' => self::mutedUntil($manager),
             'max_length' => Settings::int('chat_length'),
         ];
+    }
+
+    public static function unread(array $manager): int
+    {
+        global $wpdb;
+        $seen = (int) $wpdb->get_var($wpdb->prepare('SELECT chat_seen FROM ' . Tables::name('managers') . ' WHERE id = %d', $manager['id']));
+        return (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT COUNT(*) FROM ' . self::table() . ' WHERE channel = %s AND deleted = 0 AND id > %d AND manager_id <> %d',
+            self::channel($manager),
+            $seen,
+            $manager['id']
+        ));
     }
 
     public static function say(array $manager, string $text): true|WP_Error
