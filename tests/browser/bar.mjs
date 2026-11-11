@@ -88,8 +88,8 @@ try {
   check('the balloons hide behind the open list', (await page.$eval('.bgr-scene-talk', (el) => getComputedStyle(el).visibility)) === 'hidden');
   await page.$$eval('.bgr-scene-list tbody tr', (rows, name) => rows.find((row) => row.textContent.includes(name)).querySelector('button').click(), `Test ${stamp}`);
   await answer(page, true);
-  await page.waitForSelector('.bgr-scene-list .bgr-ok', { timeout: 8000 });
-  check('a candidate can be hired from the list', (await page.$eval('.bgr-scene-list .bgr-ok', (el) => el.textContent)).length > 0);
+  await page.waitForSelector('.bgr-toast.ok', { timeout: 8000 });
+  check('a candidate can be hired from the list', (await page.$eval('.bgr-toast.ok', (el) => el.textContent)).length > 0);
   check('the list stays open after hiring', (await listTitle(page)) === 'Пилот');
   await close(page);
   check('the close button closes the list', !(await page.$('.bgr-scene-list')));

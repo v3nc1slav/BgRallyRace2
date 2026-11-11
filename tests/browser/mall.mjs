@@ -75,8 +75,8 @@ try {
   check('the gym opens the crew training', (await listTitle(page)) === 'Фитнес' && (await page.$$('.bgr-scene-list .bgr-row')).length >= 2, await listTitle(page));
   check('the close button takes the keyboard focus', await page.$eval('.bgr-scene-close', (el) => document.activeElement === el));
   await page.$eval('.bgr-scene-list .bgr-row button:not(:disabled)', (el) => el.click());
-  await page.waitForSelector('.bgr-scene-list .bgr-ok', { timeout: 8000 });
-  check('a crew member can train in the gym', (await page.$eval('.bgr-scene-list .bgr-ok', (el) => el.textContent)).length > 0);
+  await page.waitForSelector('.bgr-toast.ok', { timeout: 8000 });
+  check('a crew member can train in the gym', (await page.$eval('.bgr-toast.ok', (el) => el.textContent)).length > 0);
   await close(page);
   check('the close button closes the list', !(await page.$('.bgr-scene-list')));
 
@@ -93,9 +93,11 @@ try {
   await tap(page, 'shoes');
   await page.waitForSelector('.bgr-scene-list tbody tr');
   check('the shoe shop sells shoes only', (await slots(page)).join(',') === 'Обувки', (await slots(page)).join(','));
+  await page.$$eval('.bgr-toast-close', (list) => list.forEach((el) => el.click()));
+  await sleep(400);
   const before = Number(sql(`SELECT money FROM wp_bgr_managers WHERE id = ${managerId}`));
   await page.$eval('.bgr-scene-list tbody tr:not(.bgr-locked) button:not(.bgr-secondary)', (el) => el.click());
-  await page.waitForSelector('.bgr-scene-list .bgr-ok', { timeout: 8000 });
+  await page.waitForSelector('.bgr-toast.ok', { timeout: 8000 });
   check('shoes can be bought and are put on', Number(sql(`SELECT money FROM wp_bgr_managers WHERE id = ${managerId}`)) < before && Boolean(await page.$('.bgr-scene-list tr.bgr-me')));
   check('the list stays open after buying', (await listTitle(page)) === 'Обувки');
   await close(page);

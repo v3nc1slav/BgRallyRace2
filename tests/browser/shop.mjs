@@ -77,7 +77,7 @@ try {
   await page.waitForSelector('.bgr-scene-list tbody tr');
   const before = Number(sql(`SELECT money FROM wp_bgr_managers WHERE id = ${managerId}`));
   await page.$eval('.bgr-scene-list tbody tr:not(.bgr-locked) button:not(:disabled)', (el) => el.click());
-  await page.waitForSelector('.bgr-scene-list .bgr-ok', { timeout: 8000 });
+  await page.waitForSelector('.bgr-toast.ok', { timeout: 8000 });
   check('tyres can be bought from the list', Number(sql(`SELECT money FROM wp_bgr_managers WHERE id = ${managerId}`)) < before);
   check('the list stays open after a purchase', Boolean(await page.$('.bgr-scene-list tbody tr')));
   await page.click('.bgr-scene-close');

@@ -65,7 +65,7 @@ try {
   check('pressing it lists what is missing', needs.length === 3, needs.join(' | '));
   await page.screenshot({ path: `${OUTPUT}/garage-level1.png` });
 
-  const feedback = () => page.$eval('.bgr-feedback', (el) => el.textContent).catch(() => '');
+  const feedback = () => page.$eval('.bgr-toast p', (el) => el.textContent).catch(() => '');
   const answer = async (accept = true) => {
     await page.waitForSelector('.bgr-dialog', { timeout: 5000 });
     const text = await page.$eval('.bgr-dialog p', (el) => el.textContent);
@@ -95,6 +95,20 @@ try {
   const engine = Number(sql(`SELECT ROUND(i.health) FROM wp_bgr_items i JOIN wp_bgr_parts p ON p.id = i.catalog_id WHERE i.manager_id = ${managerId} AND i.kind = 'part' AND i.player_car_id > 0 AND p.type = 'engine'`));
   check('the confirmed repair fixes the part', engine > 60, `${engine}% · ${await feedback()}`);
   check('the repair tables are gone', !(await page.$('#garage-slots')) && !(await page.$('#garage-storage')));
+
+  sql(`UPDATE wp_bgr_items i JOIN wp_bgr_parts p ON p.id = i.catalog_id SET i.health = 60 WHERE i.manager_id = ${managerId} AND i.kind = 'part' AND i.player_car_id > 0 AND p.type = 'engine'`);
+  sql(`UPDATE wp_bgr_managers SET energy = 0 WHERE id = ${managerId}`);
+  await openGarage(page);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await sleep(300);
+  await (await page.$$('.bgr-gs-balloon'))[0].click();
+  await answer();
+  const warning = await page.$eval('.bgr-toast.error', (el) => ({ text: el.textContent, top: el.getBoundingClientRect().top, bottom: el.getBoundingClientRect().bottom, height: window.innerHeight })).catch(() => null);
+  check('a failed repair shows a visible message even when scrolled down', Boolean(warning) && /енерги/i.test(warning.text) && warning.top >= 0 && warning.bottom <= warning.height, JSON.stringify(warning));
+  sql(`UPDATE wp_bgr_managers SET energy = 100 WHERE id = ${managerId}`);
+  await page.click('.bgr-toast-close');
+  await sleep(300);
+  check('the message can be closed', !(await page.$('.bgr-toast.error')));
 
   await (await page.$$('.bgr-gs-balloon'))[1].click();
   await page.waitForSelector('.bgr-dialog');
