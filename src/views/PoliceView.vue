@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import BribeCard from '../components/BribeCard.vue';
+import { watchAd } from '../ads';
+import { ask, tell } from '../dialog';
+import { t } from '../i18n';
 import Feedback from '../components/Feedback.vue';
-import { when } from '../format';
+import PoliceScene from '../components/PoliceScene.vue';
+import { money, when } from '../format';
 import { bribe, getPolice, reportSabotage, type PoliceInfo } from '../game';
+import { session } from '../session';
 import { useAction } from '../useAction';
 
 const police = ref<PoliceInfo | null>(null);
@@ -23,39 +27,62 @@ async function act(task: () => Promise<{ police: PoliceInfo; message: string }>)
   }
 }
 
-const give = () => act(() => bribe('police'));
+async function report() {
+  const info = police.value;
+  if (!info || busy.value) {
+    return;
+  }
+  const title = t('police.report');
+  const rally = info.reports[0];
+  if (!rally) {
+    await tell(t('police.noReports'), { title });
+    return;
+  }
+  if (await ask(t('police.reportConfirm', { rally: rally.name, energy: info.report_energy }), { title, cancel: t('dialog.answerNo') })) {
+    await act(() => reportSabotage(rally.id));
+  }
+}
+
+async function offer() {
+  const info = police.value;
+  if (!info || busy.value) {
+    return;
+  }
+  const deal = info.police;
+  const title = t('police.bribe');
+  if (deal.active_until) {
+    await tell(t('bribe.active', { time: when(deal.active_until) }), { title });
+    return;
+  }
+  if (deal.refused && !session.player?.perks.retry) {
+    if (await ask(t('bribe.refused'), { title, ok: t('common.adRetry'), cancel: t('common.close') })) {
+      const result = await run(() => watchAd('retry'));
+      if (result) {
+        message.value = result.message;
+        await offer();
+      }
+    }
+    return;
+  }
+  const lines = [deal.refused ? t('bribe.second') : '', t('bribe.chance', { chance: deal.chance }), `${t('bribe.give', { price: money(deal.price), energy: info.energy })}?`];
+  if (await ask(lines.filter(Boolean).join('\n'), { title, cancel: t('dialog.answerNo') })) {
+    await act(() => bribe('police'));
+  }
+}
 </script>
 
 <template>
   <section class="bgr-card">
     <p><RouterLink to="/city">&larr; {{ $t('common.backCity') }}</RouterLink></p>
-    <h1>{{ $t('police.title') }}</h1>
-    <p class="bgr-muted">{{ $t('police.intro') }}</p>
     <Feedback :message="message" :error="error" />
-
+    <div class="bgr-scene-stage" style="--ratio: 1.7857">
+      <PoliceScene :name="session.user?.name ?? ''" :risks="police?.risks ?? null" @report="report" @bribe="offer" />
+    </div>
     <template v-if="police">
-      <dl class="bgr-stats-list">
-        <dt>{{ $t('police.riskOfficial') }}</dt>
-        <dd>{{ police.risks.official }}%</dd>
-        <dt>{{ $t('police.riskBlack') }}</dt>
-        <dd>{{ police.risks.black }}%</dd>
-      </dl>
-
-      <BribeCard :title="$t('police.bribe')" :info="police.police" :energy="police.energy" :busy="busy" @bribe="give" @notice="(text) => (message = text)" />
-
+      <p class="bgr-muted">{{ $t('police.reportHint', { days: police.report_days, energy: police.report_energy }) }}</p>
       <p class="bgr-muted">
         <RouterLink to="/city/hall">{{ $t('police.mayor') }}</RouterLink>
       </p>
-
-      <div class="bgr-panel">
-        <h2>{{ $t('police.report') }}</h2>
-        <p class="bgr-muted">{{ $t('police.reportHint', { days: police.report_days, energy: police.report_energy }) }}</p>
-        <p v-if="!police.reports.length" class="bgr-muted">{{ $t('police.noReports') }}</p>
-        <div v-for="item in police.reports" :key="item.id" class="bgr-row">
-          <span>{{ item.name }} <small class="bgr-muted">{{ when(item.start_at) }}</small></span>
-          <button class="bgr-small" :disabled="busy" @click="act(() => reportSabotage(item.id))">{{ $t('police.send') }}</button>
-        </div>
-      </div>
     </template>
   </section>
 </template>

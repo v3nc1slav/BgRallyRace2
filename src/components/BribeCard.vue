@@ -4,13 +4,13 @@ import type { BribeInfo } from '../game';
 import { session } from '../session';
 import AdButton from './AdButton.vue';
 
-defineProps<{ title: string; info: BribeInfo; energy: number; busy: boolean; locked?: string }>();
+defineProps<{ title?: string; info: BribeInfo; energy: number; busy: boolean; locked?: string }>();
 const emit = defineEmits<{ bribe: []; notice: [message: string] }>();
 </script>
 
 <template>
   <div class="bgr-panel">
-    <h3>{{ title }}</h3>
+    <h3 v-if="title">{{ title }}</h3>
     <p v-if="info.active_until" class="bgr-ok">{{ $t('bribe.active', { time: when(info.active_until) }) }}</p>
     <p v-else-if="locked" class="bgr-muted">{{ locked }}</p>
     <template v-else-if="info.refused && !session.player?.perks.retry">

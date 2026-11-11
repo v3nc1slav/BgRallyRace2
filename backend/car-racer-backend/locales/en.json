@@ -505,7 +505,6 @@
   },
   "hall": {
     "moveConfirm": "Move to {city} for {cost}? The next move is only possible next season.",
-    "title": "City hall",
     "intro": "The mayor issues permits for your garage and for your own training track.",
     "clothes": "Your clothes give you +{pct}% in negotiations ·",
     "mall": "Mall",
@@ -536,7 +535,17 @@
     "pickCity": "Choose a city",
     "moveButton": "Move",
     "cityInfo": "Privileges: {list} · Shop prices: {pct}%",
-    "none": "none"
+    "none": "none",
+    "welcome": "Welcome, {name}! What would you like to talk about?",
+    "topics": {
+      "garage": "About the garage",
+      "track": "About a training track",
+      "funding": "About donations",
+      "move": "About moving city"
+    },
+    "scene": {
+      "title": "Mayor"
+    }
   },
   "bribe": {
     "active": "Active until {time}.",
@@ -546,7 +555,6 @@
     "give": "Bribe ({price}, {energy} energy)"
   },
   "police": {
-    "title": "Police",
     "intro": "The police watch training on the official track during the week and the black track.",
     "riskOfficial": "Risk on the official track",
     "riskBlack": "Risk on the black track",
@@ -555,7 +563,16 @@
     "report": "Report sabotage",
     "reportHint": "If you suspect sabotage, report it within {days} days after the rally ({energy} energy). With an informant the police uncover sabotage more often.",
     "noReports": "No recent rallies you can report.",
-    "send": "Report"
+    "welcome": "Welcome, {name}! If you have a complaint about sabotage, you can file it with me.",
+    "inspector": "Want to train without the police bothering you? I can help.",
+    "reportConfirm": "Are you sure you want to file a complaint about the last rally, “{rally}”? The check costs {energy} energy.",
+    "scene": {
+      "desk": "Police",
+      "deskSub": "Reports and complaints",
+      "chief": "Chief inspector",
+      "badge": "Police",
+      "clerk": "Report desk"
+    }
   },
   "track": {
     "title": "Official track",
@@ -1454,6 +1471,7 @@
   "dialog": {
     "yes": "Yes",
     "no": "Cancel",
+    "answerNo": "No",
     "ok": "OK"
   }
 }

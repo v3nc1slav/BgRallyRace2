@@ -6,8 +6,8 @@ export interface PersonLook {
   shirt?: string;
   hair?: string;
   hat?: string;
-  cut?: 'short' | 'long' | 'bald' | 'cap' | 'hat' | 'hood';
-  pose?: 'rest' | 'beer' | 'coffee' | 'cocktail' | 'cards' | 'paper' | 'talk' | 'whisper' | 'smoke' | 'polish' | 'walk' | 'bag';
+  cut?: 'short' | 'long' | 'bun' | 'bald' | 'cap' | 'hat' | 'hood';
+  pose?: 'rest' | 'beer' | 'coffee' | 'cocktail' | 'cards' | 'paper' | 'talk' | 'whisper' | 'smoke' | 'polish' | 'walk' | 'bag' | 'clasp';
   bagColor?: string;
   mirror?: boolean;
   glasses?: boolean;
@@ -15,6 +15,9 @@ export interface PersonLook {
   laugh?: boolean;
   apron?: string;
   bow?: boolean;
+  tie?: string;
+  shirtFront?: string;
+  uniform?: boolean;
   back?: boolean;
 }
 
@@ -47,6 +50,7 @@ const ARMS: Record<NonNullable<PersonLook['pose']>, [number, number, number, num
   polish: [[-56, 100, -14, 82], [56, 100, 14, 90]],
   walk: [[-64, 98, -68, 138], [64, 98, 68, 138]],
   bag: [[-64, 98, -68, 138], [64, 98, 70, 136]],
+  clasp: [[-58, 106, -10, 106], [58, 106, 10, 106]],
 };
 
 const transform = computed(() => `translate(${props.x} ${props.y}) scale(${props.mirror ? -props.scale : props.scale} ${props.scale})`);
@@ -77,6 +81,7 @@ const collar = computed(() => shade(props.shirt, 1.18));
       </template>
     </template>
     <template v-else>
+    <circle v-if="cut === 'bun'" cx="0" cy="-42" r="12" :fill="hair" />
     <path v-if="cut === 'long'" d="M-31 -6 C-35 -34 -13 -47 2 -46 C22 -46 35 -33 31 -6 L33 46 Q24 54 14 46 L-14 46 Q-24 54 -33 46 Z" :fill="hair" />
     <path d="M-64 140 L-59 80 C-57 62 -44 53 -24 48 L-11 44 H11 L24 48 C44 53 57 62 59 80 L64 140 Z" :fill="shirt" />
     <path d="M-59 80 C-57 62 -44 53 -24 48 L-30 140 H-64 Z" :fill="shirtShade" />
@@ -85,15 +90,17 @@ const collar = computed(() => shade(props.shirt, 1.18));
       <path d="M-26 67 L-16 47 M26 67 L16 47" :stroke="apron" stroke-width="7" />
     </template>
     <path d="M-11 26 V46 Q0 58 11 46 V26 Z" :fill="skinShade" />
+    <path v-if="shirtFront" d="M-13 45 L0 78 L13 45 Z" :fill="shirtFront" />
     <path v-if="cut !== 'hood'" d="M-11 42 L-22 49 L-10 65 L0 54 Z M11 42 L22 49 L10 65 L0 54 Z" :fill="collar" />
     <path v-if="bow" d="M0 52 L-13 44 V60 Z M0 52 L13 44 V60 Z" fill="#c62828" />
+    <path v-if="tie" d="M-5 49 H5 L3 57 L8 100 L0 110 L-8 100 L-3 57 Z" :fill="tie" />
 
     <ellipse cx="-25" cy="0" rx="4" ry="8" :fill="skinShade" />
     <ellipse cx="25" cy="0" rx="4" ry="8" :fill="skinShade" />
     <path d="M-24 -6 C-24 -26 -12 -32 0 -32 C12 -32 24 -26 24 -6 C24 12 18 26 8 32 C3 35 -3 35 -8 32 C-18 26 -24 12 -24 -6 Z" :fill="skin" />
     <path d="M12 -28 C20 -22 24 -16 24 -6 C24 12 18 26 8 32 C14 18 16 -12 12 -28 Z" :fill="skinShade" opacity="0.55" />
     <path v-if="cut === 'bald'" d="M-25 2 C-27 -10 -24 -16 -19 -18 L-18 -2 Z M25 2 C27 -10 24 -16 19 -18 L18 -2 Z" :fill="hair" />
-    <path v-else-if="cut === 'long'" d="M-25 -4 C-28 -26 -12 -38 4 -38 C20 -38 28 -24 26 -4 C22 -14 14 -20 4 -22 C-6 -18 -16 -16 -25 -4 Z" :fill="hair" />
+    <path v-else-if="cut === 'long' || cut === 'bun'" d="M-25 -4 C-28 -26 -12 -38 4 -38 C20 -38 28 -24 26 -4 C22 -14 14 -20 4 -22 C-6 -18 -16 -16 -25 -4 Z" :fill="hair" />
     <path v-else-if="cut !== 'hood'" d="M-26 -2 C-31 -28 -15 -43 4 -42 C23 -42 33 -26 27 -1 C26 -11 22 -19 14 -23 C3 -17 -12 -17 -20 -20 C-24 -16 -25 -9 -26 -2 Z" :fill="hair" />
     <path v-if="beard" d="M-23 4 C-21 26 -10 37 0 37 C10 37 21 26 23 4 C17 15 10 21 0 21 C-10 21 -17 15 -23 4 Z" :fill="hair" />
     <path d="M-17 -8 Q-10 -12 -4 -9 M4 -9 Q10 -12 17 -8" fill="none" :stroke="cut === 'bald' ? skinShade : hair" stroke-width="2.4" stroke-linecap="round" />
@@ -138,6 +145,12 @@ const collar = computed(() => shade(props.shirt, 1.18));
       <path :d="`M${arm.ex} ${arm.ey} L${arm.hx} ${arm.hy}`" fill="none" :stroke="skin" stroke-width="13" stroke-linecap="round" />
       <ellipse :cx="arm.hx" :cy="arm.hy" rx="8" ry="7" :fill="skin" />
     </g>
+
+    <template v-if="uniform">
+      <path d="M-52 58 L-28 51 M28 51 L52 58" stroke="#0d1322" stroke-width="7" stroke-linecap="round" />
+      <path d="M14 70 H30 V82 Q22 90 14 82 Z" fill="#c9a14a" />
+      <rect x="-32" y="74" width="20" height="6" rx="1" fill="#e8eaed" />
+    </template>
 
     <template v-if="pose === 'beer'">
       <rect x="38" y="12" width="26" height="34" rx="3" fill="#f2a93b" stroke="#b9772a" stroke-width="2" />

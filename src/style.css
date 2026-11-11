@@ -1783,6 +1783,16 @@ body.bgr-game .bgr {
   transform: rotate(-45deg);
 }
 
+.bgr-scene-talk[data-tail='right']::before {
+  top: var(--tail, 14px);
+  right: -10px;
+  transform: rotate(-135deg);
+}
+
+.bgr .bgr-scene-talk[data-anchor='bottom'] {
+  transform: translateY(-100%);
+}
+
 @container (max-width: 640px) {
   .bgr .bgr-scene-talk {
     position: relative;
@@ -1794,8 +1804,13 @@ body.bgr-game .bgr {
     font-size: 0.95rem;
   }
 
+  .bgr .bgr-scene-talk[data-anchor] {
+    transform: none;
+  }
+
   .bgr-scene-talk[data-tail]::before {
     top: -10px;
+    right: auto;
     bottom: auto;
     left: calc(50% - 8px);
     transform: rotate(135deg);
@@ -2364,5 +2379,119 @@ body.bgr-game .bgr {
 
   .bgr .bgr-board-title h1 {
     font-size: 1.1rem;
+  }
+}
+
+.bgr-police-desk,
+.bgr-police-badge,
+.bgr-police-back,
+.bgr-police-chief {
+  font-family: system-ui, sans-serif;
+  font-weight: 800;
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+
+.bgr-police-desk {
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  fill: #fff;
+}
+
+.bgr-police-desk.small {
+  font-size: 15px;
+  letter-spacing: 0.03em;
+}
+
+.bgr-police-badge {
+  font-size: 8px;
+  fill: #e0b74a;
+}
+
+.bgr-police-back {
+  font-size: 7px;
+  fill: #e8eaed;
+}
+
+.bgr-police-chief {
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  fill: #e0b74a;
+}
+
+.bgr-police-notice {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  display: grid;
+  gap: 0.5em;
+  width: var(--w);
+  padding: 1.3em 0.8em 0.8em;
+  font-size: clamp(9px, 1.15cqw, 15px);
+  line-height: 1.3;
+  color: #2b2f37;
+  background: #fdfcf7;
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
+  transform: rotate(-1deg);
+}
+
+.bgr-police-notice::before {
+  content: '';
+  position: absolute;
+  top: 0.35em;
+  left: calc(50% - 0.4em);
+  width: 0.8em;
+  height: 0.8em;
+  background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.7), #e63946 45%);
+  border-radius: 50%;
+  box-shadow: 1px 2px 3px rgba(0, 0, 0, 0.45);
+}
+
+.bgr .bgr-police-notice p {
+  margin: 0;
+}
+
+.bgr .bgr-police-notice b {
+  color: #15171c;
+}
+
+@container (max-width: 760px) {
+  .bgr-police-notice {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    margin-top: 14px;
+    font-size: 0.95rem;
+    transform: none;
+  }
+}
+
+.bgr-hall-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+  text-transform: uppercase;
+  fill: #d4af37;
+}
+
+.bgr-hall-topics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.bgr .bgr-hall-topics button {
+  width: 100%;
+  min-height: 48px;
+}
+
+@media (max-width: 760px) {
+  .bgr-hall-topics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
