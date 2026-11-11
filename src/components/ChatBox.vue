@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { errorMessage } from '../api';
 import { stamp, when } from '../format';
 import { getChat, reportMessage, sendChat, type ChatInfo, type ChatMessage } from '../game';
+import { toast } from '../toast';
 
 const POLL_MS = 10000;
 const KEEP = 100;
@@ -13,8 +14,6 @@ const messages = ref<ChatMessage[]>([]);
 const mutedUntil = ref<string | null>(null);
 const maxLength = ref(300);
 const text = ref('');
-const error = ref('');
-const notice = ref('');
 const busy = ref(false);
 const list = ref<HTMLElement | null>(null);
 let timer = 0;
@@ -46,13 +45,11 @@ async function send() {
     return;
   }
   busy.value = true;
-  error.value = '';
-  notice.value = '';
   try {
     await apply((await sendChat(text.value, lastId())).chat);
     text.value = '';
   } catch (e) {
-    error.value = errorMessage(e);
+    toast(errorMessage(e), 'error');
   } finally {
     busy.value = false;
   }
@@ -64,9 +61,9 @@ async function report(message: ChatMessage) {
   }
   try {
     await reportMessage(message.id);
-    notice.value = t('chat.reported');
+    toast(t('chat.reported'));
   } catch (e) {
-    error.value = errorMessage(e);
+    toast(errorMessage(e), 'error');
   }
 }
 
@@ -94,7 +91,5 @@ onBeforeUnmount(() => window.clearInterval(timer));
       <input v-model="text" :maxlength="maxLength" :placeholder="$t('chat.placeholder')" />
       <button :disabled="busy || !text.trim()">{{ $t('chat.send') }}</button>
     </form>
-    <p v-if="error" class="bgr-error">{{ error }}</p>
-    <p v-else-if="notice" class="bgr-ok">{{ notice }}</p>
   </section>
 </template>

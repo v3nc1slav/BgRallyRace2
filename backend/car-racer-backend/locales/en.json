@@ -413,7 +413,8 @@
     "publish": "Post",
     "report": "report",
     "reportTitle": "Report",
-    "perWeek": "{pay}/wk."
+    "perWeek": "{pay}/wk.",
+    "close": "Close"
   },
   "market": {
     "buyConfirm": "Buy “{name}” for {price}?",
@@ -662,17 +663,19 @@
   },
   "jobs": {
     "quitConfirm": "If you quit, you can only start a new job next season. Quit?",
-    "title": "Job",
     "intro": "Every night the job takes energy from the new day and pays the salary, even when you do not log in. The job is chosen for the whole season.",
     "current": "You work as",
     "currentPay": "{pay} and {energy} energy per day.",
     "quit": "Quit",
-    "job": "Job",
     "pay": "Salary",
     "energy": "Energy",
     "perDay": "{pay}/day",
     "yours": "your job",
-    "take": "Start"
+    "take": "Start",
+    "boardTitle": "Job centre – {city}",
+    "boardHours": "Open Monday to Friday, 9:00 – 17:00",
+    "notices": "Notices",
+    "offers": "Vacancies"
   },
   "bar": {
     "replaceConfirm": "{name} will replace {current}. Continue?",

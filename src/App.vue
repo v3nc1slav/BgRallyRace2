@@ -6,6 +6,7 @@ import logo from './assets/BGRallyHD.png';
 import AdModal from './components/AdModal.vue';
 import ComebackDialog from './components/ComebackDialog.vue';
 import DialogHost from './components/DialogHost.vue';
+import ToastHost from './components/ToastHost.vue';
 import ErrorScreen from './components/ErrorScreen.vue';
 import TabBar from './components/TabBar.vue';
 import { money } from './format';
@@ -66,5 +67,6 @@ onBeforeUnmount(() => stopLabels?.());
     <AdModal />
     <ComebackDialog />
     <DialogHost />
+    <ToastHost />
   </div>
 </template>

@@ -1,8 +1,19 @@
 <script setup lang="ts">
-defineProps<{ message?: string; error?: string }>();
+import { watch } from 'vue';
+import { toast } from '../toast';
+
+const props = defineProps<{ message?: string; error?: string }>();
+
+watch(
+  () => props.message,
+  (text) => text && toast(text, 'ok'),
+);
+watch(
+  () => props.error,
+  (text) => text && toast(text, 'error'),
+);
 </script>
 
 <template>
-  <p v-if="error" class="bgr-error bgr-feedback">{{ error }}</p>
-  <p v-else-if="message" class="bgr-ok bgr-feedback">{{ message }}</p>
+  <span hidden></span>
 </template>
