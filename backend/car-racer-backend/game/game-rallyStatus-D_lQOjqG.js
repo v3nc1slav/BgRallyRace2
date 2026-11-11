@@ -1,1 +1,0 @@
-import{s as e}from"./game-i18n-CMOPLk22.js";function t(t){return e(`rally.status.${t}`)}export{t};

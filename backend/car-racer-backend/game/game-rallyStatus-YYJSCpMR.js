@@ -1,0 +1,1 @@
+import{s as e}from"./game-i18n-CEssO62I.js";function t(t){return e(`rally.status.${t}`)}export{t};

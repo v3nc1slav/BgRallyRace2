@@ -1,1 +1,0 @@
-import{g as e,j as t,x as n,z as r}from"./game-i18n-CMOPLk22.js";import{i}from"./game-CruDc2x8.js";var a={hidden:``},o=n({__name:`Feedback`,props:{message:{},error:{}},setup(n){let o=n;return r(()=>o.message,e=>e&&i(e,`ok`)),r(()=>o.error,e=>e&&i(e,`error`)),(n,r)=>(t(),e(`span`,a))}});export{o as t};
